@@ -3,136 +3,148 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>第 9 讲 · 均值回归</title>
+<title>第 9 讲 · 回归均值</title>
 <link rel="stylesheet" href="../assets/style.css" />
 </head>
 <body>
 
 <p class="kicker">思考，快与慢 · 第 9 讲</p>
+<h1>回归均值：为什么“骂完就变好”多半是错觉</h1>
+<p class="lede">一个可以马上用的技能：看到极端的表现之后，先预料它会向平均值回落，别急着把功劳或罪过算给刚才那件事。</p>
+
 <p class="toc" style="margin:.1rem 0 1.6rem;font-family:var(--sans);font-size:.82rem;color:var(--muted);">
   ← <a href="0008-representativeness.html">上一讲 · 代表性启发</a>
   &nbsp;·&nbsp; <a href="0010-narrative-fallacy.html">下一讲 · 叙事谬误 →</a>
   &nbsp;·&nbsp; <a href="../reference/0001-core-concepts.html">速查表</a>
 </p>
 
-<h1>均值回归：为什么“骂完就变好”多半是错觉</h1>
-<p class="lede">一个可以马上用的技能：看到极端的表现之后，先预料它会向平均值回落，别急着把功劳或罪过算给刚才那件事。</p>
+<h2>引子：一句“立竿见影”的谈话</h2>
+<p>设想你是团队负责人。上个月小张的业绩是全组最差，你把他叫进办公室严肃地谈了一次；这个月，他的
+数字明显好看了。于是你很自然地得出一个结论：<strong>批评是有效的，我不能心软。</strong></p>
+<p>同一个办公室还有另一幕。上个月小李是全组第一，你在会上当众表扬了他；这个月，他的数字回落了。
+你又得到一个结论：<strong>表扬会让人得意忘形。</strong></p>
+<p>两个结论加在一起，就成了一条顽固的经验法则：<strong>骂有用，夸有害。</strong>它还被“亲眼所见”
+反复印证，几乎没法反驳。可这一讲要告诉你的是——这两次“变化”里，可能<strong>根本没有批评或表扬什么事</strong>。
+真正在起作用的，是一条我们天生看不见的统计规律：<strong>均值回归</strong>（regression to the mean）。</p>
 
-<p>这一讲讲一个容易被忽略、却反复在生活中骗到我们的统计现象：<strong>均值回归</strong>
-（regression to the mean）。它不是因果力，只是一条规律——<strong>极端之后，下一步往往更接近平均。</strong>
-认出它，你就能少当很多次“因果错觉”的受害者。</p>
+<h2>飞行教官的那堂课</h2>
+<p>这不是编出来的例子。Kahneman 在以色列空军给飞行教官讲授教学法时，讲了一个当时他颇为得意的观点：
+奖励进步比惩罚退步更有效。话音刚落，一位资深教官当场反驳，而且理由听起来无懈可击。大意如下：</p>
 
-<h2>飞行教练的故事</h2>
-<p>Kahneman 在以色列空军给飞行教官讲课时断言：<strong>表扬表现好的学员，比批评表现差的更有效。</strong>
-教官们当场反驳，而且理由听起来无可辩驳——他们说：</p>
 <blockquote>
-  我经常表扬飞得干净的学员，结果他下一次往往飞得更差；但我对飞砸了的学员大吼一顿，
-  他下一次通常就飞好了。所以惩罚有用，表扬反而害人。
+  我经常表扬飞得干净的学员，结果他下一次往往飞得更差；但我对飞砸了的学员大吼一顿，他下一次通常就
+  飞好了。所以惩罚有用，表扬反而害人。
+  <cite>——飞行教官对 Kahneman 的回应（据书中叙述转述，非逐字引文）</cite>
 </blockquote>
-<p>Kahneman 愣了几秒，然后明白了自己错在哪。问题出在<strong>飞行表现本身带有随机波动</strong>：
-一个学员“飞得特别好”的那一次，多半是好状态加好运气叠加的结果，下一次自然会回到他自己的平均水平，
-看起来就“变差”了；一个“飞得特别差”的那一次，也多半包含了坏运气，下一次自然会回升，看起来就“变好”了。</p>
+
+<p>Kahneman 愣了几秒。他知道教官们没在说谎——他们的观察是真的。但就在那几秒里，他想明白了：
+<strong>教官们看到的是真的，从中学到的结论是错的。</strong>原因在于飞行表现本身含有大量随机成分。</p>
+<p>一个学员“飞得特别好”的那一次，多半是<strong>真实水平偏高，加上那天的好状态和好运气</strong>共同造成的。
+下一次他未必还那么走运，于是表现向着他自己的平均水平回落，看起来就“变差”了——恰好发生在被表扬之后。
+反过来，“飞得特别差”的那一次里多半掺着坏运气，下一次自然会回升，看起来就“变好”了——又恰好
+发生在被骂之后。教官们只是长期在“极端高”之后表扬、在“极端低”之后批评，于是把自己的奖惩
+误当成了原因。</p>
 
 <div class="card">
-  <p>换句话说：<strong>表扬之后的下滑、批评之后的改善，都是均值回归，与表扬和批评本身无关。</strong>
-  教官们只是恰好总在“极端高”之后表扬、在“极端低”之后批评，于是错把自己的奖惩当成了原因。
-  麻烦在于——<strong>这种错觉最有说服力的证据，偏偏来自亲眼所见。</strong></p>
+  <p><strong>一句话抓住机制：</strong>凡是表现里混着运气的地方，极端值都会向平均值回落。
+  表扬与批评并不是变化的原因，它们只是恰好被安排在了极端值之后。</p>
 </div>
 
-<h2>同一出戏的许多版本</h2>
-<p>均值回归到处都在上演，只是我们总给它另编一个因果故事：</p>
+<p>Kahneman 后来把这一刻称为自己职业生涯里最令人满足的“恍然大悟”之一。让他震惊的不只是这条规律本身，
+还有一件事：<strong>这么重要、这么普遍的规律，绝大多数人从生活里学不会。</strong>因为每一次，
+我们都会给它另编一个因果故事，而那个故事看起来总是更有说服力。</p>
+
+<h2>这条规律的来头：Galton 与身高</h2>
+<p>均值回归最早由一个意想不到的人发现——达尔文的表弟、博学家 <strong>Francis Galton</strong>。
+十九世纪七十年代，他做了一件在今天看来很朴素、当时却极超前的事：<strong>用量化方法研究遗传</strong>。</p>
+<p>他先拿<strong>甜豌豆</strong>做实验（约 1877 年）：把一批种子按大小分组，分发给朋友种植，再测量
+收成里新种子的大小。结果令他吃了一惊——<strong>大种子长出的后代，平均比亲代小；小种子长出的后代，
+平均比亲代大。</strong>仿佛有一种力量在把种子拉回“中等”。</p>
+<p>接着他转向人类身高（成果即 1886 年那篇论文）。他测量了大量父母与成年子女的身高，
+发现<strong>高个父亲的儿子平均比父亲矮，矮个父亲的儿子平均比父亲高</strong>——但整体的身高分布形状
+却一代代保持稳定。他一度以为自然界在“往回拉”，于是给这个现象起了个朴素的、后来被沿用至今的名字：
+<em>向平庸回归</em>（regression towards mediocrity）。</p>
+<p>今天我们知道，这里<strong>没有任何神秘的力量</strong>。当两个变量之间只是“相关”而不是“完全一致”
+时，回归就必然发生——它是数学上的必然，不需要一个原因去推动。后来 Karl Pearson 等人发展出相关系数，
+把 Galton 的直觉精确化：所谓“回归线”的斜率，正是相关的强度。<strong>相关的另一面，就是回归。</strong></p>
+
+<h2>为什么我们学不会它</h2>
+<p>回归均值之所以难以被直觉掌握，有几层原因叠在一起：</p>
 <ul>
-  <li>上了体育杂志封面的明星，之后常走下坡——所谓“封面魔咒”，多半只是因为他本来就处在高峰。</li>
-  <li>一张销量爆棚的专辑之后，下一张往往“令人失望”。</li>
-  <li>业绩创纪录的一年之后，次年通常回落，于是“功劳”或“教训”被错误地分配给刚上任的经理。</li>
+  <li><strong>因果故事太顺手。</strong>系统 1 天生要寻找原因。看到“骂完变好”，它立刻给出一个因果解释，
+  而不是想到“极端值本来就该回落”。</li>
+  <li><strong>它不产生可感知的“事件”。</strong>回归是一种统计趋势，没有明确的时刻、没有主角，
+  我们的注意力抓不住它。</li>
+  <li><strong>反馈方向是错的。</strong>凡是在极端值之后做的干预，看起来都“有效”：表扬后下滑、
+  批评后回升、给药后好转、责罚后收敛。错觉被反复喂饱。</li>
 </ul>
-<p>这条规律的发现者 Galton 当年也困惑不已：他发现<strong>高个父亲的儿子往往比父亲矮，矮个父亲的儿子
-往往比父亲高</strong>，一度以为自然界在“往回拉”。他给了它一个朴素的名字：<em>向平均回归</em>。</p>
+<p>Kahneman 甚至说，连不少统计老师自己也讲不清这个概念——他坦承自己当年给别人讲回归时，
+也曾用一套“因果解释”糊弄过去，直到飞行教官那一课才真正想通。</p>
 
-<h2>当堂检验</h2>
+<h3>它和“赌徒谬误”相反</h3>
+<p>不要把均值回归和赌徒谬误混为一谈。赌徒谬误是：轮盘连出了 5 次红，就以为“该出黑了”——
+<strong>误以为独立的随机事件之间有记忆</strong>。均值回归说的是另一回事：当<strong>一次测量同时包含
+真实成分和随机误差</strong>时，那些“真实成分”较低的极端值，下一次自然会向均值移动。
+前者是乱用概率，后者是统计必然。分清这两者，你就不会一边相信“运势会转运”，一边又拿“回归”去
+解释一切。</p>
 
+<h2>常见误解：它不等于“一切都会扯平”</h2>
+<p>最常见的误读，是把均值回归当成一句“万事都会平均”的安慰。其实它<strong>只对含有随机成分、
+且不完全相关</strong>的重复测量成立，而且说的是“倾向于向均值靠近”，不是“必然精确回到均值”：</p>
+<ul>
+  <li>如果某人的成绩是<strong>稳定能力</strong>带来的、几乎没有运气成分，就不会有回归。</li>
+  <li>回归<strong>不能用来否定真实的因果</strong>。药物真有效、训练真有用，这些效果可以和回归
+  同时存在。它只是提醒你：<strong>在缺少对照组时，别把回归的功劳记到你的干预头上。</strong></li>
+  <li>体育杂志的“封面魔咒”、破纪录之后的下滑、爆款之后“令人失望”的续作——多半都是
+  当事人恰好处在高峰，之后向常态回落而已。</li>
+</ul>
+
+<h2>用起来：给自己加一个“对照组”的念头</h2>
+<p>下一次你忍不住要归因时，先别急着下结论，只在心里补上这一问：</p>
+<div class="card">
+  <p><strong>“如果什么都不做，结果会不会也这样？”</strong></p>
+  <p>更具体的做法：不要只盯着被表扬、被批评、被干预的那批“极端值”，去想同样处在极端、
+  但<strong>没被做任何事</strong>的人后来怎样。若他们也一样回落或回升，那你的干预很可能只是
+  搭了回归的顺风车。</p>
+</div>
+<p>就这一步，能拦下大半个“惩罚真有效”“这药真灵”的错觉。想预测“极端值”的下一步时，也请记住一句
+最有用的话：<strong>最可能的结果，往往是它向平均值靠拢，而不是再创极端。</strong></p>
+
+<h2>回顾</h2>
 <div class="quiz">
-  <h3>三道小题 · 点选项立即看反馈</h3>
+  <h3>三题 · 先自己回答，再点开核对</h3>
 
-  <div class="q" data-correct="2"
-       data-ok="对。极端的表现里混着运气，下一次自然倾向于回到平均水平——这不是惩罚的功劳。"
-       data-bad="再想想。一次特别差本来就是运气偏坏的极端值，下一步更接近平均，与骂没骂无关。">
-    <p class="prompt">1. 教官觉得“骂完下一次就飞得好”，最合理的解释是？</p>
-    <div class="options">
-      <button type="button">惩罚真的提升了表现</button>
-      <button type="button">表扬其实起了反作用</button>
-      <button type="button">表现向平均值回归了</button>
-      <button type="button">学员隐瞒了真实水平</button>
-    </div>
-    <p class="fb"></p>
-  </div>
+  <p class="prompt">1. 教官觉得“骂完下一次就飞得好”，最合理的解释是什么？</p>
+  <details><summary>看答案</summary>
+    <p>表现向平均值回归了。一次“特别差”本来就是掺了坏运气的极端值，下一步更接近他自己的平均水平——
+    这与骂没骂无关。</p>
+  </details>
 
-  <div class="q" data-correct="0"
-       data-ok="对。极端之后倾向于回落到平均附近，这是统计规律，不必有一个具体的原因。"
-       data-bad="不对。均值回归说的是极端值之后更接近平均，而不是表现凭空消失或不断升高。">
-    <p class="prompt">2. 什么叫“向平均值回归”？</p>
-    <div class="options">
-      <button type="button">极端表现之后常向平均水平靠拢</button>
-      <button type="button">所有表现最终都会彻底地消失</button>
-      <button type="button">平均值会随着时间不断地升高</button>
-      <button type="button">好坏表现总会成对地出现</button>
-    </div>
-    <p class="fb"></p>
-  </div>
+  <p class="prompt">2. 均值回归和赌徒谬误的关键区别是什么？</p>
+  <details><summary>看答案</summary>
+    <p>赌徒谬误是误以为独立的随机事件“有记忆、会自己扯平”；均值回归说的是：当一次测量里混着随机
+    误差时，极端值倾向于向均值回落。前者站不住脚，后者是统计必然。</p>
+  </details>
 
-  <div class="q" data-correct="1"
-       data-ok="对。上封面通常意味着正处在高峰，之后回落到常态最可能只是均值回归。"
-       data-bad="再想想。哪一件事的前提本身就是“极端高”，因而接下来最可能回落？">
-    <p class="prompt">3. 下面哪件事最可能只是均值回归在起作用？</p>
-    <div class="options">
-      <button type="button">涨薪之后员工干劲更足</button>
-      <button type="button">上封面后选手表现回落</button>
-      <button type="button">复习之后考试成绩提高</button>
-      <button type="button">锻炼之后身体变得更壮</button>
-    </div>
-    <p class="fb"></p>
-  </div>
+  <p class="prompt">3. 为什么不能因为回归的存在，就断定某个项目/药物“没用”？</p>
+  <details><summary>看答案</summary>
+    <p>因为真实效果与回归可以同时存在。回归只是提醒你：在没有对照组时，别把“向均值回落”这份功劳
+    错误地记到自己的干预头上。要看效果，就得比较“做了什么”和“什么都没做”的两批人。</p>
+  </details>
 </div>
 
-<h2>今天就能做的一步</h2>
-<p>当你忍不住要归因时，先加一个“对照组”的念头：<strong>“如果不做这件事，结果会不会也这样？”</strong>
-具体做法很简单——不要只盯着被表扬、被批评、被干预的那批“极端值”，去想想同样处于极端但
-<strong>没被做任何事</strong>的人，他们后来会怎样。就这一步，能拦下大半个“惩罚真有效”的错觉。</p>
-
-<p class="ask">还有哪件事你一直以为是自己的做法在起作用？回到 OpenCode 里问问你的老师
+<p class="ask">还有哪件事，你一直以为是自己的做法在起作用？回到 OpenCode 里问问你的老师
 （那个正在运行 <code>teach</code> 的 agent）——它陪你把它拆开，看里面有多少是回归、有多少是真实效果。</p>
 
 <p class="foot">
   <strong>推荐一手资料：</strong>
-  <a href="https://books.google.com/books/about/Thinking_Fast_and_Slow.html?id=ZuKTvERuPG8C" target="_blank" rel="noopener">
-  Daniel Kahneman《Thinking, Fast and Slow》</a> —— 第 17 章“回归均值”完整讲述了飞行教练的故事。
+  <a href="https://doi.org/10.2307/2841583" target="_blank" rel="noopener">
+  Francis Galton, “Regression Towards Mediocrity in Hereditary Stature”（1886）</a> ——
+  均值回归概念的原始论文。Kahneman 在《思考，快与慢》第 17 章“回归均值”里完整讲述了飞行教官的故事。
   <br />回顾：<a href="0008-representativeness.html">第 8 讲 · 代表性启发</a> ·
+  下一讲：<a href="0010-narrative-fallacy.html">第 10 讲 · 叙事谬误</a> ·
   速查：<a href="../reference/0001-core-concepts.html">认知偏误速查表</a>
 </p>
-
-<script>
-(function () {
-  document.querySelectorAll('.quiz .q').forEach(function (q) {
-    var buttons = q.querySelectorAll('button');
-    var fb = q.querySelector('.fb');
-    var correct = Number(q.dataset.correct);
-    buttons.forEach(function (btn, i) {
-      btn.addEventListener('click', function () {
-        if (q.dataset.done) return;
-        q.dataset.done = '1';
-        buttons.forEach(function (b, j) {
-          b.disabled = true;
-          if (j === correct) b.classList.add('correct');
-        });
-        var ok = (i === correct);
-        if (!ok) { btn.classList.add('wrong'); }
-        fb.textContent = ok ? q.dataset.ok : q.dataset.bad;
-        fb.className = 'fb ' + (ok ? 'ok' : 'bad');
-      });
-    });
-  });
-})();
-</script>
 
 </body>
 </html>
