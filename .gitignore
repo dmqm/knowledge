@@ -1,0 +1,17 @@
+# 本地进度与会话密钥 —— 绝不发布
+data/
+
+# 本地配置可能含访问密码，不提交（缺省时服务用内置默认值）
+config.json
+
+# 构建产物（由 CI 重新生成）
+dist/
+
+# 删除的主题会移到这里
+courses/.trash/
+
+# 编辑器 / 系统噪音
+node_modules/
+*.log
+.DS_Store
+Thumbs.db

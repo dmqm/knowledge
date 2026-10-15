@@ -1,0 +1,14 @@
+{
+  "name": "learning-center",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A local, mobile-friendly learning center that aggregates `teach` workspaces.",
+  "scripts": {
+    "start": "node server.mjs",
+    "export": "node scripts/export.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

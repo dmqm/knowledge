@@ -1,0 +1,598 @@
+// Learning Center front-end. A small hash-routed single-page app, no deps.
+//
+// It runs in two modes, picked by `window.__LC_STATIC__` (set by the generated
+// `assets/config.js` in a static export):
+//   - server mode (default): talks to server.mjs's JSON API — full read/write.
+//   - static mode: reads pre-built JSON under `api/`, keeps progress in
+//     localStorage, and hides the write actions. Used for the GitHub Pages
+//     build, which is read-only.
+
+const STATIC = typeof window !== 'undefined' && window.__LC_STATIC__ === true;
+const PROGRESS_KEY = 'lc:progress';
+
+const app = document.getElementById('app');
+const topbar = document.getElementById('topbar');
+const modalRoot = document.getElementById('modal');
+const toastEl = document.getElementById('toast');
+
+const esc = (s) =>
+  String(s ?? '').replace(
+    /[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]),
+  );
+
+const state = { courses: [], course: null, progress: {} };
+
+// ------------------------------------------------------------ data source ----
+// Every read/write the app needs goes through these, so the two modes stay
+// honest and the rendering code below never has to know which one is active.
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts,
+  });
+  if (res.status === 401) {
+    location.href = '/login';
+    throw new Error('unauthorized');
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+async function fetchJson(path) {
+  const res = await fetch(path, { headers: { Accept: 'application/json' } });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// --- progress (browser-local in static mode) ---------------------------------
+
+function readLocalProgress() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null');
+    if (parsed && typeof parsed === 'object' && parsed.courses) return parsed;
+  } catch {
+    // corrupt / unavailable — start fresh
+  }
+  return { courses: {} };
+}
+
+function localLessons(courseId) {
+  return (readLocalProgress().courses[courseId] || {}).lessons || {};
+}
+
+function writeLocalLesson(courseId, file, status) {
+  const all = readLocalProgress();
+  const course = all.courses[courseId] || (all.courses[courseId] = { lessons: {} });
+  if (!course.lessons) course.lessons = {};
+  if (status === 'none') delete course.lessons[file];
+  else course.lessons[file] = { status, updatedAt: Date.now() };
+  try {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(all));
+  } catch {
+    // storage full / disabled — progress simply won't persist
+  }
+  return course.lessons;
+}
+
+// --- courses -----------------------------------------------------------------
+
+async function listCourses() {
+  if (STATIC) {
+    const { courses = [] } = await fetchJson('api/courses.json');
+    for (const c of courses) {
+      const files = c.lessons || [];
+      const done = localLessons(c.id);
+      c.total = files.length;
+      c.done = files.filter((f) => done[f] && done[f].status === 'done').length;
+    }
+    return courses;
+  }
+  const { courses } = await api('/api/courses');
+  return courses;
+}
+
+async function loadCourse(id) {
+  if (STATIC) {
+    const { course } = await fetchJson(`api/courses/${encodeURIComponent(id)}.json`);
+    return { course, progress: localLessons(id) };
+  }
+  const { course, progress } = await api(`/api/courses/${encodeURIComponent(id)}`);
+  return { course, progress: progress || {} };
+}
+
+async function setProgress(courseId, file, status) {
+  if (STATIC) {
+    writeLocalLesson(courseId, file, status);
+    return;
+  }
+  await api('/api/progress', {
+    method: 'POST',
+    body: JSON.stringify({ course: courseId, file, status }),
+  });
+}
+
+// --- search ------------------------------------------------------------------
+
+let searchIndexPromise = null;
+
+function searchIndex() {
+  if (!searchIndexPromise) searchIndexPromise = fetchJson('api/search-index.json');
+  return searchIndexPromise;
+}
+
+function searchLocally(index, q) {
+  const needle = q.trim().toLowerCase();
+  if (!needle) return [];
+  const results = [];
+  for (const doc of index) {
+    const text = doc.text || '';
+    const idx = text.toLowerCase().indexOf(needle);
+    if (idx === -1) continue;
+    const start = Math.max(0, idx - 60);
+    const snippet = `${idx > 60 ? '…' : ''}${text.slice(start, idx + needle.length + 90)}${
+      idx + needle.length + 90 < text.length ? '…' : ''
+    }`;
+    results.push({
+      courseId: doc.courseId,
+      courseTitle: doc.courseTitle,
+      label: doc.label,
+      kind: doc.kind,
+      url: doc.url,
+      snippet: snippet.trim(),
+    });
+    if (results.length >= 60) break;
+  }
+  return results;
+}
+
+async function searchCourses(q) {
+  if (STATIC) return searchLocally(await searchIndex(), q);
+  const { results } = await api(`/api/search?q=${encodeURIComponent(q)}`);
+  return results;
+}
+
+// --- file URLs ---------------------------------------------------------------
+
+function fileUrl(id, kind, file) {
+  const base = STATIC ? 'files' : '/files';
+  return `${base}/${encodeURIComponent(id)}/${kind}/${encodeURIComponent(file)}`;
+}
+
+// ---------------------------------------------------------------- chrome ----
+
+let toastTimer = null;
+function toast(msg) {
+  toastEl.textContent = msg;
+  toastEl.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toastEl.hidden = true;
+  }, 2200);
+}
+
+function setTopbar(html) {
+  topbar.innerHTML = html || '';
+}
+
+function go(hash) {
+  if (location.hash === hash) render();
+  else location.hash = hash;
+}
+
+// --------------------------------------------------------------- routing ----
+
+function parseHash() {
+  const raw = location.hash.replace(/^#/, '') || '/';
+  const [pathPart, queryPart] = raw.split('?');
+  return { path: pathPart || '/', params: new URLSearchParams(queryPart || '') };
+}
+
+async function render() {
+  const { path, params } = parseHash();
+  let m;
+  if ((m = path.match(/^\/c\/(.+)$/))) return renderCourse(decodeURIComponent(m[1]));
+  if ((m = path.match(/^\/read\/([^/]+)\/([^/]+)\/(.+)$/)))
+    return renderReader(decodeURIComponent(m[1]), m[2], decodeURIComponent(m[3]));
+  if (path === '/search') return renderSearch(params.get('q') || '');
+  return renderHome();
+}
+
+// ------------------------------------------------------------------ home ----
+
+async function renderHome() {
+  setTopbar(`
+    <div class="brand"><span class="dot"></span>学习中心</div>
+    <div class="spacer"></div>
+    ${STATIC ? '' : '<button class="iconbtn" id="btn-add" title="新建主题">+</button>'}
+    <button class="iconbtn" id="btn-refresh" title="刷新">↻</button>
+  `);
+  app.innerHTML = '<div class="spinner">加载中…</div>';
+
+  if (!STATIC) document.getElementById('btn-add').onclick = openNewCourseSheet;
+  document.getElementById('btn-refresh').onclick = () => {
+    loadHome(true);
+  };
+
+  app.innerHTML = `
+    <div class="search">
+      <span class="glass">⌕</span>
+      <input id="q" placeholder="搜索课程、讲义、学习记录…" enterkeyhint="search" />
+    </div>
+    <div id="courselist"></div>
+  `;
+
+  const q = document.getElementById('q');
+  q.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && q.value.trim()) go(`#/search?q=${encodeURIComponent(q.value.trim())}`);
+  });
+  q.addEventListener('input', () => {
+    if (!q.value.trim()) return;
+    clearTimeout(q._t);
+    q._t = setTimeout(() => go(`#/search?q=${encodeURIComponent(q.value.trim())}`), 500);
+  });
+
+  await loadHome();
+}
+
+async function loadHome(refresh = false) {
+  const list = document.getElementById('courselist');
+  if (!list) return;
+  if (refresh) list.innerHTML = '<div class="spinner">刷新中…</div>';
+  try {
+    const courses = await listCourses();
+    state.courses = courses;
+    list.innerHTML = courses.length ? courseCards(courses) : emptyState();
+    if (!courses.length && !STATIC) {
+      document.getElementById('empty-add').onclick = openNewCourseSheet;
+    }
+  } catch (err) {
+    list.innerHTML = `<div class="empty"><div class="big">⚠︎</div>${esc(err.message)}</div>`;
+  }
+}
+
+function courseCards(courses) {
+  return `<div class="section-title">全部主题 · ${courses.length}</div>
+  <div class="cards">${courses.map(courseCard).join('')}</div>`;
+}
+
+function courseCard(c) {
+  const pct = c.total ? Math.round((c.done / c.total) * 100) : 0;
+  const parts = [];
+  if (c.counts.lessons) parts.push(`${c.counts.lessons} 讲`);
+  if (c.counts.reference) parts.push(`${c.counts.reference} 参考`);
+  if (c.counts.records) parts.push(`${c.counts.records} 记录`);
+  return `
+    <a class="card" href="#/c/${encodeURIComponent(c.id)}">
+      <h3>${esc(c.title)}</h3>
+      <div class="meta">
+        ${c.total ? `<span class="pill ${c.done === c.total ? 'good' : ''}">${c.done}/${c.total} 已完成</span>` : ''}
+        <span>${esc(parts.join(' · ') || '尚无内容')}</span>
+      </div>
+      ${c.total ? `<div class="bar"><span style="width:${pct}%"></span></div>` : ''}
+    </a>`;
+}
+
+function emptyState() {
+  if (STATIC) {
+    return `
+    <div class="empty">
+      <div class="big">📚</div>
+      <p>还没有学习主题。</p>
+    </div>`;
+  }
+  return `
+    <div class="empty">
+      <div class="big">📚</div>
+      <p>还没有学习主题。</p>
+      <p class="small faint">用 <code>teach</code> 生成的内容会自动出现在这里，也可以先手动新建一个。</p>
+      <button class="btn primary" id="empty-add" style="margin-top:16px">新建主题</button>
+    </div>`;
+}
+
+// ---------------------------------------------------------------- course ----
+
+async function renderCourse(id) {
+  setTopbar(`
+    <button class="back" id="btn-back">‹ 返回</button>
+    <div class="spacer"></div>
+    ${STATIC ? '' : '<button class="iconbtn" id="btn-more" title="更多">⋯</button>'}
+  `);
+  document.getElementById('btn-back').onclick = () => go('#/');
+  app.innerHTML = '<div class="spinner">加载中…</div>';
+
+  let detail;
+  try {
+    detail = await loadCourse(id);
+  } catch (err) {
+    setTopbar(`<button class="back" id="btn-back">‹ 返回</button>`);
+    document.getElementById('btn-back').onclick = () => go('#/');
+    app.innerHTML = `<div class="empty"><div class="big">⚠︎</div>${esc(err.message)}</div>`;
+    return;
+  }
+
+  state.course = detail.course;
+  state.progress = detail.progress || {};
+  const c = detail.course;
+
+  if (!STATIC) {
+    document.getElementById('btn-more').onclick = () => {
+      if (confirm(`删除主题「${c.title}」？\n（会移动到 courses/.trash，可恢复）`)) {
+        api(`/api/courses/${encodeURIComponent(c.id)}`, { method: 'DELETE' })
+          .then(() => {
+            toast('已移入回收站');
+            go('#/');
+          })
+          .catch((e) => toast(e.message));
+      }
+    };
+  }
+
+  const done = c.lessons.filter((l) => (state.progress[l.file] || {}).status === 'done').length;
+  const tabs = [
+    ['lessons', `课程 ${c.counts.lessons}`],
+    ['reference', `参考 ${c.counts.reference}`],
+    ['records', `学习记录 ${c.counts.records}`],
+  ];
+  if (c.hasResources) tabs.push(['resources', '资源']);
+  if (c.hasNotes) tabs.push(['notes', '备注']);
+
+  app.innerHTML = `
+    <div class="hero">
+      <h1 style="margin:0 0 6px;font-size:20px">${esc(c.title)}</h1>
+      <div class="meta" style="display:flex;flex-wrap:wrap;gap:6px 12px;color:var(--muted);font-size:13px">
+        <span class="pill ${done === c.counts.lessons && c.counts.lessons ? 'good' : ''}">${done}/${c.counts.lessons} 已完成</span>
+        <span class="faint small">目录：courses/${esc(c.id)}</span>
+      </div>
+      ${c.counts.lessons ? `<div class="bar"><span style="width:${c.counts.lessons ? (done / c.counts.lessons) * 100 : 0}%"></span></div>` : ''}
+      <div class="btnrow">
+        <button class="btn ghost small" id="btn-toggle-mission">查看使命</button>
+        <a class="btn ghost small" style="text-align:center" href="#/search?q=">搜索</a>
+      </div>
+    </div>
+    <div id="mission" class="prose" hidden style="margin-top:14px">${c.missionHtml || '<p class="faint">尚未填写 MISSION.md</p>'}</div>
+    <div class="tabs" id="tabs">
+      ${tabs.map(([k, label], i) => `<button data-tab="${k}" class="${i === 0 ? 'active' : ''}">${esc(label)}</button>`).join('')}
+    </div>
+    <div id="tabpanel"></div>
+  `;
+
+  document.getElementById('btn-toggle-mission').onclick = () => {
+    const m = document.getElementById('mission');
+    m.hidden = !m.hidden;
+  };
+
+  const panel = document.getElementById('tabpanel');
+  const renderTab = (key) => {
+    document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('active', b.dataset.tab === key));
+    if (key === 'lessons') panel.innerHTML = lessonRows(c.lessons);
+    else if (key === 'reference') panel.innerHTML = docRows(c.reference);
+    else if (key === 'records')
+      panel.innerHTML = c.records.length
+        ? c.records
+            .map(
+              (r) =>
+                `<article class="prose" style="margin-top:18px"><h2 style="font-size:15px">${esc(r.title)}</h2>${r.html}</article>`,
+            )
+            .join('')
+        : emptyPanel('还没有学习记录。');
+    else if (key === 'resources') panel.innerHTML = `<div class="prose">${c.resourcesHtml || emptyPanel('（空）')}</div>`;
+    else if (key === 'notes') panel.innerHTML = `<div class="prose">${c.notesHtml || emptyPanel('（空）')}</div>`;
+
+    if (key === 'lessons') wireLessonRows(c);
+  };
+
+  document.querySelectorAll('#tabs button').forEach((b) => {
+    b.onclick = () => renderTab(b.dataset.tab);
+  });
+  renderTab('lessons');
+}
+
+function emptyPanel(text) {
+  return `<p class="faint small" style="padding:20px 4px">${esc(text)}</p>`;
+}
+
+function lessonRows(lessons) {
+  if (!lessons.length) return emptyPanel('还没有课程。让 teach 在这个目录里生成讲义吧。');
+  return `<div class="rows">${lessons
+    .map((l, i) => {
+      const done = (state.progress[l.file] || {}).status === 'done';
+      return `
+      <div class="row ${done ? 'done' : ''}" data-open="1" data-file="${esc(l.file)}">
+        <span class="idx">${String(i + 1).padStart(2, '0')}</span>
+        <div class="body">
+          <div class="t">${esc(l.title)}</div>
+          <div class="s">${l.words ? `${l.words} 词 · ` : ''}${esc(l.file)}</div>
+        </div>
+        <button class="check ${done ? 'on' : ''}" data-toggle="${esc(l.file)}" title="标记完成">✓</button>
+      </div>`;
+    })
+    .join('')}</div>`;
+}
+
+function docRows(docs) {
+  if (!docs.length) return emptyPanel('还没有参考资料。');
+  return `<div class="rows">${docs
+    .map(
+      (d) => `
+      <div class="row" data-openref="1" data-file="${esc(d.file)}" data-kind="${esc(d.kind)}">
+        <span class="idx">§</span>
+        <div class="body"><div class="t">${esc(d.title)}</div><div class="s">${esc(d.file)}</div></div>
+        <span class="faint">›</span>
+      </div>`,
+    )
+    .join('')}</div>`;
+}
+
+function wireLessonRows(course) {
+  document.querySelectorAll('[data-toggle]').forEach((btn) => {
+    btn.onclick = async (e) => {
+      e.stopPropagation();
+      const file = btn.dataset.toggle;
+      const nowDone = !btn.classList.contains('on');
+      btn.classList.toggle('on', nowDone);
+      const row = btn.closest('.row');
+      if (row) row.classList.toggle('done', nowDone);
+      state.progress[file] = nowDone ? { status: 'done' } : undefined;
+      try {
+        await setProgress(course.id, file, nowDone ? 'done' : 'none');
+      } catch (err) {
+        toast(err.message);
+      }
+    };
+  });
+  document.querySelectorAll('[data-open]').forEach((row) => {
+    row.onclick = () => go(`#/read/${encodeURIComponent(course.id)}/lessons/${encodeURIComponent(row.dataset.file)}`);
+  });
+  document.querySelectorAll('[data-openref]').forEach((row) => {
+    row.onclick = () =>
+      go(`#/read/${encodeURIComponent(course.id)}/${row.dataset.kind}/${encodeURIComponent(row.dataset.file)}`);
+  });
+}
+
+// ---------------------------------------------------------------- reader ----
+
+function renderReader(id, kind, file) {
+  setTopbar('');
+  const src = fileUrl(id, kind, file);
+  const done = (state.progress[file] || {}).status === 'done';
+  app.innerHTML = `
+    <div class="reader">
+      <div class="rbar">
+        <button class="back" id="r-back">‹ 返回</button>
+        <div class="rt">${esc(file.replace(/\.html?$/i, ''))}</div>
+        <button class="iconbtn" id="r-done" title="标记完成" style="${done ? 'background:var(--good);border-color:var(--good);color:#fff' : ''}">✓</button>
+        <a class="iconbtn" href="${esc(src)}" target="_blank" rel="noopener" title="新标签打开">⤢</a>
+      </div>
+      <iframe src="${esc(src)}" referrerpolicy="no-referrer"></iframe>
+    </div>`;
+
+  document.getElementById('r-back').onclick = () => history.back();
+
+  const btn = document.getElementById('r-done');
+  btn.onclick = async () => {
+    const nowDone = !(state.progress[file] || {}).status;
+    state.progress[file] = nowDone ? { status: 'done' } : undefined;
+    btn.style.cssText = nowDone ? 'background:var(--good);border-color:var(--good);color:#fff' : '';
+    toast(nowDone ? '已标记完成' : '已取消完成');
+    try {
+      await setProgress(id, file, nowDone ? 'done' : 'none');
+    } catch (err) {
+      toast(err.message);
+    }
+  };
+}
+
+// ---------------------------------------------------------------- search ----
+
+async function renderSearch(q) {
+  setTopbar(`
+    <button class="back" id="btn-back">‹ 返回</button>
+    <div class="spacer"></div>
+  `);
+  document.getElementById('btn-back').onclick = () => go('#/');
+
+  app.innerHTML = `
+    <div class="search">
+      <span class="glass">⌕</span>
+      <input id="q" placeholder="搜索课程、讲义、学习记录…" value="${esc(q)}" enterkeyhint="search" />
+    </div>
+    <div id="results"></div>
+  `;
+  const input = document.getElementById('q');
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') go(`#/search?q=${encodeURIComponent(input.value.trim())}`);
+  });
+  if (!q) {
+    document.getElementById('results').innerHTML = emptyPanel('输入关键词开始搜索。');
+    return;
+  }
+
+  const box = document.getElementById('results');
+  box.innerHTML = '<div class="spinner">搜索中…</div>';
+  try {
+    const results = await searchCourses(q);
+    if (!results.length) {
+      box.innerHTML = emptyPanel(`没有找到「${q}」。`);
+      return;
+    }
+    box.innerHTML = `<div class="section-title">${results.length} 条结果</div>
+      <div class="rows">${results
+        .map((r) => {
+          const open =
+            r.kind === 'lesson'
+              ? `#/read/${encodeURIComponent(r.courseId)}/lessons/${encodeURIComponent(r.url.split('/').pop())}`
+              : `#/c/${encodeURIComponent(r.courseId)}`;
+          return `
+        <a class="row" href="${open}">
+          <span class="idx">${r.kind === 'lesson' ? '▤' : r.kind === 'record' ? '✎' : '◎'}</span>
+          <div class="body">
+            <div class="t">${esc(r.label)}</div>
+            <div class="s">${esc(r.courseTitle)} · ${esc(r.snippet)}</div>
+          </div>
+        </a>`;
+        })
+        .join('')}</div>`;
+  } catch (err) {
+    box.innerHTML = `<div class="empty"><div class="big">⚠︎</div>${esc(err.message)}</div>`;
+  }
+}
+
+// ----------------------------------------------------------------- sheet ----
+
+function openNewCourseSheet() {
+  modalRoot.hidden = false;
+  modalRoot.innerHTML = `
+    <div class="modal-backdrop" id="mb"></div>
+    <div class="sheet">
+      <h2>新建学习主题</h2>
+      <p class="small faint">创建后会生成一个 teach workspace（含 MISSION.md 等），之后在里面运行 teach 技能即可。</p>
+      <input id="name" placeholder="例如：Rust / 力量训练 / 概率论" autofocus />
+      <div class="actions">
+        <button class="btn ghost" id="cancel">取消</button>
+        <button class="btn primary" id="ok">创建</button>
+      </div>
+    </div>`;
+  const close = () => {
+    modalRoot.hidden = true;
+    modalRoot.innerHTML = '';
+  };
+  document.getElementById('mb').onclick = close;
+  document.getElementById('cancel').onclick = close;
+
+  const submit = async () => {
+    const name = document.getElementById('name').value.trim();
+    if (!name) return;
+    try {
+      const res = await api('/api/courses', { method: 'POST', body: JSON.stringify({ name }) });
+      close();
+      toast('已创建');
+      go(`#/c/${encodeURIComponent(res.id)}`);
+    } catch (err) {
+      toast(err.message);
+    }
+  };
+  document.getElementById('ok').onclick = submit;
+  document.getElementById('name').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submit();
+  });
+}
+
+// ------------------------------------------------------------------ boot ----
+
+window.addEventListener('hashchange', render);
+
+(async function boot() {
+  if (!STATIC) {
+    // Surfaces a login redirect via api() if a password is set.
+    try {
+      await api('/api/state');
+    } catch {
+      // ignore — render will surface any auth problem
+    }
+  }
+  if (!location.hash) location.hash = '#/';
+  render();
+})();

@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 9 讲 · 均值回归</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="kicker">思考，快与慢 · 第 9 讲</p>
+<p class="toc" style="margin:.1rem 0 1.6rem;font-family:var(--sans);font-size:.82rem;color:var(--muted);">
+  ← <a href="0008-representativeness.html">上一讲 · 代表性启发</a>
+  &nbsp;·&nbsp; <a href="0010-narrative-fallacy.html">下一讲 · 叙事谬误 →</a>
+  &nbsp;·&nbsp; <a href="../reference/0001-core-concepts.html">速查表</a>
+</p>
+
+<h1>均值回归：为什么“骂完就变好”多半是错觉</h1>
+<p class="lede">一个可以马上用的技能：看到极端的表现之后，先预料它会向平均值回落，别急着把功劳或罪过算给刚才那件事。</p>
+
+<p>这一讲讲一个容易被忽略、却反复在生活中骗到我们的统计现象：<strong>均值回归</strong>
+（regression to the mean）。它不是因果力，只是一条规律——<strong>极端之后，下一步往往更接近平均。</strong>
+认出它，你就能少当很多次“因果错觉”的受害者。</p>
+
+<h2>飞行教练的故事</h2>
+<p>Kahneman 在以色列空军给飞行教官讲课时断言：<strong>表扬表现好的学员，比批评表现差的更有效。</strong>
+教官们当场反驳，而且理由听起来无可辩驳——他们说：</p>
+<blockquote>
+  我经常表扬飞得干净的学员，结果他下一次往往飞得更差；但我对飞砸了的学员大吼一顿，
+  他下一次通常就飞好了。所以惩罚有用，表扬反而害人。
+</blockquote>
+<p>Kahneman 愣了几秒，然后明白了自己错在哪。问题出在<strong>飞行表现本身带有随机波动</strong>：
+一个学员“飞得特别好”的那一次，多半是好状态加好运气叠加的结果，下一次自然会回到他自己的平均水平，
+看起来就“变差”了；一个“飞得特别差”的那一次，也多半包含了坏运气，下一次自然会回升，看起来就“变好”了。</p>
+
+<div class="card">
+  <p>换句话说：<strong>表扬之后的下滑、批评之后的改善，都是均值回归，与表扬和批评本身无关。</strong>
+  教官们只是恰好总在“极端高”之后表扬、在“极端低”之后批评，于是错把自己的奖惩当成了原因。
+  麻烦在于——<strong>这种错觉最有说服力的证据，偏偏来自亲眼所见。</strong></p>
+</div>
+
+<h2>同一出戏的许多版本</h2>
+<p>均值回归到处都在上演，只是我们总给它另编一个因果故事：</p>
+<ul>
+  <li>上了体育杂志封面的明星，之后常走下坡——所谓“封面魔咒”，多半只是因为他本来就处在高峰。</li>
+  <li>一张销量爆棚的专辑之后，下一张往往“令人失望”。</li>
+  <li>业绩创纪录的一年之后，次年通常回落，于是“功劳”或“教训”被错误地分配给刚上任的经理。</li>
+</ul>
+<p>这条规律的发现者 Galton 当年也困惑不已：他发现<strong>高个父亲的儿子往往比父亲矮，矮个父亲的儿子
+往往比父亲高</strong>，一度以为自然界在“往回拉”。他给了它一个朴素的名字：<em>向平均回归</em>。</p>
+
+<h2>当堂检验</h2>
+
+<div class="quiz">
+  <h3>三道小题 · 点选项立即看反馈</h3>
+
+  <div class="q" data-correct="2"
+       data-ok="对。极端的表现里混着运气，下一次自然倾向于回到平均水平——这不是惩罚的功劳。"
+       data-bad="再想想。一次特别差本来就是运气偏坏的极端值，下一步更接近平均，与骂没骂无关。">
+    <p class="prompt">1. 教官觉得“骂完下一次就飞得好”，最合理的解释是？</p>
+    <div class="options">
+      <button type="button">惩罚真的提升了表现</button>
+      <button type="button">表扬其实起了反作用</button>
+      <button type="button">表现向平均值回归了</button>
+      <button type="button">学员隐瞒了真实水平</button>
+    </div>
+    <p class="fb"></p>
+  </div>
+
+  <div class="q" data-correct="0"
+       data-ok="对。极端之后倾向于回落到平均附近，这是统计规律，不必有一个具体的原因。"
+       data-bad="不对。均值回归说的是极端值之后更接近平均，而不是表现凭空消失或不断升高。">
+    <p class="prompt">2. 什么叫“向平均值回归”？</p>
+    <div class="options">
+      <button type="button">极端表现之后常向平均水平靠拢</button>
+      <button type="button">所有表现最终都会彻底地消失</button>
+      <button type="button">平均值会随着时间不断地升高</button>
+      <button type="button">好坏表现总会成对地出现</button>
+    </div>
+    <p class="fb"></p>
+  </div>
+
+  <div class="q" data-correct="1"
+       data-ok="对。上封面通常意味着正处在高峰，之后回落到常态最可能只是均值回归。"
+       data-bad="再想想。哪一件事的前提本身就是“极端高”，因而接下来最可能回落？">
+    <p class="prompt">3. 下面哪件事最可能只是均值回归在起作用？</p>
+    <div class="options">
+      <button type="button">涨薪之后员工干劲更足</button>
+      <button type="button">上封面后选手表现回落</button>
+      <button type="button">复习之后考试成绩提高</button>
+      <button type="button">锻炼之后身体变得更壮</button>
+    </div>
+    <p class="fb"></p>
+  </div>
+</div>
+
+<h2>今天就能做的一步</h2>
+<p>当你忍不住要归因时，先加一个“对照组”的念头：<strong>“如果不做这件事，结果会不会也这样？”</strong>
+具体做法很简单——不要只盯着被表扬、被批评、被干预的那批“极端值”，去想想同样处于极端但
+<strong>没被做任何事</strong>的人，他们后来会怎样。就这一步，能拦下大半个“惩罚真有效”的错觉。</p>
+
+<p class="ask">还有哪件事你一直以为是自己的做法在起作用？回到 OpenCode 里问问你的老师
+（那个正在运行 <code>teach</code> 的 agent）——它陪你把它拆开，看里面有多少是回归、有多少是真实效果。</p>
+
+<p class="foot">
+  <strong>推荐一手资料：</strong>
+  <a href="https://books.google.com/books/about/Thinking_Fast_and_Slow.html?id=ZuKTvERuPG8C" target="_blank" rel="noopener">
+  Daniel Kahneman《Thinking, Fast and Slow》</a> —— 第 17 章“回归均值”完整讲述了飞行教练的故事。
+  <br />回顾：<a href="0008-representativeness.html">第 8 讲 · 代表性启发</a> ·
+  速查：<a href="../reference/0001-core-concepts.html">认知偏误速查表</a>
+</p>
+
+<script>
+(function () {
+  document.querySelectorAll('.quiz .q').forEach(function (q) {
+    var buttons = q.querySelectorAll('button');
+    var fb = q.querySelector('.fb');
+    var correct = Number(q.dataset.correct);
+    buttons.forEach(function (btn, i) {
+      btn.addEventListener('click', function () {
+        if (q.dataset.done) return;
+        q.dataset.done = '1';
+        buttons.forEach(function (b, j) {
+          b.disabled = true;
+          if (j === correct) b.classList.add('correct');
+        });
+        var ok = (i === correct);
+        if (!ok) { btn.classList.add('wrong'); }
+        fb.textContent = ok ? q.dataset.ok : q.dataset.bad;
+        fb.className = 'fb ' + (ok ? 'ok' : 'bad');
+      });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
