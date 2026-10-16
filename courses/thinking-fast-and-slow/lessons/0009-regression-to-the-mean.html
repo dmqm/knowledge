@@ -68,6 +68,68 @@
 时，回归就必然发生——它是数学上的必然，不需要一个原因去推动。后来 Karl Pearson 等人发展出相关系数，
 把 Galton 的直觉精确化：所谓“回归线”的斜率，正是相关的强度。<strong>相关的另一面，就是回归。</strong></p>
 
+<p>这条规律画在图上是什么样，一眼就能看清（如下图）：</p>
+<figure class="figure">
+  <svg viewBox="0 0 360 288" role="img" aria-labelledby="fig-r2m-title">
+    <title id="fig-r2m-title">回归均值散点图：第一次表现越高，第二次越向均值靠近</title>
+
+    <!-- 坐标轴 -->
+    <line x1="58" y1="248" x2="342" y2="248" class="s-ink" stroke-width="1.5" />
+    <line x1="58" y1="248" x2="58" y2="20" class="s-ink" stroke-width="1.5" />
+
+    <!-- 两次表现的均值参考线 -->
+    <line x1="58" y1="135" x2="338" y2="135" class="s-muted" stroke-width="1" stroke-dasharray="3 4" />
+    <line x1="198" y1="248" x2="198" y2="20" class="s-muted" stroke-width="1" stroke-dasharray="3 4" />
+
+    <!-- 45° 参考线：两次表现完全一致时的位置 -->
+    <line x1="58" y1="248" x2="338" y2="22" class="s-muted" stroke-width="1" stroke-dasharray="7 5" />
+
+    <!-- 回归线：斜率明显更平缓 -->
+    <line x1="58" y1="197" x2="338" y2="73" class="s-accent" stroke-width="2.5" />
+
+    <!-- 散点：围绕回归线分布 -->
+    <g class="f-rule s-muted" stroke-width="1.2">
+      <circle cx="80" cy="176" r="3.6" />
+      <circle cx="92" cy="198" r="3.6" />
+      <circle cx="120" cy="161" r="3.6" />
+      <circle cx="142" cy="167" r="3.6" />
+      <circle cx="153" cy="141" r="3.6" />
+      <circle cx="176" cy="156" r="3.6" />
+      <circle cx="198" cy="128" r="3.6" />
+      <circle cx="212" cy="138" r="3.6" />
+      <circle cx="232" cy="108" r="3.6" />
+      <circle cx="254" cy="120" r="3.6" />
+      <circle cx="271" cy="94" r="3.6" />
+      <circle cx="293" cy="104" r="3.6" />
+      <circle cx="324" cy="86" r="3.6" />
+    </g>
+
+    <!-- 标出的一次观测：第一次远高于均值 -->
+    <circle cx="310" cy="75" r="9" fill="none" class="s-accent" stroke-width="1.2" />
+    <circle cx="310" cy="75" r="5" class="f-accent" />
+
+    <!-- 注解 -->
+    <text x="70" y="44" font-size="13" class="t-accent">第一次远高于均值</text>
+    <text x="70" y="62" font-size="13" class="t-accent">第二次更接近均值</text>
+    <path d="M184 54 L296 73" fill="none" class="s-accent" stroke-width="1.5" />
+    <path d="M296 73 L284.3 76.1 L286 66.2 Z" class="f-accent" />
+
+    <!-- 轴名与线名 -->
+    <text x="70" y="18" font-size="13" class="t-muted">第二次表现 ↑</text>
+    <text x="198" y="276" text-anchor="middle" font-size="13" class="t-muted">第一次表现 →</text>
+    <text x="202" y="234" font-size="12" class="t-muted">第一次均值</text>
+    <text x="334" y="129" text-anchor="end" font-size="12" class="t-muted">第二次均值</text>
+    <text x="338" y="16" text-anchor="end" font-size="12" class="t-muted">45°：完全相关</text>
+    <text x="54" y="194" text-anchor="end" font-size="13" class="t-accent">回归线</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>每个点是一次「第一次表现 → 第二次表现」的观测。两条虚线是两次表现的均值；
+    一条 45° 的对角线代表「两次完全一致」的理想情形，而散点实际围绕的<b>回归线</b>明显更平缓。
+    所以第一次远高于均值的那一次（右上角被圈出的点），第二次往往会落到更靠近均值的位置——
+    这不是谁治好了他，而是极端值本身就该向均值回落。<b>相关的另一面，就是回归。</b>
+  </figcaption>
+</figure>
+
 <h2>为什么我们学不会它</h2>
 <p>回归均值之所以难以被直觉掌握，有几层原因叠在一起：</p>
 <ul>

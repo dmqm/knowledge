@@ -53,7 +53,51 @@
   Payoffs for accuracy did not reduce the anchoring effect.
   <cite>A. Tversky &amp; D. Kahneman, "Judgment under Uncertainty: Heuristics and Biases"（<em>Science</em>, 1974）——即使为估计的准确性给付奖金，锚定效应也没有减轻。</cite>
 </blockquote>
-<p>同一篇论文里还有一个不靠外部数字的版本，更能说明"锚"有多灵活。研究者让两组高中生<strong>在五秒内</strong>估算 <code>1×2×3×4×5×6×7×8</code>。五秒做不完，人只能先算前几步，那个"部分结果"本身就成了锚：从 1 开头的组，中位数估到 <strong>512</strong>；倒过来从 8 开头的组，中位数估到 <strong>2,250</strong>。正确答案是 <strong>40,320</strong>——两组都远远偏低，但偏向哪一侧，取决于那道题<strong>先让谁出场</strong>。</p>
+<p>同一篇论文里还有一个不靠外部数字的版本，更能说明"锚"有多灵活。研究者让两组高中生<strong>在五秒内</strong>估算 <code>1×2×3×4×5×6×7×8</code>。五秒做不完，人只能先算前几步，那个"部分结果"本身就成了锚：从 1 开头的组，中位数估到 <strong>512</strong>；倒过来从 8 开头的组，中位数估到 <strong>2,250</strong>。正确答案是 <strong>40,320</strong>——两组都远远偏低，但偏向哪一侧，取决于那道题<strong>先让谁出场</strong>。上面这些估计，以及"修不够就停"的机制，可以放在一张两联图里看（如下图）。</p>
+
+<figure class="figure">
+  <svg viewBox="0 0 440 450" role="img" aria-labelledby="fig-anchor-t">
+    <title id="fig-anchor-t">转盘实验两组的估计中位数（约 25% 与约 45%），以及从锚点出发、调整不足就停下的示意</title>
+
+    <text x="24" y="30" font-size="14">（a）转盘实验：两组的估计中位数</text>
+
+    <path class="s-rule" d="M 64,130 L 420,130" stroke-dasharray="5 5" />
+    <path class="s-rule" d="M 64,44 L 64,200 L 420,200" fill="none" stroke-width="1.5" />
+    <path class="s-rule" d="M 57,60 L 64,60" />
+    <path class="s-rule" d="M 57,130 L 64,130" />
+    <text class="t-muted" x="52" y="64" text-anchor="end" font-size="13">50%</text>
+    <text class="t-muted" x="52" y="134" text-anchor="end" font-size="13">25%</text>
+    <text class="t-muted" x="52" y="204" text-anchor="end" font-size="13">0</text>
+
+    <rect class="f-bg s-muted" stroke-width="1.5" x="140" y="130" width="72" height="70" />
+    <rect class="f-wash s-accent" stroke-width="1.5" x="300" y="74" width="72" height="126" />
+    <text class="t-muted" x="176" y="118" text-anchor="middle" font-size="15">约 25%</text>
+    <text class="t-accent" x="336" y="62" text-anchor="middle" font-size="16">约 45%</text>
+    <text class="t-muted" x="176" y="222" text-anchor="middle" font-size="13">转盘停在 10</text>
+    <text class="t-muted" x="336" y="222" text-anchor="middle" font-size="13">转盘停在 65</text>
+    <text class="t-muted" x="240" y="252" text-anchor="middle" font-size="13">同一道题，答案被无关数字拉高近一倍</text>
+
+    <path class="s-rule" d="M 24,276 L 416,276" />
+
+    <text x="24" y="306" font-size="14">（b）锚定 → 调整不足</text>
+    <text class="t-muted" x="24" y="328" font-size="13">从锚点出发向合理值调整，没走到就停下了</text>
+
+    <path class="s-rule" d="M 40,400 L 410,400" stroke-width="1.5" />
+    <path class="s-ink" d="M 70,392 L 70,408" stroke-width="2" />
+    <path class="s-muted" d="M 360,392 L 360,408" />
+    <path class="s-accent" d="M 230,388 L 230,410" stroke-width="2" />
+    <path class="s-accent" d="M 78,400 L 226,400" fill="none" stroke-width="2" />
+    <path class="s-accent" d="M 218,394 L 228,400 L 218,406" fill="none" stroke-width="2" />
+    <path class="s-muted" d="M 238,400 L 352,400" stroke-dasharray="6 4" stroke-width="1.5" />
+
+    <text x="150" y="372" text-anchor="middle" font-size="13">系统 2 的调整</text>
+    <text class="t-accent" x="230" y="372" text-anchor="middle" font-size="13">停下</text>
+    <text class="t-muted" x="300" y="372" text-anchor="middle" font-size="13">调整不足</text>
+    <text x="70" y="428" text-anchor="middle" font-size="13">锚点</text>
+    <text class="t-muted" x="360" y="428" text-anchor="middle" font-size="13">合理值</text>
+  </svg>
+  <figcaption><b>（a）</b>同一道题、同一个随机转盘，只因停在不同数字上，两组估计的中位数就差了近一倍：看到 10 的约估 25%，看到 65 的约估 45%。<b>（b）</b>锚定发生的过程：系统 2 确实从锚点朝合理值挪了，但挪到一半就停下——虚线那段就是"没走到的部分"，也就是调整不足。</figcaption>
+</figure>
 
 <h3>案例二：德国法官掷骰子（Englich, Mussweiler &amp; Strack, 2006）</h3>
 <p>如果锚定只是"外行人的毛病"，那它不过是个趣闻。这个实验让它成了一件严肃的事。研究者请了一批有多年审判经验的德国法官来处理同一个入店行窃案，并让他们<strong>自己掷两颗骰子</strong>——骰子被做过手脚，只会掷出 3 或 9。随后法官被问："你认为该判得比这个数高还是低？"再给出自己的量刑。</p>

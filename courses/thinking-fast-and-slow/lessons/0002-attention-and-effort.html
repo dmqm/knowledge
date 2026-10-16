@@ -37,7 +37,45 @@
 <code>4→5</code>，得到 <code>6305</code>；记住它，过一会儿再对新的一轮做一次。这活儿本身不难，
 难点在于它<strong>占满了系统 2</strong>。研究者一边让人做，一边盯住他的瞳孔，于是"用心"
 这件事第一次有了刻度：越接近自己的极限，瞳孔扩得越大，据 Kahneman 描述，扩张幅度可以
-大到接近一半。</p>
+大到接近一半（如下图）。</p>
+
+<figure class="figure">
+  <svg viewBox="0 0 380 320" role="img" aria-labelledby="fig-effort-curve-t">
+    <title id="fig-effort-curve-t">心智努力曲线：难度越高瞳孔越大，越过能力上限就失败</title>
+    <defs>
+      <marker id="f2-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" markerUnits="userSpaceOnUse" orient="auto">
+        <path d="M0 0 L10 5 L0 10 Z" fill="currentColor" />
+      </marker>
+    </defs>
+
+    <line x1="48" y1="250" x2="368" y2="250" class="s-ink" stroke-width="1.3" marker-end="url(#f2-arrow)" />
+    <line x1="48" y1="250" x2="48" y2="30" class="s-ink" stroke-width="1.3" marker-end="url(#f2-arrow)" />
+    <text x="48" y="268" text-anchor="middle" font-size="13" class="t-muted">低</text>
+    <text x="368" y="268" text-anchor="middle" font-size="13" class="t-muted">高</text>
+    <text x="208" y="292" text-anchor="middle" font-size="13" class="t-muted">任务难度／负荷</text>
+    <text x="22" y="150" transform="rotate(-90 22 150)" text-anchor="middle" font-size="13" class="t-muted">瞳孔直径／投入</text>
+
+    <line x1="280" y1="250" x2="280" y2="70" class="s-accent" stroke-width="1.4" stroke-dasharray="5 4" />
+    <text x="280" y="58" text-anchor="middle" font-size="13" class="t-accent">能力上限</text>
+
+    <path d="M48 242 C110 238 142 210 172 182 C202 154 240 118 280 104" class="s-ink" fill="none" stroke-width="2.2" stroke-linecap="round" />
+    <text x="140" y="196" text-anchor="end" font-size="13" class="t-muted">越难越费力</text>
+    <text x="238" y="88" text-anchor="middle" font-size="13" class="t-muted">接近上限</text>
+    <circle cx="280" cy="104" r="3.5" class="f-accent" />
+
+    <path d="M280 104 C308 96 326 104 356 122" class="s-accent" fill="none" stroke-width="2.2" stroke-dasharray="6 4" stroke-linecap="round" />
+    <path d="M350 116 L362 128 M350 128 L362 116" class="s-accent" fill="none" stroke-width="2" />
+    <text x="296" y="160" font-size="13" class="t-accent">超出上限</text>
+    <text x="296" y="178" font-size="13" class="t-accent">出错或放弃</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>横轴是任务的难度／负荷，纵轴是瞳孔直径，也就是投入的心力。曲线一路向右上方走
+    ——题越难，瞳孔扩得越大、投入越多（"越难越费力"）。竖虚线是<b>能力上限</b>，越靠近它，
+    每一点投入都越吃力。一旦越过这道线，投入再也加不上去，曲线摊平（虚线段），
+    任务随即出错或干脆放弃（×）。上限本身不会凭空变大，所以更划算的做法，是把最难的事
+    挪到心力最充足的时段。
+  </figcaption>
+</figure>
 
 <p>这项研究真正要告诉我们的，是这个结论：<strong>努力不是一种态度，而是一种有容量上限的
 资源</strong>。它像一块电池，用一点少一点，而且不能靠"再坚定一点"凭空变多。</p>

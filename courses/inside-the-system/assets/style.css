@@ -308,6 +308,40 @@ th {
   color: var(--muted);
 }
 
+/* ---- 组件：图示（内联 SVG） ---------------------------------------------- */
+
+.figure {
+  margin: 1.9em 0;
+  padding: 1.15em 1.2em .95em;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+.figure svg { display: block; width: 100%; height: auto; }
+.figure figcaption {
+  margin-top: .85em;
+  padding-top: .65em;
+  border-top: 1px solid var(--rule);
+  font: 400 .85rem/1.55 var(--sans);
+  color: var(--muted);
+}
+.figure figcaption b { color: var(--ink); }
+
+/* 图内元素用主题变量着色：深浅色模式自动适配，勿写死色值 */
+.figure svg text { font-family: var(--sans); fill: var(--ink); }
+.figure svg .t-muted   { fill: var(--muted); }
+.figure svg .t-accent  { fill: var(--accent-ink); }
+.figure svg .s-rule    { stroke: var(--rule); }
+.figure svg .s-muted   { stroke: var(--muted); }
+.figure svg .s-accent  { stroke: var(--accent); }
+.figure svg .s-ink     { stroke: var(--ink); }
+.figure svg .f-surface { fill: var(--paper); }
+.figure svg .f-bg      { fill: var(--bg); }
+.figure svg .f-accent  { fill: var(--accent); }
+.figure svg .f-wash    { fill: var(--accent); fill-opacity: .12; }
+.figure svg .f-rule    { fill: var(--rule); }
+
 /* ---- 打印：转黑白、去掉底色、展开链接 ------------------------------------ */
 
 @media print {
@@ -324,5 +358,5 @@ th {
     color: #444;
   }
   h2 { break-after: avoid; }
-  .card, .quiz, .ask, blockquote, table { break-inside: avoid; }
+  .card, .quiz, .ask, blockquote, table, .figure { break-inside: avoid; }
 }

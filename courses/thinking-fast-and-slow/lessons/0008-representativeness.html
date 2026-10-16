@@ -40,6 +40,45 @@
   <p>可系统 1 不做集合运算，它只问："哪个版本更像我脑子里的那个人？"</p>
 </div>
 
+<p>上面两条捷径——基础比率与合取——各自可以用一张图看清（如下图）。</p>
+
+<figure class="figure">
+  <svg viewBox="0 0 440 600" role="img" aria-labelledby="fig-repr-t">
+    <title id="fig-repr-t">基础比率忽视：两种基准比例下同一段描述都偏向工程师；琳达问题：合取项是被包含的子集</title>
+
+    <text x="24" y="28" font-size="14">（a）基础比率忽视：同一描述，两种基准</text>
+
+    <text x="20" y="58" font-size="13">告知：工程师占 70%</text>
+    <rect class="f-wash s-accent" stroke-width="1.5" x="20" y="68" width="280" height="34" />
+    <rect class="f-bg s-muted" stroke-width="1.5" x="300" y="68" width="120" height="34" />
+    <text x="160" y="90" text-anchor="middle" font-size="13">工程师 70%</text>
+    <text class="t-muted" x="360" y="90" text-anchor="middle" font-size="13">律师 30%</text>
+
+    <text x="20" y="140" font-size="13">告知：工程师占 30%</text>
+    <rect class="f-wash s-accent" stroke-width="1.5" x="20" y="150" width="120" height="34" />
+    <rect class="f-bg s-muted" stroke-width="1.5" x="140" y="150" width="280" height="34" />
+    <text class="t-accent" x="80" y="172" text-anchor="middle" font-size="13">工程师 30%</text>
+    <text class="t-muted" x="280" y="172" text-anchor="middle" font-size="13">律师 70%</text>
+
+    <text class="t-accent" x="220" y="212" text-anchor="middle" font-size="13">基准比例刚好翻了个面</text>
+    <text x="220" y="238" text-anchor="middle" font-size="13">同一段「很像工程师」的描述</text>
+    <text class="t-accent" x="220" y="262" text-anchor="middle" font-size="13">→ 两组的判断却都偏向「工程师」</text>
+
+    <text x="20" y="306" font-size="14">（b）琳达问题：更详细，集合反而更小</text>
+
+    <ellipse class="f-bg s-ink" stroke-width="1.5" cx="200" cy="430" rx="150" ry="92" />
+    <ellipse class="f-wash s-accent" stroke-width="1.5" cx="215" cy="440" rx="82" ry="48" />
+
+    <text x="128" y="392" text-anchor="middle" font-size="13">琳达是银行出纳</text>
+    <text class="t-accent" x="215" y="448" text-anchor="middle" font-size="13">且积极参与女权</text>
+    <text class="t-muted" x="332" y="430" text-anchor="middle" font-size="13">更小</text>
+
+    <text class="t-accent" x="220" y="556" text-anchor="middle" font-size="14">P(银行出纳且女权) ≤ P(银行出纳)</text>
+    <text class="t-muted" x="220" y="584" text-anchor="middle" font-size="13">约 85% 的人选了更小的那一个</text>
+  </svg>
+  <figcaption><b>（a）</b>两组的基准比例恰好翻了个面（工程师 70%→30%），可只要给同一段"很像工程师"的描述，判断几乎不再跟着基准走。<b>（b）</b>"琳达是银行出纳且积极女权"整块都被"琳达是银行出纳"包住——它是子集，面积（概率）只可能更小，绝不可能更大。</figcaption>
+</figure>
+
 <h3>四、小数定律：小样本也应该"像"总体</h3>
 <p>代表性还会反过来作用于随机性。我们以为随机样本应该<strong>忠实反映</strong>总体，于是觉得一百次抛硬币里出现一段"连正"，就已经"不像随机"。Kahneman 与 Tversky 把这个错误叫作<strong>小数定律</strong>（信得过头的那条其实是大数定律）：<strong>样本量越小，随机波动越大</strong>，小样本本来就<strong>不该</strong>那么像总体。</p>
 <p>这一条对现实后果最直接：它让你把偶然波动当成信号——一次面试后的裁员、连续两月的好业绩、几场连胜——然后为此编出因果解释。</p>

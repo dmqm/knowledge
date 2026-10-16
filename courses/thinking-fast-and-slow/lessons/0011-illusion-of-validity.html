@@ -60,6 +60,52 @@ Gary Klein 合作，把几十年里彼此看似矛盾的发现摊在一起梳理
 （比如没人告诉你上次判断错了）；也可能反馈很及时，但环境本身太随机（比如赌场）。<strong>只有
 “有规律 + 有反馈”同时成立，经验才会变成真正的专长。</strong></p>
 
+<p>把这两条判据放在一张图上，四个象限立刻分出了「可信」与「不可信」（如下图）：</p>
+<figure class="figure">
+  <svg viewBox="0 0 360 320" role="img" aria-labelledby="fig-validity-title">
+    <title id="fig-validity-title">直觉何时可信：环境是否有规律 × 是否有快速反馈</title>
+
+    <!-- 两个关键象限的底色 -->
+    <rect x="201" y="26" width="137" height="120" class="f-wash" />
+    <rect x="64" y="146" width="137" height="120" class="f-rule" />
+
+    <!-- 外框与中轴 -->
+    <rect x="64" y="26" width="274" height="240" fill="none" class="s-muted" stroke-width="1.2" />
+    <line x1="201" y1="26" x2="201" y2="266" class="s-ink" stroke-width="1.5" />
+    <line x1="64" y1="146" x2="338" y2="146" class="s-ink" stroke-width="1.5" />
+
+    <!-- 右上：有规律 + 有反馈 -->
+    <text x="270" y="62" text-anchor="middle" font-size="13">象棋 · 消防</text>
+    <text x="270" y="82" text-anchor="middle" font-size="13">麻醉 · 桥牌</text>
+    <text x="270" y="112" text-anchor="middle" font-size="14" class="t-accent">→ 直觉可信</text>
+
+    <!-- 左上：无规律 + 有反馈 -->
+    <text x="132" y="62" text-anchor="middle" font-size="13">赌场 · 短期行情</text>
+    <text x="132" y="82" text-anchor="middle" font-size="13">反馈很快</text>
+    <text x="132" y="112" text-anchor="middle" font-size="13" class="t-muted">但学到的是噪声</text>
+
+    <!-- 左下：无规律 + 无反馈 -->
+    <text x="132" y="182" text-anchor="middle" font-size="13">股票 · 政治预测</text>
+    <text x="132" y="202" text-anchor="middle" font-size="13">自由面试选人</text>
+    <text x="132" y="232" text-anchor="middle" font-size="14" class="t-accent">→ 伪直觉 · 不可信</text>
+
+    <!-- 右下：有规律 + 无反馈 -->
+    <text x="270" y="182" text-anchor="middle" font-size="13">长期投资 · 药效</text>
+    <text x="270" y="202" text-anchor="middle" font-size="13">规律存在，</text>
+    <text x="270" y="222" text-anchor="middle" font-size="13">但反馈太少太慢</text>
+
+    <!-- 轴名 -->
+    <text x="201" y="16" text-anchor="middle" font-size="13" class="t-muted">快速反馈 ↑</text>
+    <text x="336" y="308" text-anchor="end" font-size="13" class="t-muted">环境有规律 →</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>横轴向右，是环境越有规律；纵轴向上，是反馈越快、越可靠。
+    <b>只有右上角</b>（象棋、消防、麻醉这类领域）两个条件同时成立，直觉才真的可信；左下角
+    （股票、长期政治预测、一场自由面试）环境随机又没有诚实反馈，练得再久也只是「更自信地猜错」；
+    左上与右下各缺一条，经验同样长不成专长。图中标色的两个象限，正是两条判据同时成立与同时落空的两端。
+  </figcaption>
+</figure>
+
 <h2>专家失灵的证据：Tetlock 与长期预测</h2>
 <p>低效度环境里，专家的表现有多糟？心理学家 <strong>Philip Tetlock</strong> 花了近二十年，系统收集
 了数百位专家对政治与经济前景的成千上万条具体预测，再逐一核对结局。他的结论相当不好看：

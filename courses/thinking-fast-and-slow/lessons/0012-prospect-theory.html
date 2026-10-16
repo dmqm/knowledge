@@ -65,6 +65,77 @@ Kahneman 与 Tversky 用前景理论刻画人<strong>实际</strong>怎么做风
 之间——丢掉 100 元的难受，大约要赚到 150 至 250 元才能抵消。所以，仅仅“参照点上移一毫米”，
 就能让人从大胆变保守、从接受变拒绝。</p>
 
+<p>把价值函数画出来是这样的（如下图）：左图是它本身的形状，右图是把“概率是高还是低”也叠上去之后，
+前景理论给出的四重模式。</p>
+<figure class="figure">
+  <svg viewBox="0 0 360 620" role="img" aria-labelledby="fig-prospect-title">
+    <title id="fig-prospect-title">前景理论：由价值函数构成的不对称 S 形曲线，以及四重模式 2×2 图</title>
+
+    <!-- ============ （a）价值函数 ============ -->
+    <text x="16" y="22" font-size="14" class="t-accent">（a）价值函数</text>
+
+    <!-- 坐标轴 -->
+    <line x1="14" y1="176" x2="340" y2="176" class="s-ink" stroke-width="1.5" />
+    <line x1="168" y1="32" x2="168" y2="312" class="s-ink" stroke-width="1.5" />
+
+    <!-- 曲线：过原点；收益段凹，损失段凸、且在原点附近陡得多 -->
+    <path d="M168 176 Q 252 112 338 98" fill="none" class="s-accent" stroke-width="2.5" />
+    <path d="M168 176 Q 106 244 20 292" fill="none" class="s-accent" stroke-width="2.5" />
+
+    <!-- 参照点 -->
+    <circle cx="168" cy="176" r="4" class="f-accent" />
+    <text x="176" y="196" font-size="12" class="t-accent">参照点</text>
+
+    <!-- 注解 -->
+    <text x="336" y="56" text-anchor="end" font-size="12" class="t-muted">收益段：凹 · 边际递减</text>
+    <text x="20" y="310" font-size="12" class="t-muted">损失段：凸 · 更陡</text>
+    <text x="172" y="34" font-size="12" class="t-muted">主观价值</text>
+    <text x="40" y="196" font-size="13" class="t-muted">损失</text>
+    <text x="332" y="196" text-anchor="end" font-size="13" class="t-muted">收益</text>
+
+    <!-- 分隔 -->
+    <line x1="16" y1="340" x2="344" y2="340" class="s-rule" stroke-width="1" />
+
+    <!-- ============ （b）四重模式 ============ -->
+    <text x="16" y="366" font-size="14" class="t-accent">（b）四重模式</text>
+
+    <!-- 列名与行名 -->
+    <text x="130" y="392" text-anchor="middle" font-size="13">面对收益</text>
+    <text x="270" y="392" text-anchor="middle" font-size="13">面对损失</text>
+    <text x="54" y="460" text-anchor="end" font-size="12" class="t-muted">高概率</text>
+    <text x="54" y="565" text-anchor="end" font-size="12" class="t-muted">低概率</text>
+
+    <!-- 网格 -->
+    <rect x="60" y="402" width="280" height="210" fill="none" class="s-muted" stroke-width="1.2" />
+    <line x1="200" y1="402" x2="200" y2="612" class="s-ink" stroke-width="1.5" />
+    <line x1="60" y1="507" x2="340" y2="507" class="s-ink" stroke-width="1.5" />
+
+    <!-- 高概率 × 收益 -->
+    <text x="130" y="448" text-anchor="middle" font-size="14" class="t-accent">风险规避</text>
+    <text x="130" y="470" text-anchor="middle" font-size="12" class="t-muted">宁要稳的</text>
+
+    <!-- 高概率 × 损失 -->
+    <text x="270" y="448" text-anchor="middle" font-size="14" class="t-accent">风险寻求</text>
+    <text x="270" y="470" text-anchor="middle" font-size="12" class="t-muted">宁可赌一把</text>
+
+    <!-- 低概率 × 收益 -->
+    <text x="130" y="553" text-anchor="middle" font-size="14" class="t-accent">风险寻求</text>
+    <text x="130" y="575" text-anchor="middle" font-size="12" class="t-muted">买彩票</text>
+
+    <!-- 低概率 × 损失 -->
+    <text x="270" y="553" text-anchor="middle" font-size="14" class="t-accent">风险规避</text>
+    <text x="270" y="575" text-anchor="middle" font-size="12" class="t-muted">买保险</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>（a）横轴是相对参照点的变化（左亏右赚），纵轴是主观价值。曲线穿过原点；
+    <b>收益段是凹的</b>——越往上，每多赚一点带来的快乐越少；<b>损失段是凸的，而且在原点附近陡得多</b>——
+    同样大小的一笔钱，亏比赚疼得多，这就是损失厌恶（系数约 1.5–2.5 倍）。
+    （b）把「得失」与「概率高低」两个维度叠起来，就得到四重模式：大概率收益时怕冒险、
+    大概率损失时反而要赌一把、小概率收益时买彩票、小概率损失时买保险。同一个人为什么既买保险
+    又买彩票？答案就在这张 2×2 里。
+  </figcaption>
+</figure>
+
 <h2>确定性效应：同构的选择，却反了向</h2>
 <p>前景理论的第二块基石，是人对“确定”这件事格外着迷。下面两组选择来自 1979 年那篇原始论文，
 它们在数学结构上<strong>其实同构</strong>，但多数人的偏好却掉了个头：</p>
