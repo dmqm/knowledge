@@ -163,6 +163,11 @@ function fileUrl(id, kind, file) {
 
 // ---------------------------------------------------------------- chrome ----
 
+// Stable pseudo-random hue per course id — drives the tile/hero accent color.
+function courseHue(s) {
+  return [...String(s)].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) % 360, 7);
+}
+
 let toastTimer = null;
 function toast(msg) {
   toastEl.textContent = msg;
@@ -191,6 +196,7 @@ function parseHash() {
 }
 
 async function render() {
+  document.body.classList.remove('reader-open');
   const { path, params } = parseHash();
   let m;
   if ((m = path.match(/^\/c\/(.+)$/))) return renderCourse(decodeURIComponent(m[1]));
@@ -265,11 +271,16 @@ function courseCard(c) {
   if (c.counts.reference) parts.push(`${c.counts.reference} 参考`);
   if (c.counts.records) parts.push(`${c.counts.records} 记录`);
   return `
-    <a class="card" href="#/c/${encodeURIComponent(c.id)}">
-      <h3>${esc(c.title)}</h3>
-      <div class="meta">
-        ${c.total ? `<span class="pill ${c.done === c.total ? 'good' : ''}">${c.done}/${c.total} 已完成</span>` : ''}
-        <span>${esc(parts.join(' · ') || '尚无内容')}</span>
+    <a class="card" style="--hue:${courseHue(c.id)}" href="#/c/${encodeURIComponent(c.id)}">
+      <div class="card-top">
+        <span class="tile">${esc(c.title.trim().charAt(0) || '?')}</span>
+        <div class="tile-txt">
+          <h3>${esc(c.title)}</h3>
+          <div class="meta">
+            ${c.total ? `<span class="pill ${c.done === c.total ? 'good' : ''}">${c.done}/${c.total} 已完成</span>` : ''}
+            <span>${esc(parts.join(' · ') || '尚无内容')}</span>
+          </div>
+        </div>
       </div>
       ${c.total ? `<div class="bar"><span style="width:${pct}%"></span></div>` : ''}
     </a>`;
@@ -340,13 +351,13 @@ async function renderCourse(id) {
   if (c.hasNotes) tabs.push(['notes', '备注']);
 
   app.innerHTML = `
-    <div class="hero">
-      <h1 style="margin:0 0 6px;font-size:20px">${esc(c.title)}</h1>
-      <div class="meta" style="display:flex;flex-wrap:wrap;gap:6px 12px;color:var(--muted);font-size:13px">
+    <div class="hero" style="--hue:${courseHue(c.id)}">
+      <h1>${esc(c.title)}</h1>
+      <div class="meta">
         <span class="pill ${done === c.counts.lessons && c.counts.lessons ? 'good' : ''}">${done}/${c.counts.lessons} 已完成</span>
-        <span class="faint small">目录：courses/${esc(c.id)}</span>
+        <span class="dirpath">courses/${esc(c.id)}</span>
       </div>
-      ${c.counts.lessons ? `<div class="bar"><span style="width:${c.counts.lessons ? (done / c.counts.lessons) * 100 : 0}%"></span></div>` : ''}
+      ${c.counts.lessons ? `<div class="bar"><span style="width:${c.counts.lessons ? Math.round((done / c.counts.lessons) * 100) : 0}%"></span></div>` : ''}
       <div class="btnrow">
         <button class="btn ghost small" id="btn-toggle-mission">查看使命</button>
         <a class="btn ghost small" style="text-align:center" href="#/search?q=">搜索</a>
@@ -367,6 +378,8 @@ async function renderCourse(id) {
   const panel = document.getElementById('tabpanel');
   const renderTab = (key) => {
     document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('active', b.dataset.tab === key));
+    // Long tab bars overflow on a phone — keep the active tab visible.
+    document.querySelector('#tabs button.active')?.scrollIntoView({ block: 'nearest', inline: 'center' });
     if (key === 'lessons') panel.innerHTML = lessonRows(c.lessons);
     else if (key === 'reference') panel.innerHTML = docRows(c.reference);
     else if (key === 'records')
@@ -466,8 +479,15 @@ function renderReader(id, kind, file) {
         <button class="iconbtn" id="r-done" title="标记完成" style="${done ? 'background:var(--good);border-color:var(--good);color:#fff' : ''}">✓</button>
         <a class="iconbtn" href="${esc(src)}" target="_blank" rel="noopener" title="新标签打开">⤢</a>
       </div>
-      <iframe src="${esc(src)}" referrerpolicy="no-referrer"></iframe>
-    </div>`;
+      <iframe id="r-frame" src="${esc(src)}" referrerpolicy="no-referrer"></iframe>
+    </div>
+    <div class="reader-load" id="r-load"></div>`;
+  document.body.classList.add('reader-open');
+
+  // Cover the iframe until the lesson paints, so there's no white flash.
+  document.getElementById('r-frame').addEventListener('load', () => {
+    document.getElementById('r-load').hidden = true;
+  });
 
   document.getElementById('r-back').onclick = () => history.back();
 
