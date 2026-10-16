@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 5 讲 · 资源有限，先做什么</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+  <nav aria-label="讲义导航">
+    <a class="tag" href="0004-validate-before-you-build.html">← 第 4 讲 · 先验证，再开发</a>
+    <a class="tag" href="0006-ship-it-with-product.html">第 6 讲 · 和产品一起，把事做成 →</a>
+    <a class="tag" href="../reference/0001-glossary.html">概念速查表</a>
+  </nav>
+
+  <p class="kicker">工程师的产品思维 · 第 5 讲</p>
+  <h1>资源有限，先做什么</h1>
+  <p class="lede">一句话目标：读完这一讲，你能把一墙候选功能，换成一次可辩护的排序——知道哪些由你估工作量、哪些根本不该进打分池、以及为什么「排出一个分数」不是重点，「让分歧暴露」才是。</p>
+
+  <h2>引子：一张永远排不完的清单</h2>
+
+  <p>产品把候选清单贴到墙上：十七个功能。资源是三个人、六周。你问「哪个先做」，得到的回答是：「都挺重要的。」——这句话一出现，你就知道接下来会发生什么：<strong>谁的声音大、谁的职级高、谁最近在会上把话说重了，谁的需求先进排期。</strong></p>
+
+  <p>这讲的题目非常具体：候选一堆，资源有限，怎么排优先级。它看起来是个流程问题，其实是本课程里最容易被工程思维「误伤」的一环。技术人遇到排序，第一反应常常是去找一个<strong>能输出确定答案的公式</strong>，然后照着结果执行——好像只要算法够好，争议就会消失。</p>
+
+  <p>而真正有用的做法恰好相反：<strong>用公式把分歧摊到明确的维度上，让它可以被讨论、被反驳，而不是消失。</strong> 这一讲要拆的，就是这件事的两个工具：RICE（怎么给候选打分）和 Kano（哪些候选根本不该进打分池），以及你作为工程师在其中的天然位置。</p>
+
+  <h2>RICE：把吵架搬到四个维度上</h2>
+
+  <p>RICE 是 Intercom 团队做出来的一套优先级评分法，官方记录在 ProductPlan 的术语页里。它的公式只有一行，但每个因子都在回答一个不同的问题：</p>
+
+  <p><code>RICE = (Reach × Impact × Confidence) ÷ Effort</code></p>
+
+  <table>
+    <thead>
+      <tr><th>因子</th><th>它问的问题</th><th>Intercom 的给分方式</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Reach 触达</td><td>在给定时间窗内，会影响多少人？</td><td>先定义「人」是谁、时间窗多长，再给一个估计人数</td></tr>
+      <tr><td>Impact 影响</td><td>对每个被触达的人，改变有多大？</td><td>离散档：3 / 2 / 1 / 0.5 / 0.25</td></tr>
+      <tr><td>Confidence 信心</td><td>上面两项，你有多确定？</td><td>离散档：100% / 80% / 50%；低于 50% 按原文应视为「卫星式」赌注</td></tr>
+      <tr><td>Effort 工作量</td><td>要投入多少总量？</td><td>以人月计；不足一个月记为 0.5</td></tr>
+    </tbody>
+  </table>
+
+  <p>先看这四个因子为什么长这样。<strong>Reach 是分母之外唯一带「规模」的量</strong>，它逼你先回答「这件事影响的是全部用户，还是某个大客户」，而不是笼统地说「很多人需要」。<strong>Impact 是每个被触达者身上的改变强度</strong>：让一个人从「做不到」变成「做得到」，和让一个人从「有点麻烦」变成「没那么麻烦」，是两个量级。做成离散档，是为了不让团队卡在「到底是 73% 还是 76%」这种假精度上——<strong>这个设计本身就在承认：我们测不准，所以只分档。</strong></p>
+
+  <p><strong>Confidence 是这套模型里最容易被工程师忽略、却最有价值的一项。</strong> 它不新增信息，而是给你前面两项的估计<strong>打个折扣</strong>。Reach 有数据支撑、Impact 只是拍脑袋，那信心就该低；两个都靠直觉，信心就该更低。写成 100% / 80% / 50% 三档，等于强制你在填表时回答一句：<strong>这个数字，是我的判断，还是我的猜测？</strong></p>
+
+  <p>最后是 <strong>Effort，唯一进分母的项</strong>——也就是本讲要单独讲的一段，因为它天然是你的地盘。</p>
+
+  <h3>但 RICE 真正的产物不是那个分数</h3>
+
+  <p>很多人第一次用 RICE，会把它当成一个排序机器：填进去，输出名次，照做。这恰恰是误用。RICE 最有价值的产出，是<strong>四列被你逐一填过的理由</strong>：谁被影响、改变多大、你多确定、要花多少。<strong>分数只是让讨论有个落点。</strong> 当有人说「A 应该排在 B 前面」，他必须具体改成某一个因子，并给出理由——讨论就从「我觉得」升到了「因为 Reach 我算错了，还是我的 Confidence 太乐观」。</p>
+
+  <p>反过来，也有一个必须警惕的陷阱：<strong>如果两个方案的分数差了三倍，但那个差距完全来自两个工程师对 Effort 的乐观程度差了一倍，那这个差距是噪音，不是信号。</strong> RICE 的第一用途，是把分歧<strong>暴露</strong>出来，而不是替你做决定。</p>
+
+  <h2>Effort 是你的地盘：报量级和不确定性，不报假精度</h2>
+
+  <p>在 RICE 的四个因子里，另外三个通常由产品、设计、数据一起给，<strong>Effort 几乎必然由工程师给。</strong> 这是你在这张桌子上最硬的话语权，也最容易被浪费——因为工程文化奖励「给一个确定的日期」，而产品排序需要的恰恰是别的三样东西。</p>
+
+  <ul>
+    <li><strong>报量级，不报小数。</strong> 与其说「大约 17.5 人天」，不如说「这一档是『两三周』，那一档是『一个季度』」。人月本身就粗糙，小数点后一位是幻觉。Intercom 把不足一个月直接记成 0.5，也是同一个态度：<strong>粗糙地标定，胜过精确地撒谎。</strong></li>
+    <li><strong>报不确定性，并说出它来自哪里。</strong> 「2 到 5 人月，卡在一个点：我们要的老数据能不能复用。能复用是 2，不能复用是 5。」这句话对排序的价值，远大于「大概 3 人月」——因为<strong>它把风险变成了一个可以被讨论、甚至可以被砍掉的东西。</strong></li>
+    <li><strong>用你熟悉的语言说这件事。</strong> 这不是在「报工时」，而是在做一次容量规划：你要标出已知的、未知的、以及「要先花几天探一下才知道」的部分。你已经在系统设计里做这件事，只是换了个对象。</li>
+    <li><strong>警惕那句「这个简单，一天就能做完」。</strong> 它常常是你自己最没底的时候说出口的。说之前，先问自己：历史上我说这句话的命中率有多高？</li>
+  </ul>
+
+  <p>这里可以接上 <a href="https://basecamp.com/shapeup" target="_blank" rel="noopener">《Shape Up》</a> 的一个反向思路作对照：与其先估工作量再决定做不做，不如<strong>先定「愿意为这件事花多少时间」（appetite，时间预算），再让方案迁就这个预算</strong>。两条路并不冲突：RICE 用 Effort 给候选比大小，appetite 用来给入选的那件事<strong>画死边界</strong>——先有排序，再有限额，方案不够小就缩方案，而不是让工期膨胀。</p>
+
+  <h2>Kano：为什么有些功能必须做，却换不来满意</h2>
+
+  <p>RICE 有一个盲点，必须靠另一个模型补上。这个模型叫 Kano，来自日本学者狩野纪昭等人 1984 年那篇《魅力质量与必备质量》。它把需求分成三类，分法不看「重要性」，而看<strong>它和用户满意度之间的关系形状</strong>：</p>
+
+  <ul>
+    <li><strong>基本型（必备质量）</strong>：缺失会让人愤怒，做多了也不会更满意。例如登录能用、支付不出错、数据不丢。</li>
+    <li><strong>期望型（绩效质量）</strong>：越多越好，满意度随投入线性上升。例如查询速度、服务可用性、能存的容量。</li>
+    <li><strong>兴奋型（魅力质量）</strong>：用户没期待过，出现时超出预期、带来惊喜。例如某个第一次见到就顺手的功能。</li>
+  </ul>
+
+  <figure class="figure">
+    <svg viewBox="0 0 470 280" role="img">
+      <title>Kano 模型的三条满意度曲线</title>
+      <defs>
+        <marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+          <path class="f-accent" d="M0,0 L10,5 L0,10 Z" />
+        </marker>
+      </defs>
+
+      <!-- 坐标轴 -->
+      <path class="s-accent" fill="none" stroke-width="1.3" d="M60,240 H430" marker-end="url(#ar5)" />
+      <path class="s-accent" fill="none" stroke-width="1.3" d="M60,240 V24" marker-end="url(#ar5)" />
+      <text class="t-muted" x="428" y="262" text-anchor="end" font-size="11">功能做得越充分 →</text>
+      <text class="t-muted" x="20" y="132" text-anchor="middle" font-size="11" transform="rotate(-90 20 132)">用户满意度 →</text>
+
+      <!-- 中性线 -->
+      <path class="s-rule" fill="none" stroke-width="1" stroke-dasharray="4 4" d="M60,125 H420" />
+
+      <!-- 基本型：缺失急剧掉下去，做多也涨不动 -->
+      <path class="s-ink" fill="none" stroke-width="1.6" d="M60,222 C140,196 200,142 240,126 C300,118 360,116 420,116" />
+      <!-- 期望型：线性，越多越好 -->
+      <path class="s-accent" fill="none" stroke-width="1.6" d="M60,198 L420,42" />
+      <!-- 兴奋型：缺失时无所谓，出现后大幅超预期 -->
+      <path class="s-muted" fill="none" stroke-width="1.6" d="M60,120 C140,120 200,122 240,120 C300,102 360,58 420,22" />
+
+      <!-- 曲线标注 -->
+      <text x="426" y="26" font-size="10">兴奋型</text>
+      <text class="t-accent" x="426" y="54" font-size="10">期望型</text>
+      <text x="426" y="126" font-size="10">基本型</text>
+    </svg>
+    <figcaption>读法：横轴是「这个需求被满足的程度」，虚线是<strong>中性</strong>——不失望也不惊喜。三条曲线形状不同，含义就不同。<strong>基本型（深色）</strong>在缺失时急剧掉入负分，一旦达标就贴着中性线摊平，<strong>再怎么加码也换不来满意度</strong>；<strong>期望型（强调色）</strong>是一条直线，投入越多越满意，永远可以「再好一点」；<strong>兴奋型（次要色）</strong>在缺失时用户并不在意，因为压根没期待，一旦出现却大幅越过中性线，带来惊喜。<strong>同一个「做得多好」，落在三条曲线上，回报完全不同。</strong></figcaption>
+  </figure>
+
+  <p>这张图直接推翻了「重要就排前面」这种直觉。把三条曲线放到 RICE 里看，会立刻发现一个尴尬：<strong>基本型需求的 Reach 往往很大（所有人都受影响），但它的 Impact 会被诚实地打得很低</strong>——因为它做多也不会让人更满意。于是它很容易被排到后面，被「更吸引人」的兴奋型挤掉，直到它坏掉一次，愤怒盖上一切。</p>
+
+  <p>所以正确的用法是：<strong>基本型不该进 RICE 的打分池，它应该作为一道门槛。</strong> 登录、支付、数据正确性、合规与安全，这些是<strong>准入条件</strong>，不是什么「值得优先的候选」。RICE 要排的，是门槛之上的那些期望型与兴奋型。</p>
+
+  <h2>真实案例：RICE 为什么会被发明出来</h2>
+
+  <p>RICE 的出身很能说明问题。按 ProductPlan 的记录，Intercom 的产品团队当时<strong>试用过市面上多种优先级模型，都没能适配自己那堆互相竞争的想法</strong>，最后自己搞了一套四因子评分法。它的目的写得很直白：做出更好的决策、<strong>减少个人偏见</strong>、并让产品经理<strong>能向高管解释自己的排序</strong>。</p>
+
+  <p>换句话说，RICE 诞生在一个「排序被个人偏好和嗓门主导」的团队里。它要解决的不是「怎么算得更科学」，而是「怎么让排序这件事变得<strong>可辩论</strong>」。这也解释了为什么它刻意用离散档而不是精确值——<strong>它想要的是一张能被别人指着某个格子说「这里我不同意」的表。</strong></p>
+
+  <p>再看 <a href="https://basecamp.com/shapeup" target="_blank" rel="noopener">《Shape Up》</a> 对「待办清单」的批评，道理是相通的：清单会越堆越长，堆出一大坨没人真的会做的条目，让人永远觉得欠着债；于是作者主张「想法是廉价的」「真正重要的想法会自己回来」。这句话反过来是一把很好的筛子：<strong>噪音型需求的典型特征，就是喊的时候很响、喊完就消失。</strong> 一件事只被提过一次、之后再没人提，它大概率不是真问题。</p>
+
+  <p>把这两点拼起来，就能看清一种常见失败形状（下面是教学场景，不是某家公司的数据）：团队按「声量」而非「影响」排序，谁喊得响谁先做。一个季度过去，做出来的是——给三个大客户各做了定制导出、加了两个只在演示时用到的开关、把内部小工具美化了一遍；而核心路径上「新用户从注册到第一次成功使用」的第三步，依然卡着。声量排序至少踩了三个偏差：<strong>响度不等于影响</strong>（提需求的人常常只代表自己）、<strong>当下不等于长期</strong>（今天吵得最凶的事，下周可能就不是问题了）、<strong>可见不等于关键</strong>（演示里看得见的改动，比底层修复更容易被表扬）。</p>
+
+  <h2>落地：一道门槛，一次排序，一条护栏</h2>
+
+  <p>把 RICE 和 Kano 组装成一个能在评审会上跑起来的流程，其实只要三步：</p>
+
+  <ol class="flow">
+    <li><strong>先过门槛（Kano 基本型）。</strong> 登录、支付、数据正确性、安全与合规——这些直接进，不参与打分。它们的缺席是「事故」，不是「低优先级」。</li>
+    <li><strong>再用 RICE 排序。</strong> 剩下的候选填四列，Effort 由工程给<strong>量级加不确定性</strong>。分数算出来，但把它当作讨论的起点。</li>
+    <li><strong>最后加一条护栏。</strong> 分数接近（差不到一倍）的，视为平手，用一个更硬的规则裁决——例如「离核心路径更近的优先」。不要让 10% 的分数差替你决定方向。</li>
+  </ol>
+
+  <p>这三步做完，你交付的是一份<strong>可以被反驳的排序</strong>：谁想改顺序，就得去改某一个因子，并给出理由。这比「我觉得这个更重要」高了一个维度——也正是第 1 讲讲的那件事：产品思维不是替你拍板，而是让判断过程变得可见、可讨论、可修正。至于排序定了之后，怎么和产品真正把一件事做成，是下一讲的事。</p>
+
+  <div class="card">
+    <span class="card-title">小练习</span>
+    <p>拿你现在手上的 3 个候选功能，填一张 RICE 表：<strong>Reach × Impact × Confidence ÷ Effort</strong>，四列都写，一个都别留空。然后回答两个问题：（1）三个得分里，<strong>哪一列的估计是你最没底的</strong>？把它圈出来——那多半才是真正该先讨论的地方。（2）如果让另一个人独立填一遍 Effort，结果会不会差一倍以上？如果会，说明这个分数暂时不配拿来排序，先把它拆成「量级 + 不确定性来源」再说。</p>
+  </div>
+
+  <h2>回顾：三个判断</h2>
+
+  <div class="quiz" aria-label="回顾练习">
+    <span class="card-title">点选项，立刻看解析</span>
+
+    <div class="q">
+      <p class="stem">1. RICE 里 Confidence（信心）这一项的作用是什么？</p>
+      <button type="button" class="opt">估计这个改动最终能触达多少用户</button>
+      <button type="button" class="opt">估算完成这个改动需要多少总人月</button>
+      <button type="button" class="opt" data-correct="true">给前面的触达与影响估计打个折扣</button>
+      <button type="button" class="opt">判断这个需求属于哪一类质量属性</button>
+      <p class="fb" hidden data-explain="Confidence 不新增信息，而是给 Reach 和 Impact 的估计打折：有数据支撑就高，靠直觉就低。Intercom 用 100% / 80% / 50% 三档，低于 50% 视为「卫星式」赌注。判断需求类型是 Kano 模型干的事。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">2. 为什么「基本型需求」不适合丢进 RICE 打分池排队？</p>
+      <button type="button" class="opt">它触达的人数太少难以估计影响</button>
+      <button type="button" class="opt" data-correct="true">它缺失引发愤怒而做多也不涨满意度</button>
+      <button type="button" class="opt">它的工作量总被团队严重地低估</button>
+      <button type="button" class="opt">它属于兴奋型因此不需要参与排序</button>
+      <p class="fb" hidden data-explain="按 Kano 模型，基本型（如登录、支付、数据不丢）缺失会让人愤怒，达标后却贴着中性线摊平，做多也不会更满意。它的 Reach 大但 Impact 低，很容易被兴奋型挤掉——正确做法是把它当准入门槛，而不是候选。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">3. 工程师给 Effort 估值时，最该避免的是什么？</p>
+      <button type="button" class="opt" data-correct="true">给出精确到小数的工作量造假象</button>
+      <button type="button" class="opt">给出一个偏保守的时间区间范围</button>
+      <button type="button" class="opt">标注最可能导致超期的风险来源</button>
+      <button type="button" class="opt">参考历史相似项目的实际耗时来估</button>
+      <p class="fb" hidden data-explain="人月本身粗糙，小数点后一位是幻觉。更有用的做法是报量级（『两三周』还是『一个季度』）加上不确定性来自哪里，让风险变成可以被讨论、甚至被砍掉的东西——Intercom 干脆把不足一个月直接记成 0.5。"></p>
+    </div>
+  </div>
+
+  <p class="ask">哪里没说清？<strong>回头直接问你的老师</strong>（那个正在运行本工作区的 agent）。它知道你的目标，可以就任何一句追问下去、举更多例子。</p>
+
+  <p class="foot">
+    <strong>推荐一手资料：</strong>
+    <a href="https://www.productplan.com/glossary/rice-scoring-model" target="_blank" rel="noopener">“RICE Scoring Model”（ProductPlan 术语页）</a>
+    —— 记录 Intercom 如何造出 RICE，并逐项给出四个因子的打分方式（Impact 的 3 / 2 / 1 / 0.5 / 0.25 档、Confidence 的 100% / 80% / 50% 档、Effort 以人月计且不足一月记 0.5）；读完你会明白它为什么刻意用离散档，而不是追求精确值。<br />
+    相关：<a href="https://basecamp.com/shapeup" target="_blank" rel="noopener">《Shape Up》全文在线（Basecamp）</a> ·
+    <a href="https://leanproductplaybook.com/" target="_blank" rel="noopener">《The Lean Product Playbook》（Dan Olsen）</a> ·
+    <a href="0004-validate-before-you-build.html">第 4 讲 · 先验证，再开发</a> ·
+    <a href="0006-ship-it-with-product.html">第 6 讲 · 和产品一起，把事做成</a> ·
+    <a href="../reference/0001-glossary.html">概念速查表</a> ·
+    <a href="../MISSION.md">使命</a>
+  </p>
+
+<script>
+(function () {
+  var questions = document.querySelectorAll('.quiz .q');
+  for (var i = 0; i < questions.length; i++) {
+    (function (q) {
+      var opts = q.querySelectorAll('.opt');
+      var fb = q.querySelector('.fb');
+      for (var j = 0; j < opts.length; j++) {
+        (function (opt) {
+          opt.addEventListener('click', function () {
+            if (q.dataset.answered === '1') return;
+            q.dataset.answered = '1';
+            for (var k = 0; k < opts.length; k++) {
+              opts[k].disabled = true;
+              if (opts[k].dataset.correct === 'true') opts[k].classList.add('correct');
+            }
+            var ok = opt.dataset.correct === 'true';
+            if (!ok) opt.classList.add('wrong');
+            fb.innerHTML = (ok ? '<b>✓ 对。 </b>' : '<b>✗ 再想一下。 </b>') + fb.dataset.explain;
+            fb.hidden = false;
+          });
+        })(opts[j]);
+      }
+    })(questions[i]);
+  }
+})();
+</script>
+</body>
+</html>

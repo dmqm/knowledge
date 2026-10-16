@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 4 讲 · 先验证，再开发</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+  <nav aria-label="讲义导航">
+    <a class="tag" href="../lessons/0003-is-it-worth-doing.html">← 第 3 讲 · 这件事，值不值得做</a>
+    <a class="tag" href="../lessons/0005-what-to-build-first.html">第 5 讲 · 资源有限，先做什么 →</a>
+    <a class="tag" href="../reference/0001-glossary.html">概念速查表</a>
+  </nav>
+
+  <p class="kicker">工程师的产品思维 · 第 4 讲</p>
+  <h1>先验证，再开发</h1>
+  <p class="lede">一句话目标：读完这一讲，你能从一个想法里挑出<strong>最危险的那条假设</strong>，并为它设计一个三天内做完、且能真正改变你决策的验证实验——在写第一行生产代码之前。</p>
+
+  <h2>引子：最贵的那种浪费，长得很像成功</h2>
+
+  <p>第 3 讲我们算过一笔账：这件事值不值得做。但那笔账是<strong>坐在会议室里推演出来的</strong>，它的每一个输入都是判断，不是事实。这一讲要解决的是下一步：账算得过来，然后呢？</p>
+
+  <p>对绝大多数工程师，答案是「然后就开始做」。这恰恰是工程训练给我们的默认反射——问题一旦确定，剩下的就是把它解好。于是团队花两个月，把一个功能做得稳定、优雅、埋点齐全。上线。然后安静得像没人来过。复盘时最刺痛的从来不是「做得不好」，而是「做得太好了」：<strong>你高效地证明了一个没人要的假设。</strong></p>
+
+  <p>所以这一讲要给你一套「动手之前先动手」的本事，而且是用工程师最熟悉的形式——<strong>先写断言，再写实现。</strong></p>
+
+  <h2>「最小可行产品」不是小一号的产品</h2>
+
+  <p>Lean Startup 给 MVP（最小可行产品）的定义很容易被误读成「先用少量功能上线，以后再补」。术语表里的措辞更准确：<strong>用最小成本学到最多东西的那一版——目标是「拿到能改变决策的证据」，不是「少做一点上线」。</strong></p>
+
+  <p>这两句话的分野，落在同一个判据上：<strong>如果你的这一版做出来之后，无论数据是好是坏，你都会继续做下去（或者都会放弃），那它就不是 MVP，它只是一个更便宜的产品。</strong> MVP 的唯一合格标准，是它<strong>能改变决策</strong>。</p>
+
+  <p>工程师理解这件事，最短的路径是拿它去类比<strong>技术 spike</strong>。当你要决定「选哪个存储引擎」时，你会花一天写一个用完即弃的 spike，去量 P99 延迟——你在意的是<strong>那个结论</strong>，绝不是让这段代码进生产。MVP 就是<strong>产品层的 spike</strong>：你投入的每一分，都是为了买一个结论。</p>
+
+  <p>但类比的边界也要说清，否则会误导：spike 通常丢掉，而 MVP 常常要交给真实用户使用，甚至真的要发出去。更准确的说法是：<strong>MVP 不是「最小的功能集」，而是「最小的实验装置」。</strong> 有些合格的 MVP 甚至连「软件」都不是——一段视频、一个假按钮都算（后面会讲）。</p>
+
+  <h2>构建—度量—学习：一个被读反了的循环</h2>
+
+  <p>Lean Startup 的核心循环是 <strong>Build-Measure-Learn（构建—度量—学习）</strong>：先做出最小版本，度量真实反馈，据此决定坚持或<strong>转向（pivot）</strong>。它衡量的单位不是「交付了什么」，而是<strong>经证实的认知</strong>（validated learning）——你今天确定了一件昨天还只是猜测的事。</p>
+
+  <p>大部分人对这个循环的误读在于：他们按箭头顺序读，于是默认「先构建」。但 Ries 在书里特别强调，<strong>实际规划是反着来的</strong>：先问「我们需要学到什么」，再问「要量什么才能知道学到了」，最后才问「要构建什么才能量到它」。</p>
+
+  <p>把这个循环放到你熟悉的语言里，它就是一条<strong>对「学习速度」的优化</strong>：真正稀缺的资源不是你的构建能力，而是<strong>你单位时间能从真实世界换回多少确定性</strong>。你写代码很快，这恰恰让「先构建」显得很划算——可如果方向错了，你只是在更快地跑向错误的地方。</p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 460 300" role="img">
+      <title>构建—度量—学习循环，以及从最危险假设进入的入口</title>
+      <defs>
+        <marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+          <path class="f-accent" d="M0,0 L10,5 L0,10 Z" />
+        </marker>
+      </defs>
+
+      <!-- 入口：最危险假设 -->
+      <rect class="f-wash s-accent" x="16" y="34" width="112" height="40" rx="8" stroke-width="1.1" />
+      <text x="72" y="59" text-anchor="middle" font-size="12">最危险假设</text>
+      <path class="s-accent" fill="none" stroke-width="1.3" d="M128,58 L171,55" marker-end="url(#ar4)" />
+      <text class="t-muted" x="72" y="24" text-anchor="middle" font-size="11">从这里进入</text>
+
+      <!-- 三个节点 -->
+      <rect class="f-bg s-rule" x="175" y="32" width="112" height="42" rx="8" />
+      <text x="231" y="58" text-anchor="middle" font-size="13">构建 Build</text>
+
+      <rect class="f-bg s-rule" x="332" y="208" width="112" height="42" rx="8" />
+      <text x="388" y="234" text-anchor="middle" font-size="13">度量 Measure</text>
+
+      <rect class="f-bg s-rule" x="16" y="208" width="112" height="42" rx="8" />
+      <text x="72" y="234" text-anchor="middle" font-size="13">学习 Learn</text>
+
+      <!-- 循环三边 -->
+      <path class="s-accent" fill="none" stroke-width="1.3" d="M254,74 L366,204" marker-end="url(#ar4)" />
+      <path class="s-accent" fill="none" stroke-width="1.3" d="M332,229 L132,229" marker-end="url(#ar4)" />
+      <path class="s-accent" fill="none" stroke-width="1.3" d="M98,204 L212,76" marker-end="url(#ar4)" />
+
+      <!-- 边上的动作说明 -->
+      <text class="t-muted" x="322" y="132" text-anchor="middle" font-size="11">做出最小版本</text>
+      <text class="t-muted" x="232" y="256" text-anchor="middle" font-size="11">度量真实反馈</text>
+      <text class="t-muted" x="128" y="132" text-anchor="middle" font-size="11">决定坚持 / 转向</text>
+
+      <!-- 中心 -->
+      <text class="t-accent" x="231" y="162" text-anchor="middle" font-size="12">最小可行产品</text>
+      <text class="t-muted" x="231" y="182" text-anchor="middle" font-size="11">能改变决策的那一版</text>
+    </svg>
+    <figcaption>读法：三个节点本身没什么稀奇，稀奇的是<strong>入口</strong>——循环不从「构建」出发，而是从<strong>最危险假设</strong>出发，倒推出「要量什么、要构建什么」。每转完一圈，你换回的是<strong>经证实的认知</strong>，然后决定坚持还是转向。工程师容易把「构建」当成起点，因为那是自己最擅长、最确定的一段；但起点该由<strong>哪个假设错了代价最大</strong>来决定。</figcaption>
+  </figure>
+
+  <h2>从「最危险的假设」开始，而不是从最容易的</h2>
+
+  <p>假设（assumption）是<strong>你认为成立、但还没有证据支持的说法</strong>。产品里最贵的往往不是「实现错了」，而是「假设错了」。而<strong>最危险的假设</strong>有一个精确的定义：<strong>如果它错了，代价最大的那一条。</strong></p>
+
+  <p>注意「危险」不等于「最可能错」。这是一个你已经很熟悉的乘法——风险 = 概率 × 影响。但你排优先级时，常常会不自觉地只优化其中一项：先干掉「最容易修」的，因为它能立刻给你确定感。产品验证里最典型的版本就是：<strong>团队先验证技术可行性</strong>，因为那是自己最有把握回答、且能在实现中顺手澄清的一类问题。可恰恰是它，往往最不值得单独花实验去验——技术问题会在你真正动手时自然暴露，而<strong>「用户根本不在乎」这件事，如果你不去主动问，它会一直保持沉默，直到你把东西做完。</strong></p>
+
+  <p>要挑出最危险的那条，术语表里 Cagan 的四问可以直接当分类框架：</p>
+
+  <ul>
+    <li><strong>价值 / 用户真想要吗（desirability）</strong>：有没有一类人，真的有一个值得被解决的<strong>用户要完成的任务</strong>？</li>
+    <li><strong>可行性 / 技术做得到吗（feasibility）</strong>：以现有能力与成本，能不能真的做出来、跑得稳？</li>
+    <li><strong>可用性 / 用户用得明白吗（usability）</strong>：就算做出来了，用户能不能不靠说明书就用起来？</li>
+    <li><strong>商业可行性 / 业务算得过账吗（viability）</strong>：它能不能被支撑下去——成本、合规、渠道、长期收入？</li>
+  </ul>
+
+  <p>分类之后，用一个残忍但好用的启发式去排序：<strong>「如果这条假设明天就被证伪，这个项目还成立吗？」</strong> 如果答案是「不成立」，它就是危险的。工程团队的通病，是把大量验证预算花在右下角两类（可行性、可用性），因为它们「可测、可证、能立刻写代码」；而真正会决定生死的是左上和右下那两类（价值、商业可行性），它们不测，就永远只是猜测。</p>
+
+  <h2>用最小成本买最大信息量：五种手段</h2>
+
+  <p>接下来的问题是「用什么验」。下面这五种手段，成本从几小时到几天不等，能验证的假设类型也各不相同。别把它们当成「技巧清单」，要当成一个<strong>「信息量 / 成本」的梯度</strong>——和你选日志采样率是同一类权衡：你想要的不是最便宜的，而是<strong>信息量刚好够改变你那条最危险假设决策的、最便宜的那个</strong>。</p>
+
+  <table>
+    <thead>
+      <tr><th>手段</th><th>你实际交付什么</th><th>成本量级</th><th>能验证哪类假设</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>用户访谈</td>
+        <td>一次对话（不下产品）</td>
+        <td>小时级</td>
+        <td>价值（定性面）；不验可用性</td>
+      </tr>
+      <tr>
+        <td>落地页</td>
+        <td>一页说明 + 一个「开始使用」按钮</td>
+        <td>小时级</td>
+        <td>价值（意愿信号）；不验可用性</td>
+      </tr>
+      <tr>
+        <td>假门（fake door）</td>
+        <td>界面里一个真按钮，点了才知「即将上线」</td>
+        <td>小时级</td>
+        <td>价值（真实场景里的意愿）</td>
+      </tr>
+      <tr>
+        <td>人工代跑（concierge）</td>
+        <td>结果由你手动做出来，用户直接用</td>
+        <td>天级</td>
+        <td>价值 + 可用性（能观察真实使用）</td>
+      </tr>
+      <tr>
+        <td>绿野仙踪（Wizard of Oz）</td>
+        <td>用户面对完整界面，背后是人在手动完成</td>
+        <td>天级</td>
+        <td>可用性 + 价值（用户以为系统是自动的）</td>
+      </tr>
+      <tr>
+        <td>演示视频</td>
+        <td>一段说明「它该怎么工作」的视频</td>
+        <td>半天级</td>
+        <td>价值（兴趣 / 意愿）；不验可行性、可用性</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>几个容易混淆的细节值得说透：</p>
+
+  <ul>
+    <li><strong>访谈和落地页验的不是一回事。</strong> 访谈给的是<strong>动机与语言</strong>（他为什么在乎、他怎么描述问题），但样本小、还容易被「善意的谎话」污染——所以要用 <strong>The Mom Test</strong> 的纪律：<strong>问过去的行为，别问未来的意愿</strong>；聊他的生活，别聊你的点子。落地页给的是<strong>行为的数字</strong>（点击、留资），可信度高一点，但它解释不了「为什么」。</li>
+    <li><strong>人工代跑和绿野仙踪只差一件事：用户知不知道背后有个人。</strong> 人工代跑是「我知道你在帮我做」，绿野仙踪是「我以为这是系统自动的」。差别决定了你测的是「这个结果有没有用」，还是「这个交互能不能被独立使用」。</li>
+    <li><strong>假门要诚实收尾。</strong> 它的原理是：在真实场景里放一个「点了才发现还没做」的按钮，用点击率当意愿信号。但它会<strong>消耗用户信任</strong>——测完必须给出明确的后续（比如登记、退款、说明），否则你省下的钱会以品牌信誉的形式还回去。</li>
+    <li><strong>演示视频几乎不验技术。</strong> 它只回答「有没有人想要」，代价是它连「做不做得出来」都证明不了。这听起来像缺点，但对某类项目恰恰是优点——下一节的案例就是这样。</li>
+  </ul>
+
+  <p>最后一条纪律，也是工程师最能立刻上手的部分：<strong>在实验开始之前，先写下「什么结果算通过」。</strong> 这就是<strong>可证伪的判据</strong>——和「写实现之前先写断言」是同一种纪律。没有预先写下的通过线，你看到任何数字都能事后解释它「还行」，那这次实验等于白做，你只是把猜测换成了一个更好听的猜测。</p>
+
+  <h2>案例：一段视频，一个还没写成的产品</h2>
+
+  <p>最能说明「先验证什么」的案例，是 Dropbox。它在 2007 年面对一个几乎无法提前演示的产品：文件同步的价值<strong>只有真的用起来才体会得到</strong>，你没法用一段静态原型把它讲明白；而要做出来，要啃下跨平台文件系统集成这类硬骨头，是典型的「工程难度极高、但要先确认值不值得做」的项目。</p>
+
+  <p>创始人 Drew Houston 要证的<strong>最危险假设</strong>，不是「技术能不能做出来」——那种事他作为工程师本来就有把握。他要证的是那条<strong>信心的跳跃</strong>（leap-of-faith）：<strong>如果我们真能把体验做得足够无缝，人们会愿意尝试吗？</strong> 当时的现实是：一对一向投资人解释这个产品，得到的回应常常是「这个市场已经很拥挤、而且没人靠它赚到钱」。所以「有人在不在乎」这个问题，用嘴是问不出来的。</p>
+
+  <p>他做了一件出乎意料地简单的事：<strong>拍了一段三分钟的视频。</strong> Eric Ries 在《The Lean Startup》里记录了这件事——视频朴实地演示了这项技术<strong>「本该如何工作」</strong>，由 Drew 亲自配音，画面里是他的鼠标如何拖拽文件、文件如何自动同步。它就投放给技术早期采用者社区看。</p>
+
+  <p>据 Ries 在书中引述 Drew 的回忆：<strong>「它把几十万人带到了网站。我们的 beta 等候名单一夜之间从 5,000 人变成了 75,000 人。」</strong> 并且<strong>在 24 小时内，这段视频获得了超过 10,000 个 Digg。</strong></p>
+
+  <p>关键在于时序：<strong>在那一刻，Dropbox 还没有一个可以交付的完整产品，这段视频本身就是 MVP。</strong> 它没有验证任何一条技术假设，却精准地击中了最危险的那条——<strong>有人真的想要。</strong></p>
+
+  <p>这个案例最有价值的读法，不是「他们营销很聪明」，而是<strong>「他们选对了验证顺序」</strong>：先花一个下午确认「要不要做」，把昂贵的「怎么做」留到确认之后。反过来，如果先埋头两年把跨平台同步做到极致，两年后你完全有可能对着一个<strong>没人要的完美产品</strong>。注意 Ries 的用词——他把这段视频称为 <strong>MVP</strong>，而不是「预告片」。差别就在判据上：它换回了一条能改变决策的证据。</p>
+
+  <h2>常见误解</h2>
+
+  <p><strong>一、MVP 就是把做成一半的东西先上线。</strong> 不是。合格的判据是「能否产出改变决策的证据」，不是「功能做了多少」。假门、演示视频连软硬件都不需要，却可以是合格的 MVP；反过来，一个功能齐全但<strong>无论数据如何你都不会改主意</strong>的版本，不算 MVP。</p>
+
+  <p><strong>二、验证就是发问卷、做调研。</strong> 问卷问的几乎全是「你将来会不会用」——未来、假设性，收到的是廉价的口头承诺。The Mom Test 的核心，就是绕开这种善意谎言：<strong>问过去的行为，不问未来的意愿。</strong></p>
+
+  <p><strong>三、我先把技术跑通再说。</strong> 这是工程师最自然的默认，也是本讲最想松动的一条。技术假设通常会在你动手实现时<strong>自动澄清</strong>；而价值与商业假设不会——你不主动设计实验去问，它就一直沉默。把验证预算全押在可行性上，等于把最贵的那两个问号留到最晚才面对。</p>
+
+  <div class="card">
+    <span class="card-title">小练习</span>
+    <p>挑一个你手上、或最近听到的想法（不一定要是你的项目）。写三件事：<br />
+    （1）它要成立，<strong>必须为真的三条假设</strong>，尽量覆盖价值 / 可行性 / 可用性 / 商业可行性；<br />
+    （2）用那句残忍的启发式——「如果它明天被证伪，项目还成立吗」——圈出<strong>最危险的那一条</strong>；<br />
+    （3）为它设计一个<strong>三天内能做完</strong>的验证实验，并在开始之前就写下<strong>通过判据</strong>（出现什么结果，你才会改变原计划）。</p>
+  </div>
+
+  <h2>回顾：三个问题</h2>
+
+  <div class="quiz" aria-label="回顾练习">
+    <span class="card-title">点选项，立刻看解析</span>
+
+    <div class="q">
+      <p class="stem">1. 判断一个「最小可行产品」是否合格，关键看什么？</p>
+      <button type="button" class="opt">功能是否少到能在一周之内上线</button>
+      <button type="button" class="opt">它的价格是否比现有竞品都更低</button>
+      <button type="button" class="opt" data-correct="true">它能否产出足以改变决策的证据</button>
+      <button type="button" class="opt">技术难点是否已经全部被攻克验证</button>
+      <p class="fb" hidden data-explain="MVP 的定义是「用最小成本学到最多东西的那一版」，目标是拿到能改变决策的证据，不是「少做一点上线」。如果做出来之后无论数据如何你都不会改主意，它就不是 MVP，只是一个更便宜的产品——哪怕它功能很多，或者功能很少。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">2. 验证要从「最危险的假设」开始，主要原因是？</p>
+      <button type="button" class="opt">它最容易被拆成可执行的开发任务</button>
+      <button type="button" class="opt" data-correct="true">它一旦错了代价最大足以拖垮整个项目</button>
+      <button type="button" class="opt">它通常是技术团队最有能力验证的那一条</button>
+      <button type="button" class="opt">它决定了这次迭代要交付多少个功能点</button>
+      <p class="fb" hidden data-explain="「最危险」= 错了代价最大，关注的是后果的重，而不是错的概率。技术可行性虽然容易验证，却往往会在实现中自动澄清；价值与商业可行性不会自己暴露，你不主动去问，它会一直沉默到产品做完。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">3. Dropbox 的演示视频，主要验证了哪一类假设？</p>
+      <button type="button" class="opt">可行性：跨平台同步引擎能否真的跑通</button>
+      <button type="button" class="opt">可用性：用户能否不靠帮助就完成操作</button>
+      <button type="button" class="opt">商业可行性：这门生意的账是否算得过来</button>
+      <button type="button" class="opt" data-correct="true">价值：用户是否真的想要这个产品</button>
+      <p class="fb" hidden data-explain="Ries 在《The Lean Startup》里记录了这个案例：Drew Houston 用一段三分钟演示视频（产品尚未交付）去验证那条信心的跳跃——「如果体验足够无缝，人们会愿意尝试吗」。视频换回了等候名单的暴涨，验证的是「有人想要」（价值 / desirability），而不是技术或界面。"></p>
+    </div>
+  </div>
+
+  <p class="ask">哪里没说清？<strong>回头直接问你的老师</strong>（那个正在运行本工作区的 agent）。它知道你的目标，可以就任何一句追问下去、举更多例子。</p>
+
+  <p class="foot">
+    <strong>推荐一手资料：</strong>
+    <a href="http://theleanstartup.com/" target="_blank" rel="noopener">Eric Ries, <em>The Lean Startup</em></a>
+    —— MVP、构建—度量—学习循环与「经证实的认知」的原始出处；本讲的 Dropbox 演示视频案例（含 5,000 → 75,000 的等候名单与「视频就是 MVP」的结论）即出自该书。
+    配套读法：<a href="https://www.producttalk.org/continuous-discovery-habits-book" target="_blank" rel="noopener">Teresa Torres, <em>Continuous Discovery Habits</em></a>——把「假设 → 实验 → 决策」变成每周可执行的节奏；也可用 <a href="https://www.momtestbook.com" target="_blank" rel="noopener">Rob Fitzpatrick, <em>The Mom Test</em></a> 来纪律化你的访谈。<br />
+    相关：<a href="0003-is-it-worth-doing.html">第 3 讲 · 这件事，值不值得做</a> ·
+    <a href="0005-what-to-build-first.html">第 5 讲 · 资源有限，先做什么</a> ·
+    <a href="../reference/0001-glossary.html">概念速查表</a> ·
+    <a href="../MISSION.md">使命</a>
+  </p>
+
+<script>
+(function () {
+  var questions = document.querySelectorAll('.quiz .q');
+  for (var i = 0; i < questions.length; i++) {
+    (function (q) {
+      var opts = q.querySelectorAll('.opt');
+      var fb = q.querySelector('.fb');
+      for (var j = 0; j < opts.length; j++) {
+        (function (opt) {
+          opt.addEventListener('click', function () {
+            if (q.dataset.answered === '1') return;
+            q.dataset.answered = '1';
+            for (var k = 0; k < opts.length; k++) {
+              opts[k].disabled = true;
+              if (opts[k].dataset.correct === 'true') opts[k].classList.add('correct');
+            }
+            var ok = opt.dataset.correct === 'true';
+            if (!ok) opt.classList.add('wrong');
+            fb.innerHTML = (ok ? '<b>✓ 对。 </b>' : '<b>✗ 再想一下。 </b>') + fb.dataset.explain;
+            fb.hidden = false;
+          });
+        })(opts[j]);
+      }
+    })(questions[i]);
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 2 讲 · 用户说的，不是用户要的</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+  <nav aria-label="讲义导航">
+    <a class="tag" href="../lessons/0001-do-the-right-things.html">← 第 1 讲 · 做对的事</a>
+    <a class="tag" href="../lessons/0003-is-it-worth-doing.html">第 3 讲 · 这件事值不值得做 →</a>
+    <a class="tag" href="../reference/0001-glossary.html">概念速查表</a>
+  </nav>
+
+  <p class="kicker">工程师的产品思维 · 第 2 讲</p>
+  <h1>用户说的，不是用户要的</h1>
+  <p class="lede">一句话目标：读完这一讲，你能把用户嘴里那句「给我加个 X」解码成他的<strong>处境</strong>与他想完成的<strong>任务</strong>，并且知道该问哪几个只关于过去的问题，而不是问他「会不会用」。</p>
+
+  <h2>引子：那句几乎无可挑剔的需求</h2>
+
+  <p>「客户要一个批量导出按钮，做不做？」第 1 讲用这句话讲过「该不该做」；这一讲讲更难的一半：<strong>怎么听懂它。</strong></p>
+
+  <p>把它当工程题看，它几乎无可挑剔：数据可能很大，于是要异步任务队列、进度可查、断点续传，或者干脆走游标分页流式下载；大租户要限流、队列打散，免得白天把库扫穿；导出的是敏感数据，还要权限校验和审计日志。每一层都正当、都能落地、都能写进 OKR。</p>
+
+  <p>现在换一句问法：「他导出来，是要干什么？」答案可能是：<strong>月末结账时财务把报表甩回来，说这个月毛利对不上，他得在关账前把那几笔异常交易找出来。</strong> 这个处境下的任务是「飞快定位极少数可疑记录」。</p>
+
+  <p>看清这一点，那个按钮就不再无可挑剔，而是<strong>一个可能更慢的解法</strong>：几十万行丢进 Excel 让人用眼睛翻——他本来坐在一个会写 SQL 的系统前面，你却把他发配到表格里。更贴题的可能是：把对账口径做进系统、按「与上月差异最大」排序、给离群值做标记、让异常连同上下文直接推到他面前。</p>
+
+  <blockquote>
+    <p>他报的是一个<strong>解决方案</strong>，你要解的是一个<strong>任务</strong>。这两样东西经常连名字都不一样。</p>
+  </blockquote>
+
+  <p>这一讲的功利价值就在这里：「用户说的」不是需求本身，而是需求经过一次<strong>有损压缩</strong>后的产物。下面拆开这次压缩，看丢了什么、为什么丢、怎么解回来。</p>
+
+  <h2>为什么用户报出来的永远是解法</h2>
+
+  <p>先说清楚：这不是用户不诚实，也不是他不会表达。<strong>人在描述不舒服时，会自动把不舒服归因到离他最近的那个名词上。</strong> 两个机制在同时起作用。</p>
+
+  <h3>一、他只能命名他叫得出来的东西</h3>
+
+  <p>你问「你要什么」，他脑子里检索的不是「我这一天的工作流卡在哪里」，而是「我知道的产品名词有哪些」：导出、报表、批量、标签。他确实难受，但他的难受没有名字，而这些名词有。<strong>于是可表达的那部分被说出来，不可表达的那部分被丢掉——丢掉的往往正是最要紧的。</strong> 用工程的话说：用户提交的是<strong>症状报告</strong>，不是根因分析——你从不会拿一句报错去改代码，而是先把现场信息捞出来；可换成需求，大家就习惯照着那句话写设计文档。</p>
+
+  <h3>二、一个请求要活下来，必须长得像「需求」</h3>
+
+  <p>在 B 端尤其关键：<strong>「我很难受」是没法被受理的</strong>——不能排期、不能验收、不能写进合同；而「给我加一个批量导出按钮」可以，它有交付物、有工作量、有验收标准。于是任何想让自己的痛被处理的人，都会本能地把它<strong>编译</strong>成一份格式合规的请求。<strong>你收到的是编译后的二进制，你要的是源码。</strong> 更麻烦的是我们自己在配合这场编译：问「要支持哪些格式？要几列？」，等于替他把对话钉死在解法层——<strong>问解法层的问题，只能拿到解法层的数据。</strong></p>
+
+  <h2>需求 vs 任务：把词先定死</h2>
+
+  <p>速查表里已收了这两条，直接引用它的措辞：</p>
+
+  <dl class="glossary">
+    <dt>需求 vs 任务<span class="alias">request vs job</span></dt>
+    <dd>需求是<strong>他提出的手段</strong>（「我要批量导出」）；任务是<strong>他真正想达成的进展</strong>（「我要找出那几个对象」）。</dd>
+
+    <dt>用户要完成的任务<span class="alias">Jobs to Be Done (JTBD) · Christensen</span></dt>
+    <dd>用户不是「买产品」，而是「雇一个东西来完成某件事」。问「他雇它干什么」，而不是「他要什么功能」。</dd>
+  </dl>
+
+  <p>合起来得到一个好用的判据：<strong>把产品换掉，任务还在不在？</strong> 换成一个完全不同的东西、那份进展照样有人需要，那它是任务；换掉产品这句话就作废，那它是需求，也就是一种解法。「关账前找出异常」是任务，那么手动查、写脚本查、看告警都是候选解法——只有一个恰好是你想做的那个。</p>
+
+  <p>Christensen 团队把任务表述为：<strong>一个人在特定处境下想要取得的进展（progress）</strong>，并且同时带着三种力量——功能性的（事能不能办成）、社会性的（别人怎么看我）、情绪性的（我心里过不过得去）。<a href="https://www.christenseninstitute.org/theory/jobs-to-be-done" target="_blank" rel="noopener">Christensen Institute 的 JTBD 条目</a>还给了我很喜欢的一句：人们不是简单买一个东西，而是把它<strong>拉进自己的生活中</strong>来取得进展。「在货架上挑一个最像能用的」，这正是用户报解法的原因。</p>
+
+  <p>副产品是：用任务定义竞争，对手名单会整个换掉。第 1 讲里奶昔的对手是香蕉和贝果；在「关账前找出异常」上，对手可能是财务的 Excel 手工活，甚至「先拖着不查」。<strong>如果那场仗本来就不在你的产品里打，你做得再好也赢不了。</strong></p>
+
+  <h2>一张图：冰山</h2>
+
+  <figure class="figure">
+    <svg viewBox="0 0 460 310" role="img">
+      <title>冰山模型：水面上是用户要的功能，水面下是要完成的任务与处境</title>
+
+      <!-- 水面以下 -->
+      <rect class="f-wash" x="0" y="112" width="460" height="198" />
+      <polygon class="f-surface" points="112,112 168,112 202,170 186,222 132,268 84,232 74,172" />
+      <polygon class="s-accent" fill="none" stroke-width="1.2" points="112,112 168,112 202,170 186,222 132,268 84,232 74,172" />
+
+      <!-- 水面线 -->
+      <line class="s-accent" x1="0" y1="112" x2="460" y2="112" stroke-width="1.4" />
+      <text class="t-muted" x="8" y="106" font-size="10">水面</text>
+
+      <!-- 水面以上 -->
+      <polygon class="f-bg" points="140,44 168,112 112,112" />
+      <polygon class="s-accent" fill="none" stroke-width="1.2" points="140,44 168,112 112,112" />
+
+      <!-- ① 他要的功能 -->
+      <path class="s-accent" fill="none" stroke-width="1" stroke-dasharray="3 3" d="M170,78 L222,64" />
+      <rect class="f-bg s-rule" x="222" y="38" width="230" height="46" rx="8" />
+      <text class="t-accent" x="234" y="59" font-size="11">① 他说他想要的</text>
+      <text x="234" y="76" font-size="13">一个批量导出按钮</text>
+
+      <!-- ② 他要完成的任务 -->
+      <path class="s-muted" fill="none" stroke-width="1" stroke-dasharray="3 3" d="M196,180 L222,164" />
+      <rect class="f-bg s-rule" x="222" y="140" width="230" height="46" rx="8" />
+      <text class="t-accent" x="234" y="161" font-size="11">② 他要完成的任务</text>
+      <text x="234" y="178" font-size="13">关账前找出那几笔异常</text>
+
+      <!-- ③ 他要的进展与处境 -->
+      <path class="s-muted" fill="none" stroke-width="1" stroke-dasharray="3 3" d="M182,236 L222,238" />
+      <rect class="f-bg s-rule" x="222" y="214" width="230" height="46" rx="8" />
+      <text class="t-accent" x="234" y="235" font-size="11">③ 他要的进展与处境</text>
+      <text x="234" y="252" font-size="13">不被追问、不加班、不出错</text>
+    </svg>
+    <figcaption>读法：<strong>水面上只有一条，就是他说出口的功能需求；水面下才决定成败。</strong> 越往下越接近处境——任务（要取得的进展）和情绪 / 社会性的力量（不想被追问、不想通宵、不想显得不专业）。你的设计只作用在水面上，成不成立却由水面以下决定。<strong>方向不是把水面上那条否掉，而是往下潜，直到问出「什么处境、什么进展」。</strong></figcaption>
+  </figure>
+
+  <h2>一个真实案例：那张搬不走的餐桌</h2>
+
+  <p>这个案例来自 Bob Moesta 的访谈研究（Christensen Institute 记录，出处见文末）：<strong>用户明确说出口的那句话，恰恰是错的。</strong></p>
+
+  <p>底特律一家建筑公司要卖新建公寓，客群定得很清楚：退休人士、离异的单亲父母。产品按这个客群做高端感——花岗岩台面、不锈钢家电，销售与营销都下了本钱。<strong>结果是来看房的人很多，成交很少。</strong> 公司于是用了最标准的做法：焦点小组。用户说「凸窗会更好看」，建筑师就赶着给样板间加上凸窗和其他细节——<strong>销量还是没有起色。</strong></p>
+
+  <p>Moesta 换了做法：不问还没买的人「你想要什么」，而是去找<strong>已经买了的人</strong>，问他们当初雇这套房子是要做什么。线索出现得有点怪——餐桌。看房的人反复说「我用不上正式餐厅」，可真正成交的买家反复提到餐桌。有位买家的话被完整记了下来：「等我想清楚那张餐桌该怎么办，我才敢搬。」<strong>餐桌代表的是家庭；真正挡住成交的不是少了某个配置，而是放弃一件有分量的事所伴随的焦虑。</strong></p>
+
+  <p>公司据此改的东西全在水面下：把餐厅做大，让人放得下那张桌子；提供搬家服务；给两年储物；在小区里做一个分拣室，让新业主慢慢决定什么留下、什么扔掉。结果：<strong>价格上调 3,500 美元（覆盖搬家与仓储成本后仍有利润）。2007 年行业销量下滑 49% 时，他们反而把生意做大了 25%。</strong></p>
+
+  <p>请注意「用不上正式餐厅」：它不是谎话，而是<strong>用户在解法层给的答案</strong>。照着做是把餐厅做小；读懂它是把餐厅做<strong>大</strong>，外加一整套降低焦虑的服务。<strong>同一个字面请求，照做和读懂，指向相反的方向。</strong> 而可展示的东西（凸窗、台面、家电）永远在水面上、永远好验收——<strong>「照需求做」在验收环节永远安全，原因正是你交付的每一样东西都能被看见。</strong></p>
+
+  <h2>一个更扎工程师心的版本：报税软件</h2>
+
+  <p>同样记录在 Christensen Institute：一家报税软件公司推断用户想要<strong>更深入的节税洞察</strong>，于是做了个很「强壮」的平台。结果是平台的复杂度让用户花在软件上的时间变多了。而 JTBD 分析揭示，很多用户的主要任务是<strong>在报税上少花时间</strong>；顺着这个洞察把产品<strong>简化</strong>之后，销量上去了。</p>
+
+  <p>读成一句给架构师的话：<strong>「更强壮的平台」是我们的天然审美。</strong> 但如果用户的任务就是「省时间、少做决定」，那么可配置性就是负担，抽象层就是多出来的学习成本，通用就是没有人替他做决定。<strong>功能是加法的诱惑，任务有时要求你减法。</strong></p>
+
+  <h2>访谈纪律：不问他会不会用，问他上次怎么办</h2>
+
+  <p>要往水面下潜，只能跟人聊。而大多数人第一次聊就拿回一堆假数据，因为问的是<strong>关于未来和假设的问题</strong>。Rob Fitzpatrick 的《The Mom Test》就是为此写的。坏问题几乎全落在三类里：</p>
+
+  <ul>
+    <li><strong>关于未来</strong>：「上线了你会用吗？」——回答是免费的，所以没有信息量。</li>
+    <li><strong>关于假设</strong>：「如果能自动标记异常交易，对你有帮助吗？」——你已经在句子里把解法喂给他，他只能点头。</li>
+    <li><strong>关于意见</strong>：「你觉得这个功能好不好？」——他会礼貌地说「挺好的」，这就是书里说的「善意的谎话」。</li>
+  </ul>
+
+  <p>把这三类反过来就是纪律。书里那几条规矩转述成我们的语境是：<strong>聊他的生活，别聊你的点子；问过去的具体事，别问未来的笼统看法；少说，多听。</strong> 落到问题上，就是这套只关于过去的问法：</p>
+
+  <ol class="flow">
+    <li><strong>「你上次遇到这情况是什么时候？」</strong>（要一个具体的、有日期的场景，不要「经常」「有时候」。）</li>
+    <li><strong>「你当时是怎么凑合过去的？」</strong>（金矿。他已经有了一个解法，而那个解法的形状就是任务真正的约束——Excel、手写 SQL、叫同事帮忙、先不管。）</li>
+    <li><strong>「为此你花了多少时间或钱？」</strong>（时间与钱是已经付过的代价，最接近真实需求的证据。）</li>
+    <li><strong>「还有谁被这件事影响？」</strong>（谁在催他、谁在看结果——社会性那层力量常常是真正的驱动力。）</li>
+  </ol>
+
+  <p>为什么「过去」这么有效？因为<strong>过去的行为已经被时间和成本定价过了，而未来的意愿没有。</strong>「如果有这功能我会用」是零成本的；「上个月为了查这个我加了两晚班」是有价格的——访谈的本质，是<strong>给人已经付出的代价定价</strong>。</p>
+
+  <p>对工程师有个顺手的类比：<strong>做访谈要像看生产环境的日志，而不是像读用户手写的需求文档。</strong> 日志只记录已经发生、有时间戳的事实，不会为照顾你的情绪而美化自己——<strong>你只信日志。</strong></p>
+
+  <h2>把「需求」翻写成「任务」：一个句式</h2>
+
+  <blockquote>
+    <p>当<strong>【处境】</strong>时，我要<strong>【进展】</strong>，这样我就能<strong>【结果 / 避免的损失】</strong>。</p>
+  </blockquote>
+
+  <p>拿开头的例子试一遍：「当<strong>月末结账、财务说这个月毛利对不上</strong>时，我要<strong>快速找出那几笔最可疑的交易并看清它们为什么异常</strong>，这样就能<strong>在关账前改完，不必通宵，也不必在跨部门群里显得无能</strong>。」</p>
+
+  <p>然后自检两条，它们比句式本身更重要：<strong>句子里出现界面元素或功能名了吗？</strong>「按钮」「页面」「导出」「报表」都是解法的词，一出现就说明还没翻到任务层。<strong>把产品换成完全不同的东西，这句话还成立吗？</strong> 换掉产品任务就消失的那不是任务，是你在给自己的功能找理由。</p>
+
+  <table>
+    <thead>
+      <tr><th>维度</th><th>需求（用户说的）</th><th>任务（用户要的）</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>外在形态</td>
+        <td>一个可交付的物件：按钮、页面、报表</td>
+        <td>一个处境下的进展：关账前找出异常</td>
+      </tr>
+      <tr>
+        <td>稳定性</td>
+        <td>随界面与实现变化，换个产品就作废</td>
+        <td>跨产品稳定：手查、脚本、告警都算数</td>
+      </tr>
+      <tr>
+        <td>怎么验证</td>
+        <td>能不能做出来（工程问题）</td>
+        <td>有没有人为它付过时间或钱（产品问题）</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>两个陷阱</h2>
+
+  <p><strong>一、把用户说的反着做。</strong> 用户说要 A，你偏不做 A，去做你猜的「真正的 B」——这是把独断当洞察。正确动作不是「那就做小餐厅」，也不是「我懂用户，别问了」，而是<strong>潜下去，再拿证据回来</strong>：任务同样是假设，需要被验证。</p>
+
+  <p><strong>二、把 JTBD 做成话术。</strong> 它的价值在于<strong>解释人为什么换</strong>，不在于给用户贴标签。用对没用对只看一件事：<strong>你的下一个决策有没有因此改变。</strong></p>
+
+  <div class="card">
+    <span class="card-title">小练习</span>
+    <p>拿你手上真实的一句「用户需求」——比如「我们要支持按标签批量给订单打标」——改写成 JTBD 任务陈述：<strong>当【处境】时，我要【进展】，这样就能【结果】。</strong></p>
+    <p>然后自检三项：（1）句子里还有没有界面元素或功能名？（2）把「批量打标」换成完全不同的做法（告警、规则自动匹配、让客服直接改、干脆不做），这个任务还成立吗？（3）这个任务，我手上有什么<strong>证据</strong>？——老实写下第 3 条；如果答案是「靠猜」，那就是你下一步该去聊的人。</p>
+  </div>
+
+  <h2>回顾：三个判断题</h2>
+
+  <div class="quiz" aria-label="回顾练习">
+    <span class="card-title">点选项，立刻看解析</span>
+
+    <div class="q">
+      <p class="stem">1. 用户说「给我加个批量导出按钮」，在 JTBD 视角下这是什么？</p>
+      <button type="button" class="opt">他对自身真实处境与任务的准确描述</button>
+      <button type="button" class="opt" data-correct="true">他提出的一种手段未必等于要完成的任务</button>
+      <button type="button" class="opt">他确认过的唯一需求可直接进入设计阶段</button>
+      <button type="button" class="opt">他对某个已知系统缺陷的技术性反馈</button>
+      <p class="fb" hidden data-explain="按速查表的措辞：需求是他提出的手段（「我要批量导出」）；任务是他真正想达成的进展（「我要找出那几个对象」）。手段只是候选解法之一，直接照实现，就是把一个有损压缩后的产物当成原始需求。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">2. 底特律公寓案例里，「用不上正式餐厅」和「餐桌」说明了什么？</p>
+      <button type="button" class="opt">焦点小组的意见比一对一访谈更能预测购买</button>
+      <button type="button" class="opt">应该忠实按用户原话把餐厅改得更小更省</button>
+      <button type="button" class="opt" data-correct="true">用户明确说出的诉求可能遮蔽真正的阻碍</button>
+      <button type="button" class="opt">情绪因素只在住房这类大额消费里起作用</button>
+      <p class="fb" hidden data-explain="买家嘴上说用不上餐厅，但「等我想清楚那张餐桌该怎么办，我才敢搬」——餐桌代表家庭，真正的阻碍是放弃它的焦虑。照原话做（做小餐厅）方向恰好相反；真实动作是做大餐厅，外加搬家、仓储、分拣室。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">3. 按 The Mom Test 的纪律，下面哪个问题值得问？</p>
+      <button type="button" class="opt" data-correct="true">你上次遇到这问题是怎么凑合解决的</button>
+      <button type="button" class="opt">如果我们做出来你会不会愿意付费</button>
+      <button type="button" class="opt">你觉得我们这版方案设计得好不好用</button>
+      <button type="button" class="opt">你希望我们下个版本再增加哪些功能</button>
+      <p class="fb" hidden data-explain="关于未来的意愿、假设和主观评价都是免费的回答，所以没有信息量；只有过去的具体行为已经被时间和钱定价过——「上次什么时候、怎么凑合的、花了多少时间或钱、谁还受影响」才是数据。"></p>
+    </div>
+  </div>
+
+  <p class="ask">哪里没说清？<strong>回头直接问你的老师</strong>（那个正在运行本工作区的 agent）。它知道你的目标，可以就任何一句追问下去、举更多例子。</p>
+
+  <p class="foot">
+    <strong>推荐一手资料：</strong>
+    <a href="https://www.momtestbook.com" target="_blank" rel="noopener">Rob Fitzpatrick, <em>The Mom Test</em></a>
+    —— 两小时能读完的小书，讲的就是怎么跟用户聊而不被「善意的谎话」骗到：聊他的生活别聊你的点子，问过去别问未来，少说多听。本讲后半的访谈纪律几乎全从它来。<br />
+    <strong>案例与理论出处：</strong>
+    <a href="https://www.christenseninstitute.org/theory/jobs-to-be-done" target="_blank" rel="noopener">Christensen Institute · Jobs to Be Done Theory</a>
+    （底特律公寓与餐桌、报税软件两个案例，以及「在特定处境下要取得的进展」「功能 / 社会 / 情绪三种力量」的表述）与
+    <a href="https://hbr.org/2016/09/know-your-customers-jobs-to-be-done" target="_blank" rel="noopener">Clayton M. Christensen et al., “Know Your Customers’ ‘Jobs to Be Done’”, HBR, 2016-09</a>
+    （JTBD 的原始论述）。<br />
+    相关：<a href="../lessons/0001-do-the-right-things.html">第 1 讲 · 做对的事</a> ·
+    <a href="../lessons/0003-is-it-worth-doing.html">第 3 讲 · 这件事值不值得做</a> ·
+    <a href="../reference/0001-glossary.html">概念速查表</a> ·
+    <a href="../MISSION.md">使命</a>
+  </p>
+
+<script>
+(function () {
+  var questions = document.querySelectorAll('.quiz .q');
+  for (var i = 0; i < questions.length; i++) {
+    (function (q) {
+      var opts = q.querySelectorAll('.opt');
+      var fb = q.querySelector('.fb');
+      for (var j = 0; j < opts.length; j++) {
+        (function (opt) {
+          opt.addEventListener('click', function () {
+            if (q.dataset.answered === '1') return;
+            q.dataset.answered = '1';
+            for (var k = 0; k < opts.length; k++) {
+              opts[k].disabled = true;
+              if (opts[k].dataset.correct === 'true') opts[k].classList.add('correct');
+            }
+            var ok = opt.dataset.correct === 'true';
+            if (!ok) opt.classList.add('wrong');
+            fb.innerHTML = (ok ? '<b>✓ 对。 </b>' : '<b>✗ 再想一下。 </b>') + fb.dataset.explain;
+            fb.hidden = false;
+          });
+        })(opts[j]);
+      }
+    })(questions[i]);
+  }
+})();
+</script>
+</body>
+</html>

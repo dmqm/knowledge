@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>概念速查表 · 工程师的产品思维</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+  <nav aria-label="讲义导航">
+    <a class="tag" href="../lessons/0001-do-the-right-things.html">← 第 1 讲 · 「把事做对」还是「做对的事」</a>
+  </nav>
+
+  <p class="kicker">工程师的产品思维 · 参考文档</p>
+  <h1>概念速查表</h1>
+  <p class="lede">全课程共用的术语。所有讲义都以本表的措辞为准；遇到没收录的词，先回来这里补定义再用。想深入，每一讲末尾都有一手资料。</p>
+
+  <h2>思维与目标</h2>
+  <dl class="glossary">
+    <dt>工程思维<span class="alias">engineering thinking</span></dt>
+    <dd>给定一个问题，找出最好的解法。优化正确性、可靠性、效率、成本。<strong>题目是给定的。</strong></dd>
+
+    <dt>产品思维<span class="alias">product thinking</span></dt>
+    <dd>先追问问题值不值得解、是不是真问题。优化用户价值与业务结果。<strong>题目本身要被质疑。</strong></dd>
+
+    <dt>产出<span class="alias">output</span></dt>
+    <dd>你交付了什么——上线了几个功能、写了多少代码。容易度量，但与价值无关。</dd>
+
+    <dt>结果<span class="alias">outcome</span></dt>
+    <dd>用户或业务真的发生了什么改变——任务变快、留存提高、成本下降。难度量，但才是有意义的。</dd>
+
+    <dt>交付陷阱<span class="alias">build trap · Melissa Perri</span></dt>
+    <dd>组织用产出而非结果衡量成功，于是不断生产功能，却离用户的真问题越来越远。</dd>
+  </dl>
+
+  <h2>团队与工作方式</h2>
+  <dl class="glossary">
+    <dt>功能团队<span class="alias">feature team</span></dt>
+    <dd>被动接收一份功能清单 / 路线图并把它做出来。产品的成败不由它负责。本质是「功能工厂」。</dd>
+
+    <dt>赋能团队<span class="alias">empowered team · Marty Cagan</span></dt>
+    <dd>接收的是要达成的<strong>结果</strong>（如「提高新用户首周留存」），自己负责发现问题、设计方案、验证结果。</dd>
+
+    <dt>发现 / 交付<span class="alias">discovery / delivery</span></dt>
+    <dd>发现 = 决定「做什么」的工作（探问题、验假设）；交付 = 把确定要做的东西「做出来、上线、维护」。</dd>
+
+    <dt>塑形 / 下注<span class="alias">shaping / betting · Shape Up</span></dt>
+    <dd>塑形 = 在投入前把粗糙想法打磨到「够粗、够确定、有边界」；下注 = 从候选里挑少数几件进固定周期做。</dd>
+
+    <dt>时间预算<span class="alias">appetite · Shape Up</span></dt>
+    <dd>先定「愿意为这件事花多少时间」，再让方案迁就这个预算；而不是先估工时再决定做不做。</dd>
+  </dl>
+
+  <h2>理解用户与需求</h2>
+  <dl class="glossary">
+    <dt>用户要完成的任务<span class="alias">Jobs to Be Done (JTBD) · Christensen</span></dt>
+    <dd>用户不是「买产品」，而是「雇一个东西来完成某件事」。问「他雇它干什么」，而不是「他要什么功能」。</dd>
+
+    <dt>需求 vs 任务<span class="alias">request vs job</span></dt>
+    <dd>需求是他提出的手段（「我要批量导出」）；任务是他真正想达成的进展（「我要找出那几个对象」）。</dd>
+
+    <dt>机会解决方案树<span class="alias">Opportunity Solution Tree (OST) · Teresa Torres</span></dt>
+    <dd>从「目标」向下长：目标 → 用户机会（痛点 / 需求）→ 候选方案 → 假设实验。用来避免一上来就跳到方案。</dd>
+
+    <dt>假设<span class="alias">assumption</span></dt>
+    <dd>你认为成立、但还没被证据支持的说法。产品里最贵的往往不是「实现错了」，而是「假设错了」。</dd>
+
+    <dt>最危险的假设<span class="alias">riskiest assumption</span></dt>
+    <dd>如果它错了、代价最大的那条假设。验证要从它开始，而不是从最容易的那条开始。</dd>
+  </dl>
+
+  <h2>验证与优先级</h2>
+  <dl class="glossary">
+    <dt>最小可行产品<span class="alias">MVP · Lean Startup</span></dt>
+    <dd>用最小成本学到最多东西的那一版——目标是「拿到能改变决策的证据」，不是「少做一点上线」。</dd>
+
+    <dt>构建—度量—学习<span class="alias">Build-Measure-Learn</span></dt>
+    <dd>精益创业的核心循环：先做出最小版本，度量真实反馈，据此决定坚持或转向（pivot）。</dd>
+
+    <dt>产品—市场契合<span class="alias">PMF</span></dt>
+    <dd>产品真正满足了某类人的某项任务，用户愿意持续使用甚至离不开它。没有 PMF，再多的功能也留不住人。</dd>
+
+    <dt>RICE<span class="alias">Reach × Impact × Confidence ÷ Effort · Intercom</span></dt>
+    <dd>量化优先级：(触达人数 × 影响程度 × 信心) ÷ 工作量。好处是把分歧摊到四个明确因素上，不是替你决定。</dd>
+
+    <dt>Kano 模型<span class="alias">基本型 / 期望型 / 兴奋型需求</span></dt>
+    <dd>把需求分类：基本型缺失会让人愤怒、做多也不会更满意；期望型越多越好；兴奋型超出预期、能带来惊喜。</dd>
+  </dl>
+
+  <h2>负债与判断</h2>
+  <dl class="glossary">
+    <dt>产品债<span class="alias">product debt</span></dt>
+    <dd>为了短期上线而欠下的体验债、逻辑债、一致性债。与「技术债」对应，同样会累积利息。</dd>
+
+    <dt>可行性 / 可用性 / 价值 / 商业可行性<span class="alias">feasibility / usability / value / viability</span></dt>
+    <dd>Cagan 的四问：技术做得到吗（工程负责）、用户用得明白吗（设计负责）、用户真需要吗、业务算得过账吗（产品负责）。</dd>
+  </dl>
+
+  <p class="ask">这张表会随课程生长。哪一条你觉得含混，<strong>直接问你的老师</strong>，我们把它改清楚。</p>
+
+  <p class="foot">
+    <strong>完整出处清单：</strong><a href="../RESOURCES.md">RESOURCES.md</a> ·
+    回到 <a href="../lessons/0001-do-the-right-things.html">第 1 讲</a> ·
+    <a href="../MISSION.md">使命</a>
+  </p>
+
+</body>
+</html>

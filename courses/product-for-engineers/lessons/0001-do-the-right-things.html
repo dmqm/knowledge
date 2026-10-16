@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 1 讲 · 「把事做对」还是「做对的事」</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+  <nav aria-label="讲义导航">
+    <a class="tag" href="0002-users-dont-know-what-they-want.html">下一讲 · 用户说的不是用户要的 →</a>
+    <a class="tag" href="../reference/0001-glossary.html">概念速查表</a>
+  </nav>
+
+  <p class="kicker">工程师的产品思维 · 第 1 讲</p>
+  <h1>「把事做对」还是「做对的事」</h1>
+  <p class="lede">一句话目标：读完这一讲，你能说清工程思维与产品思维分别在优化什么、各自在哪一步最危险，以及一个架构师该怎么把后者的能力接到自己身上。</p>
+
+  <h2>引子：一个你大概经历过的瞬间</h2>
+
+  <p>需求评审会上，产品经理说：「用户反馈想要批量导出。」你很快给出一个漂亮的方案：异步任务队列、进度条、断点续传、权限校验、导出格式可配置。三周后上线，稳定、优雅、零事故。然后——<strong>没有然后了。三个月里，这个功能被用了 40 次，其中 30 次是测试和销售自己点的。</strong></p>
+
+  <p>复盘这件事，最刺痛的往往不是「做得不好」，恰恰相反：<strong>做得太好了。</strong> 系统设计没问题，工程实现没问题，问题出在最开始的那一步——没人问过「批量导出」到底是用户要完成的任务，还是他随口提的一个手段。你把它当成一道已经被定义好的题，然后漂亮地解了它。可如果这道题本身就不值得解呢？</p>
+
+  <p>这一讲是整门课的地基。它要澄清一个后端 / 架构背景的人最容易踩的坑：<strong>你越强于「把事做对」，越容易忽略「做对的事」。</strong></p>
+
+  <h2>「对」这个字，其实有两个意思</h2>
+
+  <p>中文里「把事做对」和「做对的事」听起来差不多，英文里却分得很清楚：前者是 <em>do things right</em>，后者是 <em>do the right things</em>。德鲁克那句话之所以被反复引用，就在于它点破了一个残酷的事实：<strong>这两件事的优化目标根本不同，甚至常常冲突。</strong></p>
+
+  <ul>
+    <li><strong>把事做对（工程思维）</strong>：给定一个问题，找出最好的解法。它优化的是<strong>正确性、可靠性、效率、成本</strong>——系统不出错、能扩展、好维护、跑得省。题目是别人给的。</li>
+    <li><strong>做对的事（产品思维）</strong>：先追问这个问题值不值得解、它是不是真问题、有没有更根本的问题。它优化的是<strong>价值与结果</strong>——用户真的因此变得更好吗？业务真的因此变了吗？题目本身是要被质疑的。</li>
+  </ul>
+
+  <p>把这两个目标放进同一个项目里看，冲突立刻显现。假设你的团队有能力在三周内上线那个批量导出功能，也可以选择用同样三周去查清：用户真正卡住的地方是不是「找不到某几个对象」，而批量导出只是他勉强能想到的绕路？<strong>工程思维会选前者——因为它确定、可交付、能立刻在燃尽图上画一笔；产品思维必须先忍受一段不确定，才敢说后者可能更值。</strong></p>
+
+  <h2>为什么技术人天然偏向「把事做对」</h2>
+
+  <p>这不是性格问题，是训练的结果，而且是被系统性强化的。</p>
+
+  <p>工程能力的成长路径，几乎全是「解题」：给定一个 bug，定位它；给定一个性能瓶颈，优化它；给定一套需求，设计它。你被奖励的每一次，都是<strong>在题目已经确定的前提下，提高解的质量</strong>。久而久之，一种默认契约形成了：<strong>问题由上游负责，解法由我负责。</strong> 需求进入你的视线时，已经是一份写好的规格说明，你要做的是把它翻译成系统。</p>
+
+  <p>这套契约在「题目确实是对的」时候极其高效，这正是工程师文化强大的地方。但它有一个隐藏前提：<strong>上游定义问题是可靠的。</strong> 而这个前提，在现实中经常不成立——提出需求的人可能也没想清楚，或者想清楚了但不是真实痛点，或者痛点真实但没大到值得投入。工程师的默认姿态，恰恰让他最不容易发现这一点，因为他的注意力全在「怎么解」上。</p>
+
+  <blockquote>
+    <p>产品思维不是要你变成产品经理，而是让你在接手任何一个题目之前，先完成一次「上游工作」——哪怕只是问三个问题。</p>
+  </blockquote>
+
+  <h2>两个循环：功能工厂 vs 结果回路</h2>
+
+  <p>把这个分野画成图，最容易看清。左边是技术人熟悉的那条线：需求进来，方案出去，实现，上线，结束。右边多了一个头和一个尾——一头是「目标与问题」，一尾是「验证与学习」。</p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 460 250" role="img">
+      <title>功能工厂循环与结果回路的对比</title>
+      <defs>
+        <marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+          <path class="f-accent" d="M0,0 L10,5 L0,10 Z" />
+        </marker>
+      </defs>
+
+      <!-- 左：功能工厂 -->
+      <text class="t-muted" x="110" y="22" text-anchor="middle" font-size="13">功能工厂（交付导向）</text>
+      <rect class="f-bg s-rule" x="20" y="44" width="180" height="30" rx="7" />
+      <text x="110" y="64" text-anchor="middle" font-size="13">需求</text>
+      <path class="s-accent" fill="none" stroke-width="1.3" d="M110,76 V104" marker-end="url(#ar1)" />
+      <rect class="f-bg s-rule" x="20" y="108" width="180" height="30" rx="7" />
+      <text x="110" y="128" text-anchor="middle" font-size="13">方案 / 实现</text>
+      <path class="s-accent" fill="none" stroke-width="1.3" d="M110,140 V168" marker-end="url(#ar1)" />
+      <rect class="f-bg s-rule" x="20" y="172" width="180" height="30" rx="7" />
+      <text x="110" y="192" text-anchor="middle" font-size="13">上线 · 结束</text>
+      <text class="t-muted" x="110" y="226" text-anchor="middle" font-size="11">衡量：上线了几个功能</text>
+
+      <!-- 右：结果回路 -->
+      <text class="t-muted" x="340" y="22" text-anchor="middle" font-size="13">结果回路（价值导向）</text>
+      <rect class="f-wash s-accent" x="250" y="40" width="180" height="28" rx="7" stroke-width="1.1" />
+      <text x="340" y="59" text-anchor="middle" font-size="13">目标 / 问题</text>
+      <path class="s-accent" fill="none" stroke-width="1.3" d="M340,70 V92" marker-end="url(#ar1)" />
+      <rect class="f-bg s-rule" x="250" y="96" width="180" height="26" rx="7" />
+      <text x="340" y="114" text-anchor="middle" font-size="13">机会 / 假设</text>
+      <path class="s-accent" fill="none" stroke-width="1.3" d="M340,124 V146" marker-end="url(#ar1)" />
+      <rect class="f-bg s-rule" x="250" y="150" width="180" height="26" rx="7" />
+      <text x="340" y="168" text-anchor="middle" font-size="13">最小方案</text>
+      <path class="s-accent" fill="none" stroke-width="1.3" d="M340,178 V200" marker-end="url(#ar1)" />
+      <rect class="f-bg s-rule" x="250" y="204" width="180" height="26" rx="7" />
+      <text x="340" y="222" text-anchor="middle" font-size="13">验证 · 学习</text>
+      <path class="s-accent" fill="none" stroke-width="1.3" d="M430,217 H448 V54 H432" marker-end="url(#ar1)" />
+      <text class="t-muted" x="446" y="140" text-anchor="middle" font-size="11" transform="rotate(90 446 140)">回到目标</text>
+    </svg>
+    <figcaption>读法：左边那条线是技术人最熟悉的——从「需求」直接进入「方案 / 实现」，衡量标准是<strong>上线了几个功能（output）</strong>。右边多出两头：入口先锚定「目标 / 问题」，出口用「验证 / 学习」把结果带回目标，衡量标准是<strong>用户或业务是否真的改变了（outcome）</strong>。产品思维的本质，就是把左图补成右图。</figcaption>
+  </figure>
+
+  <p>这个「功能工厂」不是夸张。工业界给它起了个名字——<strong>Build Trap（交付陷阱）</strong>。Melissa Perri 在《Escaping the Build Trap》里把它定义为：组织用<strong>产出（output）</strong>而不是<strong>结果（outcome）</strong>衡量成功，于是不断加班加点生产功能，却离用户真正的问题越来越远。她给的判据很直接：如果团队最自豪的句子是「我们今年上线了 47 个功能」，而不是「我们让某类用户的某项任务变快了 30%」，那多半掉进了陷阱。</p>
+
+  <p>Marty Cagan 在《INSPIRED》里从团队结构给了对应的诊断：把团队分成两种——<strong>功能团队（feature team）</strong>被动接收路线图、把功能做出来；<strong>赋能团队（empowered team）</strong>接收的是要达成的结果（比如「提高新用户首周留存」），自己负责发现问题、设计方案、验证。前者是功能工厂，后者才可能跑结果回路。注意，这里的区别不在团队有多大、技术多强，而在<strong>给他们的是「功能清单」还是「要达成的结果」</strong>。</p>
+
+  <h2>一个真实到残忍的案例：奶昔</h2>
+
+  <p>最能说明「问题本身可能定义错了」的案例，来自 Clayton Christensen 团队的经典研究（HBR，2016）——麦当劳想提高奶昔销量。</p>
+
+  <p>麦当劳是数据驱动的公司。他们画出了奶昔用户的画像，把人请进会议室问「奶昔怎么改进你会多买」，得到的答案很具体：再浓一点、再甜一点、果粒再多一点。他们照做了。销量？几乎没动。</p>
+
+  <p>后来他们换了个问法，不再问「产品」，而是问<strong>「你什么时候、为什么买这杯奶昔」</strong>。答案翻转了：很大一部分奶昔是在<strong>早上通勤路上</strong>买的。买的人要开很久的车去上班，肚子还不饿但十点会饿，需要一样能单手拿、能慢慢吸、能填住一段无聊车程、又不弄脏车的东西。奶昔的竞争对手根本不是别的奶昔，而是香蕉、贝果、甜甜圈、能量棒——甚至是一根能嚼很久的香蕉。它的「任务」是<strong>「让无聊的通勤变得有事可做，并且撑到十点」</strong>。</p>
+
+  <p>看清这一点，改进方向完全变了：奶昔该做得更<strong>浓、更耐吸</strong>（吸得久），而不是更甜；该更快拿到手，而不是更花哨。Christensen 团队由此提出 <strong>Jobs to Be Done（用户要完成的任务）</strong>：用户不是「买产品」，而是「雇一个东西来完成某个任务」。用产品经理的常见做法（问用户想要什么改进）去解这道题，恰恰会解错——因为用户被问「怎么改奶昔」时，会顺着你给的框架回答，而不会主动告诉你<strong>他其实不是在找一个奶昔，而是在打发通勤</strong>。</p>
+
+  <p>这就是第 1 讲最想让你记住的形状：<strong>你越熟练地优化「奶昔本身」，越可能错过「用户要完成的任务」。</strong> 批量导出是这样，奶昔也是这样。</p>
+
+  <h2>架构师的优势，其实比你想的更大</h2>
+
+  <p>好消息是：产品思维不是要你从零学一套陌生语言。你已经在做一种高度相似的事——<strong>权衡（trade-off）</strong>。</p>
+
+  <p>你会说：这个方案读性能好但写复杂；那个方案一致性强但吞吐低；拆微服务能独立扩展，但引入分布式事务的代价。你习惯了<strong>在约束下比较不同选择的代价</strong>，而产品思维的内核，正是把同一套权衡能力用在「该不该做、做哪个」上：</p>
+
+  <ul>
+    <li>把「读性能 vs 写复杂度」换成「用户价值 vs 开发成本」；</li>
+    <li>把「技术债」换成「产品债」——为了短期上线而欠下的体验债、逻辑债；</li>
+    <li>把「这个瓶颈在哪」换成「这个假设最可能错在哪」。</li>
+  </ul>
+
+  <p>你缺的不是理性,而是<strong>把理性的对象从「解法」上移到「问题」</strong>。这一步的迁移，比从零学产品的人快得多。</p>
+
+  <h2>三个问题：接题之前先问</h2>
+
+  <p>不用等整门课学完。下次有人把需求递到你面前，在开始设计之前，先问这三个问题（哪怕只在心里问）：</p>
+
+  <ol class="flow">
+    <li><strong>用户要完成的任务是什么？</strong>（不是「他要批量导出」，而是「他导出之后要拿这批数据做什么」——这决定导出到底是不是对的解法。）</li>
+    <li><strong>怎么知道它值得做？</strong>（如果不做会怎样？有多少人、多频繁、多痛？有没有更便宜的验证方式？）</li>
+    <li><strong>最可能错的假设是哪个？</strong>（是「用户真需要」，还是「用户会用」，还是「用户会因此改变行为」？——先想清楚哪一个错了代价最大。）</li>
+  </ol>
+
+  <p>三个问题问完，你并没有变成产品经理，但你已经从「功能工厂的工人」挪到了「结果回路的一端」。后面的每一讲，都会把其中某个问题拆开、讲透。</p>
+
+  <h2>常见误解：产品思维 = 讨好用户 / 当需求翻译机？</h2>
+
+  <p>不是。两个方向都要防：</p>
+
+  <p>第一，<strong>产品思维不等于「用户要什么就给什么」</strong>。用户会提「批量导出」，但真实任务可能是「找那几个对象」，也可能他就该被引导到别处。照单全收只是把决策权推给用户，那不叫产品思维，叫逃避判断。</p>
+
+  <p>第二，<strong>产品思维也不等于「做需求翻译机」</strong>，把产品的口头需求转成技术规格。翻译机只是功能工厂里的优秀工人。真正的产品判断，要在「这个需求该不该存在」这一层上做工作。</p>
+
+  <p>产品思维的本质，是<strong>持续追问价值</strong>：对用户、对业务，到底发生了改变没有。它既反「闷头做功能」，也反「无原则地满足用户」。</p>
+
+  <div class="card">
+    <span class="card-title">小练习</span>
+    <p>回想你最近做过的一个功能。写下两句话：（1）它<strong>上线后实际改变了什么</strong>？（2）它<strong>当初想改变什么</strong>？如果两句对不上，问题出在哪一步？把这题留着，第 6 讲会带你重做一遍。</p>
+  </div>
+
+  <h2>回顾：三个问题</h2>
+
+  <div class="quiz" aria-label="回顾练习">
+    <span class="card-title">点选项，立刻看解析</span>
+
+    <div class="q">
+      <p class="stem">1. 「把事做对」和「做对的事」的根本区别是什么？</p>
+      <button type="button" class="opt" data-correct="true">前者优化既定解法的质量后者质疑题目本身</button>
+      <button type="button" class="opt">前者由工程师负责后者由产品经理全权负责</button>
+      <button type="button" class="opt">前者只在初创公司重要后者只在成熟公司重要</button>
+      <button type="button" class="opt">前者追求速度后者追求质量二者并不冲突</button>
+      <p class="fb" hidden data-explain="工程思维把问题当作给定、优化解法；产品思维先追问问题值不值得解。二者优化目标不同，甚至会冲突——把功能做得越精致，可能越偏离用户真正要完成的任务。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">2. 麦当劳奶昔案例里，最初的做法错在哪？</p>
+      <button type="button" class="opt">没有做用户画像也没有收集任何反馈</button>
+      <button type="button" class="opt">改进方向全错应该把奶昔做得更甜更大</button>
+      <button type="button" class="opt" data-correct="true">只问产品怎么改没问用户雇它做什么</button>
+      <button type="button" class="opt">调研对象太少样本不足以支撑结论</button>
+      <p class="fb" hidden data-explain="麦当劳做了画像、也问了用户，但问题是「奶昔怎么改进」——用户会顺着这个框架回答。换成问「你何时为何买它」，才发现真正的任务是「打发无聊通勤并撑到十点」，竞争对手是香蕉贝果而非别的奶昔。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">3. 组织掉进「交付陷阱」的典型信号是什么？</p>
+      <button type="button" class="opt">团队规模太大难以协调跨部门协作</button>
+      <button type="button" class="opt" data-correct="true">用上线功能数量而非用户结果衡量成功</button>
+      <button type="button" class="opt">技术债太多导致系统频繁出现故障</button>
+      <button type="button" class="opt">需求变化太快导致排期反复被推翻</button>
+      <p class="fb" hidden data-explain="Perri 的定义：组织用产出（output，上线了几个功能）而非结果（outcome，用户/业务真的改变了什么）衡量成功，就会不停生产功能却离真问题越来越远。"></p>
+    </div>
+  </div>
+
+  <p class="ask">哪里没说清？<strong>回头直接问你的老师</strong>（那个正在运行本工作区的 agent）。它知道你的目标，可以就任何一句追问下去、举更多例子。</p>
+
+  <p class="foot">
+    <strong>推荐一手资料：</strong>
+    <a href="https://www.svpg.com/product-vs-feature-teams" target="_blank" rel="noopener">Marty Cagan, “Product vs. Feature Teams”（SVPG）</a>
+    —— 用最短的篇幅讲清「功能团队」与「赋能团队」的区别，也就是本讲两个循环的核心；读完你会明白为什么「给他们什么」比「团队多强」更能决定结果。<br />
+    相关：<a href="0002-users-dont-know-what-they-want.html">第 2 讲 · 用户说的不是用户要的</a> ·
+    <a href="../reference/0001-glossary.html">概念速查表</a> ·
+    <a href="../MISSION.md">使命</a>
+  </p>
+
+<script>
+(function () {
+  var questions = document.querySelectorAll('.quiz .q');
+  for (var i = 0; i < questions.length; i++) {
+    (function (q) {
+      var opts = q.querySelectorAll('.opt');
+      var fb = q.querySelector('.fb');
+      for (var j = 0; j < opts.length; j++) {
+        (function (opt) {
+          opt.addEventListener('click', function () {
+            if (q.dataset.answered === '1') return;
+            q.dataset.answered = '1';
+            for (var k = 0; k < opts.length; k++) {
+              opts[k].disabled = true;
+              if (opts[k].dataset.correct === 'true') opts[k].classList.add('correct');
+            }
+            var ok = opt.dataset.correct === 'true';
+            if (!ok) opt.classList.add('wrong');
+            fb.innerHTML = (ok ? '<b>✓ 对。 </b>' : '<b>✗ 再想一下。 </b>') + fb.dataset.explain;
+            fb.hidden = false;
+          });
+        })(opts[j]);
+      }
+    })(questions[i]);
+  }
+})();
+</script>
+</body>
+</html>

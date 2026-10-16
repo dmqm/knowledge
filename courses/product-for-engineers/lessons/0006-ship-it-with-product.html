@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 6 讲 · 和产品一起，把事做成</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+  <nav aria-label="讲义导航">
+    <a class="tag" href="../lessons/0005-what-to-build-first.html">← 第 5 讲 · 资源有限，先做什么</a>
+    <a class="tag" href="../reference/0001-glossary.html">概念速查表</a>
+  </nav>
+
+  <p class="kicker">工程师的产品思维 · 第 6 讲</p>
+  <h1>和产品一起，把事做成</h1>
+  <p class="lede">一句话目标：读完这一讲，你能把一句「做不了」改写成一份带代价的选项菜单，能用一页纸提案把「我觉得该做」变成可下注的项目，并说清工程师与产品各自该对哪一问负责。</p>
+
+  <h2>引子：一句「做不了」，对方听到了什么</h2>
+
+  <p>评审会上，产品问：「这个功能下周能上吗？」你说：「<strong>做不了。</strong>」你没说错。你的意思是：在当前的质量标准、当前的排期、当前的系统结构下，成本高得离谱。但对方听到的是另一句话——「他不想做。」于是对话从「怎么一起把事做成」滑向「怎么说服他做」：他列举用户多痛，你列举坑有多深。三个来回之后，会议结束了，你们甚至比开始时更不了解对方。</p>
+
+  <p>这不是沟通技巧的问题，是<strong>话语类型</strong>的问题。「做不了」是一个结论，一句否决。否决会触发防御：对方要么继续加码说服你，要么绕开你，去更上面找资源。而「愿意为它花两周」和「做不了」描述的其实是同一份约束，却是两种完全不同的话——前者是<strong>报价</strong>，后者是<strong>关门</strong>。</p>
+
+  <p>工程师为什么会习惯性给结论？因为工程训练奖励的就是结论。面对技术伙伴，「这个方案一致性强但吞吐低」是专业的、值得信任的。但产品不是你的技术伙伴——他手里还攥着一件你不掌握的事：这件事<strong>值不值得做</strong>。当你用一个纯技术的结论，去回答一个混合了价值与成本的问题时，你不只是拒绝了一个方案，你其实是替对方下了一个你无权下的判断。</p>
+
+  <h2>把否决换成菜单</h2>
+
+  <p>正确的话术形状只有一条：<strong>给「可选方案 + 代价」，而不是给结论。</strong>把二元的那扇门，拆成一张带价签的菜单。</p>
+
+  <p>下面是一段<strong>示例话术</strong>（用来演示形状，不是谁的真实记录）：</p>
+
+  <blockquote>
+    <p>产品：「导出功能下周能上吗？」</p>
+    <p>你：「能谈，但有三种代价。<strong>一，</strong>全量导出，任意条件都能导——2 周，要改导出服务、动权限。<strong>二，</strong>只解月末那几笔异常——先做一个筛选视图，3 天，覆盖多数场景。<strong>三，</strong>这周先不做，月末我帮你们人工拉一次——零开发，但以后每月都要占一次人力。你们更在意哪一个？」</p>
+  </blockquote>
+
+  <p>同一份约束，同一个你，同一周。区别只在：你没有替对方决定「值不值得」，你把<strong>代价</strong>摊开，让他用自己的判断（价值、商业可行性）来做选择。这里有两个要点，缺一不可：</p>
+
+  <ul>
+    <li><strong>代价必须是真的。</strong>如果三个选项里有两个明显是陪跑的坑，那不是菜单，是要挟。菜单的可信度，来自每一条都能独立成立、都有人会真心选它。</li>
+    <li><strong>菜单不是让步。</strong>你并没有承诺「3 天一定做完」，也没有偷偷降低质量标准；你只是把一个非黑即白的「能 / 不能」，拆成了几档受约束的可能。约束没变，可决定权交回去了。</li>
+  </ul>
+
+  <p>而且，菜单会顺带逼出那个最关键的问题：对方要的到底是 2 周的全量导出，还是月末那几笔异常？这正是前面几讲反复出现的分层——<strong>需求是手段，任务是进展</strong>。菜单让两个人不得不在同一句里同时回答它。</p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 470 190" role="img">
+      <title>把「做不了」翻译成带代价的可选方案菜单</title>
+      <defs>
+        <marker id="ar6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+          <path class="f-accent" d="M0,0 L10,5 L0,10 Z" />
+        </marker>
+      </defs>
+
+      <!-- 左：一句结论 -->
+      <text class="t-muted" x="85" y="28" text-anchor="middle" font-size="12">现在的说法</text>
+      <rect class="f-wash s-rule" x="20" y="40" width="130" height="46" rx="8" />
+      <text x="85" y="62" text-anchor="middle" font-size="14">做不了</text>
+      <text class="t-muted" x="85" y="78" text-anchor="middle" font-size="10.5">结论 · 对话终止</text>
+
+      <!-- 转化 -->
+      <text class="t-accent" x="182" y="55" text-anchor="middle" font-size="9.5">换成选项</text>
+      <path class="s-accent" fill="none" stroke-width="1.3" d="M152,63 H206" marker-end="url(#ar6)" />
+
+      <!-- 右：菜单 -->
+      <text class="t-muted" x="335" y="16" text-anchor="middle" font-size="12">换成菜单（代价各不同）</text>
+      <rect class="f-bg s-rule" x="215" y="24" width="240" height="42" rx="8" />
+      <text x="227" y="43" font-size="12.5">全量导出</text>
+      <text class="t-muted" x="227" y="58" font-size="10.5">代价 2 周 · 覆盖全部场景</text>
+
+      <rect class="f-wash s-accent" x="215" y="72" width="240" height="46" rx="8" stroke-width="1.2" />
+      <text x="227" y="92" font-size="12.5">筛选视图（只解月末异常）</text>
+      <text class="t-muted" x="227" y="108" font-size="10.5">代价 3 天 · 命中真实任务</text>
+
+      <rect class="f-bg s-rule" x="215" y="124" width="240" height="42" rx="8" />
+      <text x="227" y="143" font-size="12.5">这周先不做</text>
+      <text class="t-muted" x="227" y="158" font-size="10.5">代价 0 · 每月人工核对</text>
+    </svg>
+    <figcaption>读法：左边只有一个结论——「做不了」，它是一扇关上的门。中间只做了一件事：把同一份约束翻译成<strong>带代价的选项</strong>。约束没有改变，右边却变成了一张菜单，决定权回到了对方手里。真正命中任务的，往往不是最贵的那一项。</figcaption>
+  </figure>
+
+  <h2>四问分工：谁该对哪一问负责</h2>
+
+  <p>僵局之所以反复发生，是因为双方常常在回答同一个问题，却以为在回答对方的问题。Cagan 把产品判断拆成<strong>四问</strong>，正好可以给这件事排座次：</p>
+
+  <ul>
+    <li><strong>可行性（feasibility）</strong>：技术做得到吗——<strong>工程负责</strong>；</li>
+    <li><strong>可用性（usability）</strong>：用户用得明白吗——<strong>设计负责</strong>；</li>
+    <li><strong>价值（value）</strong>：用户真需要吗——<strong>产品负责</strong>；</li>
+    <li><strong>商业可行性（viability）</strong>：业务算得过账吗——<strong>产品负责</strong>。</li>
+  </ul>
+
+  <p>看清这张表，「做不了」的病根就露出来了：它是<strong>可行性</strong>问题的一个答案，却被当成了对整个提案的裁决。工程师有资格说「这样做，我们做得到 / 做不到，代价是多少」；但没有足够信息说「这件事不值得做」——那是价值与商业可行性。反过来，产品有资格说「这个结果很重要」，但没有资格替你说「这三天能做完」——那是可行性。</p>
+
+  <p>四问的价值，是把一场「谁说了算」的拉扯，换成一次分工：每个视角只对自己那一问表态，并把依据摆出来。你会立刻发现，「做不了」几乎从来不是终局——它只是告诉你，哪一条路贵、贵多少。</p>
+
+  <p>由此得到一条给工程师的硬规则，Shape Up 说得最准：当别人问「<strong>这个能不能做</strong>」时，别回答能不能，回答「<strong>在什么预算内，能不能</strong>」。原话是——在软件里，什么都能做，但没有什么是免费的（<em>“everything is possible but nothing is free.”</em>）；所以不要问「能不能做 X」，要问「X 能不能在六周里做」。同一句「能做」，配上不同的时间盒，是两件完全不同的事。</p>
+
+  <h2>固定时间、可变范围：谈结果，不要谈承诺</h2>
+
+  <p>Shape Up 的核心机制，可以一句话概括：<strong>时间固定，范围可变。</strong>要理解它，先分清两个看起来很像、方向却相反的东西：</p>
+
+  <ul>
+    <li><strong>估算（estimate）</strong>：从设计出发，以一个数字结束。你先想清楚要做什么，再算出要多久。</li>
+    <li><strong>时间预算（appetite）</strong>：从数字出发，以一个设计结束。你先决定「这件事值多少时间」，再让方案迁就这个数字。</li>
+  </ul>
+
+  <p>这不是顺序上的小差别，它决定了整场对话的性质。估算是被动的：设计一膨胀，时间就跟着膨胀，最后你拿「工时」为方案背书，而没人再问它值不值。时间预算是主动的：你先给出「我们愿意为它花两周」，之后每一句关于范围的争论，都有一个锚。</p>
+
+  <p>这也直接改变了协作的姿势。产品提需求时，你们第一个要谈的不该是「要做哪些功能」，而是「<strong>这段时间，我们想换到什么结果</strong>」。结果定住，范围就成了那个可砍的变量：能换到结果的做好，换不到的砍掉。Shape Up 用两个词描述这件事的两半：</p>
+
+  <ul>
+    <li><strong>上坡（uphill）</strong>：还有未知，还有没解的问题；</li>
+    <li><strong>下坡（downhill）</strong>：未知都解决了，只剩执行。</li>
+  </ul>
+
+  <p>这个区分对工程师特别有用，因为它把含糊的「进度」，翻译成了具体的「<strong>未知还剩多少</strong>」。上坡阶段最该谈的，是「哪个兔子洞要不要砍、要不要提前补」；下坡阶段才轮到催进度。把上坡当成下坡来催，正是很多「做不了」的起因——你被要求在还有未知的时候，就给出一个确定的日期。</p>
+
+  <p>还有一条专门保护工程师的机制值得知道：<strong>断路器（circuit breaker）</strong>——没能在周期内交付的项目，默认<strong>取消</strong>，而不是默认延长。它听着残酷，其实是解放：时间盒是事先约好的，范围可以砍，所以「砍到能在盒子里交付」是一件正常、甚至被鼓励的事，而不是失败。当范围可砍、时间固定，你就再也不用靠加班去吞下所有膨胀。</p>
+
+  <h2>一页纸提案：工程师主导时的最小工具</h2>
+
+  <p>前面都在讲怎么回应别人。这一节反过来问：当你自己觉得「这事该做」时，怎么发起？Shape Up 给的答案是一页纸提案（pitch），五个要素，缺一不可：</p>
+
+  <ol class="flow">
+    <li><strong>问题。</strong>现在哪里出错了，谁在什么场景下卡住。不说「加个导出功能」，而说清「月末对账时，人要翻五个页面才找得到那几笔异常」。这就是给设计锚一个可比的基线。</li>
+    <li><strong>时间预算（appetite）。</strong>我们愿意为它花多少时间——小批量（一两周）还是大批量（六周）。先给数，再给设计。</li>
+    <li><strong>方案。</strong>粗、但已解、有边界：够让人看懂，又不细到剥夺实现方自己决定的空间。</li>
+    <li><strong>兔子洞（rabbit holes）。</strong>已知的未知——哪一块可能没有现成解法、哪一处从没做过、哪个决定必须先定下来。对每个兔子洞，要么在塑形阶段补掉，要么明确砍掉。</li>
+    <li><strong>不做（no-gos）。</strong>本周期明确不支持的场景。比如「不做跨组织导出」「不做定时推送」——写出来，范围才不会无声地膨胀。</li>
+  </ol>
+
+  <p>为什么这是工程师的「最小武器」？因为你本来就最擅长结构化：把不确定拆成边界，把风险标出来，把接口先定死。一页纸提案，就是用你最熟的技能，去做一件你可能还不熟的事——<strong>发起一件事，并为它下注</strong>。你不需要等产品把需求写好再翻译；你可以自己把问题、预算、方案、风险、边界写清楚，放到桌上，让大家决定要不要投时间。发现问题的人，往往也最该把方案写出来。</p>
+
+  <h2>真实案例：从「六周」谈成「一天」</h2>
+
+  <p>Basecamp 的做法里有一个很具体的例子（《Shape Up》全文在网上免费可读）。一位客户要求「<strong>更复杂的权限规则</strong>」，如果照请求的字面意思去做，很容易就是<strong>六周</strong>的工作量。团队没有照单接收，也没有简单拒绝，而是往下多问了一层：到底发生了什么？</p>
+
+  <p>答案是：有人把一份文件归档了，却不知道归档会让它对所有人消失。症结不是「权限不够细」，而是「归档这个动作没有告诉人它的后果」。于是他们没有去建一套权限规则，而是在归档动作上加了一句警告，说明影响——<strong>一个六周的项目，变成了一天的改动。</strong></p>
+
+  <p>这个案例值得工程人反复看，因为它就是「给方案不给结论」在真实环境里的样子：团队没有停在「六周，做不了」这个结论上，也没有认命去做六周，而是把问题往下挖了一层，于是一场本要硬碰硬的需求，变成了一天就能拿出的选项。时间预算、缩小问题、兔子洞——前面讲的东西，全在这一步里。</p>
+
+  <p>反过来，《Shape Up》也记了一次失败，用来警告不能把「设计师 / 工程师到时候会想出来」当成借口。团队曾下注去重做 Basecamp 首页上展示客户项目的方式，默认「总会有个可行的设计」，但在塑形阶段没有验证这一点。项目开始后才发现问题比预想难得多，六周预算内谁都没能找到合适的设计方案，最后整个项目被放弃、之后再重新考虑。教训很直接：<strong>时间盒救不了一个没做兔子洞排查的方案。</strong>「做不了」如果是一个你在上坡阶段就看到的兔子洞，那就该在那时说，而不是开跑后第十天才说。</p>
+
+  <h2>回到使命：不转岗，但要有判断该做什么的能力</h2>
+
+  <p>到这里，六讲走完了。第 1 讲问「题目值不值得解」；中间几讲把用户、机会、验证、优先级逐一拆开；这一讲把它们落到协作与主导。它们其实是同一个能力在不同场合的样子：<strong>判断该做什么，并让这个判断能被讨论、被下注、被验证。</strong></p>
+
+  <p>你不用转岗。你还是那个写代码、设计系统的人——而且正因为你在一线，你比任何人都更早看到「做不了」背后真正的代价、真正的兔子洞、真正的替代方案。过去，你把这些信息压缩成一句结论，于是它成了一堵墙；把它摊成一份带代价的菜单、一页纸的提案，同样的信息就变成了一张桌子——大家可以围着它一起做决定。改变的不是你的技术水平，只是这些信息的形状。</p>
+
+  <p>这就是这门课想给你的东西：不是一个新头衔，而是当你面对一个需求、一个系统、一个机会时，能问出「它值不值得做、有没有更便宜的路、最可能错在哪」的那种判断力。拥有它，你就不必再等别人把题目递到你手里。</p>
+
+  <div class="card">
+    <span class="card-title">小练习</span>
+    <p>把一句「这个做不了」改写成三条<strong>带代价的选项</strong>。挑一个你最近说过或听过的「做不了」，然后：</p>
+    <p>① 先写出那条约束到底是什么（是时间、是架构、是数据拿不到，还是要动别的系统）。② 写三条选项，<strong>每条都标注代价</strong>（时间 + 影响面 + 副作用），并保证每条都能独立成立——不是两条陪跑。③ 最后加一句：这三条里，哪一条最可能命中对方真正要完成的任务？</p>
+    <p>参照本讲那张导出的菜单：全量导出 2 周 / 筛选视图 3 天 / 先不做人工处理。写完之后你会发现，你并没有多做什么，只是把「关门」换成了「报价」。</p>
+  </div>
+
+  <h2>回顾：三件事</h2>
+
+  <div class="quiz" aria-label="回顾练习">
+    <span class="card-title">点选项，立刻看解析</span>
+
+    <div class="q">
+      <p class="stem">1. 一句「做不了」最容易引发僵局，根本原因是什么？</p>
+      <button type="button" class="opt">工程师没能把技术方案解释清楚</button>
+      <button type="button" class="opt">产品经理低估了实现的真实难度</button>
+      <button type="button" class="opt" data-correct="true">它下的是结论而不是给出选项与代价</button>
+      <button type="button" class="opt">双方没有对齐需求各自的优先级</button>
+      <p class="fb" hidden data-explain="「做不了」是一个结论、一句否决，对方收到的是「你不想做」，于是转入防御或绕过你。把它换成带代价的几种选项，约束没变，但决定权交回了对方。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">2. 「固定时间、可变范围」讲的是什么？</p>
+      <button type="button" class="opt">先用估算确定工作量再决定是否开始</button>
+      <button type="button" class="opt">把范围先写死之后再灵活调整交付时间</button>
+      <button type="button" class="opt">时间不够时用降低质量标准来保住范围</button>
+      <button type="button" class="opt" data-correct="true">先定时间预算再让方案迁就预算来设计</button>
+      <p class="fb" hidden data-explain="估算从设计出发、以数字结束；时间预算从数字出发、以设计结束。固定时间、可变范围，就是先把「这段时间要换到什么结果」谈定，再让方案与范围随预算调整。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">3. 一页纸提案里的「不做（no-gos）」是干什么的？</p>
+      <button type="button" class="opt" data-correct="true">明确声明本周期不支持的场景与用法</button>
+      <button type="button" class="opt">列出将来可能会补上的备选功能清单</button>
+      <button type="button" class="opt">承诺在下一个周期里补齐这些功能</button>
+      <button type="button" class="opt">记录团队内部对这份方案的反对意见</button>
+      <p class="fb" hidden data-explain="no-gos 划出本周期明确不支持、也不去讨论的场景，防止范围无声膨胀，也让对方不必猜。它说的是「不在这版做这件事」，而不是「永久不做这件事」。"></p>
+    </div>
+  </div>
+
+  <p class="ask">哪里没说清？<strong>回头直接问你的老师</strong>（那个正在运行本工作区的 agent）。它知道你的目标，可以就任何一句追问下去、举更多例子。</p>
+
+  <p class="foot">
+    <strong>推荐一手资料：</strong>
+    <a href="https://basecamp.com/shapeup" target="_blank" rel="noopener">Ryan Singer, 《Shape Up》（Basecamp，全文免费在线）</a>
+    —— 本讲的「时间预算」「固定时间、可变范围」「上坡 / 下坡」「兔子洞」「no-gos」「断路器」都出自这里；上文那两则真实案例，分别在第 3 章「Set Boundaries」与第 5 章「Risks and Rabbit Holes」，值得连原文一起读。
+    想看团队与授权那条线，读 <a href="https://www.svpg.com/books/empowered-ordinary-people-extraordinary-products" target="_blank" rel="noopener">Cagan &amp; Jones, 《Empowered》（SVPG）</a>。<br />
+    相关：<a href="../lessons/0005-what-to-build-first.html">第 5 讲 · 资源有限，先做什么</a> ·
+    <a href="../reference/0001-glossary.html">概念速查表</a> ·
+    <a href="../MISSION.md">使命</a>
+  </p>
+
+<script>
+(function () {
+  var questions = document.querySelectorAll('.quiz .q');
+  for (var i = 0; i < questions.length; i++) {
+    (function (q) {
+      var opts = q.querySelectorAll('.opt');
+      var fb = q.querySelector('.fb');
+      for (var j = 0; j < opts.length; j++) {
+        (function (opt) {
+          opt.addEventListener('click', function () {
+            if (q.dataset.answered === '1') return;
+            q.dataset.answered = '1';
+            for (var k = 0; k < opts.length; k++) {
+              opts[k].disabled = true;
+              if (opts[k].dataset.correct === 'true') opts[k].classList.add('correct');
+            }
+            var ok = opt.dataset.correct === 'true';
+            if (!ok) opt.classList.add('wrong');
+            fb.innerHTML = (ok ? '<b>✓ 对。 </b>' : '<b>✗ 再想一下。 </b>') + fb.dataset.explain;
+            fb.hidden = false;
+          });
+        })(opts[j]);
+      }
+    })(questions[i]);
+  }
+})();
+</script>
+</body>
+</html>
