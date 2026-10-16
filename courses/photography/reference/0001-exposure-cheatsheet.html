@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>曝光速查表 · 摄影</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="kicker">摄影 · 速查</p>
+<h1>曝光速查表</h1>
+<p class="lede">拍照时该一直开着（或打印出来）的一张表：三个旋钮、一句口诀、一张排错清单，
+十秒钟查完，不必回头翻讲义。</p>
+
+<p class="toc" style="margin:.1rem 0 1.6rem;font-family:var(--sans);font-size:.82rem;color:var(--muted);line-height:2;">
+  <a href="#stops">一、三档速查</a> ·
+  <a href="#roles">二、三者管什么</a> ·
+  <a href="#swap">三、互换表</a> ·
+  <a href="#ev">四、曝光补偿口诀</a> ·
+  <a href="#hist">五、直方图判读</a> ·
+  <a href="#trouble">六、排错表</a> ·
+  <a href="#phone">七、手机三步</a> ·
+  <a href="#manual">八、什么时候放弃自动</a>
+</p>
+
+<figure class="figure">
+  <svg viewBox="0 0 420 196" role="img" aria-labelledby="fig-cheat-t">
+    <title id="fig-cheat-t">三个旋钮共同决定画面亮度，每个旋钮各自带来一种副作用</title>
+    <defs>
+      <marker id="cheat-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" markerUnits="userSpaceOnUse" orient="auto">
+        <path d="M0 0 L10 5 L0 10 Z" class="f-muted" />
+      </marker>
+    </defs>
+
+    <circle cx="70" cy="50" r="27" class="f-wash s-accent" stroke-width="1.5" />
+    <text x="70" y="46" text-anchor="middle" font-size="13" font-weight="600">光圈</text>
+    <text x="70" y="63" text-anchor="middle" font-size="10" class="t-muted">孔的大小</text>
+
+    <circle cx="210" cy="50" r="27" class="f-wash s-accent" stroke-width="1.5" />
+    <text x="210" y="46" text-anchor="middle" font-size="13" font-weight="600">快门</text>
+    <text x="210" y="63" text-anchor="middle" font-size="10" class="t-muted">开多久</text>
+
+    <circle cx="350" cy="50" r="27" class="f-wash s-accent" stroke-width="1.5" />
+    <text x="350" y="46" text-anchor="middle" font-size="13" font-weight="600">ISO</text>
+    <text x="350" y="63" text-anchor="middle" font-size="10" class="t-muted">放大多少倍</text>
+
+    <rect x="12" y="88" width="116" height="32" rx="8" class="f-surface s-rule" />
+    <rect x="152" y="88" width="116" height="32" rx="8" class="f-surface s-rule" />
+    <rect x="292" y="88" width="116" height="32" rx="8" class="f-surface s-rule" />
+    <text x="70" y="108" text-anchor="middle" font-size="11" class="t-muted">景深：清楚范围</text>
+    <text x="210" y="108" text-anchor="middle" font-size="11" class="t-muted">凝固 / 拖影</text>
+    <text x="350" y="108" text-anchor="middle" font-size="11" class="t-muted">噪点 / 画质</text>
+
+    <line x1="70" y1="122" x2="70" y2="142" class="s-muted" stroke-width="1.6" marker-end="url(#cheat-arrow)" />
+    <line x1="210" y1="122" x2="210" y2="142" class="s-muted" stroke-width="1.6" marker-end="url(#cheat-arrow)" />
+    <line x1="350" y1="122" x2="350" y2="142" class="s-muted" stroke-width="1.6" marker-end="url(#cheat-arrow)" />
+
+    <rect x="30" y="144" width="360" height="44" rx="10" class="f-bg s-rule" />
+    <rect x="30" y="144" width="5" height="44" rx="2.5" class="f-accent" />
+    <text x="210" y="164" text-anchor="middle" font-size="13" font-weight="600" class="t-accent">画面亮度</text>
+    <text x="210" y="180" text-anchor="middle" font-size="11" class="t-muted">各让一档，亮度翻倍或减半；两边一换，亮度不变</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>上面三个旋钮都指向同一个结果——<b>画面亮度</b>。但每个旋钮都会顺手带来一种<b>副作用</b>（中间那排）：
+    动光圈改变景深，动快门决定动作被凝固还是拖成影子，动 ISO 改变噪点多少。<b>你选的从来不只是亮度，而是用哪种代价换来这个亮度。</b>
+  </figcaption>
+</figure>
+
+<h2 id="stops">一、三档速查：每格差一倍</h2>
+
+<p>所有相机上的数字都出自下面三条整档序列，规律只有一条：<strong>每相邻一格，进光量乘以二</strong>（或除以二）。</p>
+
+<table>
+  <thead>
+    <tr><th>旋钮</th><th>整档序列</th><th>一句话</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>光圈</td>
+      <td><code>f/1.4 · 2 · 2.8 · 4 · 5.6 · 8 · 11 · 16</code></td>
+      <td>数字越小孔越大、进光越多；每减一档（<code>f/8 → f/5.6</code>）进光翻倍。</td>
+    </tr>
+    <tr>
+      <td>快门</td>
+      <td><code>1/1000 · 1/500 · 1/250 · 1/125 · 1/60 · 1/30 · 1/15 · 1/8 · 1/4 · 1/2 · 1"</code></td>
+      <td>时间越长进光越多；<code>1/250 → 1/125</code> 曝光时间翻倍，进光也翻倍。</td>
+    </tr>
+    <tr>
+      <td>ISO</td>
+      <td><code>100 · 200 · 400 · 800 · 1600 · 3200 · 6400</code></td>
+      <td>数字越大放大越多、画面越亮；<code>ISO 100 → 400</code> 是放大四倍，亮四倍。</td>
+    </tr>
+  </tbody>
+</table>
+
+<p class="refs">数字为什么长得这么怪，见 <a href="../lessons/0002-aperture-and-depth-of-field.html">第 2 讲 · 光圈与景深</a>。</p>
+
+<h2 id="roles">二、三者管什么，副作用是什么</h2>
+
+<table>
+  <thead>
+    <tr><th>旋钮</th><th>管什么</th><th>副作用（真正的代价）</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>光圈</td><td>一次进来多少光——镜头里那个孔的直径</td><td><strong>景深</strong>：孔越大，清楚的范围越窄；孔越小，前后越清楚</td></tr>
+    <tr><td>快门</td><td>光落多久——快门帘幕打开的时间</td><td><strong>凝固还是留痕</strong>：越慢，走动的人拖出虚影，手抖也被记下来</td></tr>
+    <tr><td>ISO</td><td>电信号放大多少倍</td><td><strong>噪点</strong>：放大的是「信号 + 噪声」，越高颗粒和色斑越明显</td></tr>
+  </tbody>
+</table>
+
+<h2 id="swap">三、互换表：亮度不变，换掉代价</h2>
+
+<p>下面四组设置在同一亮度下几乎一样亮，区别只在<strong>你想让什么清楚、想让什么定住、愿意忍受多少噪点</strong>。</p>
+
+<table>
+  <thead>
+    <tr><th>组合</th><th>设置</th><th>换来什么</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>A</td><td><code>f/4 · 1/250 s · ISO 200</code></td><td>基准</td></tr>
+    <tr><td>B</td><td><code>f/5.6 · 1/125 s · ISO 200</code></td><td>清楚范围变大（拍风景更稳），但更容易拍糊</td></tr>
+    <tr><td>C</td><td><code>f/4 · 1/500 s · ISO 400</code></td><td>跑动的人被定住，代价是噪点变多</td></tr>
+    <tr><td>D</td><td><code>f/2.8 · 1/500 s · ISO 200</code></td><td>背景更糊、动作更凝固，代价是清楚的范围变窄</td></tr>
+  </tbody>
+</table>
+
+<div class="card">
+  <p><strong>一句话记住互换：</strong>孔开大一档，就等于时间少一半；时间多一倍，就等于 ISO 低一半。
+  三者此消彼长，亮度守住了，你要保住的其实是那个<strong>副作用</strong>。</p>
+</div>
+
+<h2 id="ev">四、曝光补偿口诀：白加黑减</h2>
+
+<dl>
+  <dt>白加黑减 <span class="pill">±EV</span></dt>
+  <dd>相机默认把整个画面平均成中等亮度。拍<strong>白的要往上加</strong>，拍<strong>黑的要往下减</strong>——这就是那个 <code>±EV</code>，手机上就是能上下拖的小太阳。</dd>
+
+  <dt>往上加（白加）</dt>
+  <dd>拍<strong>雪、白墙、逆光</strong>时。画面本来就亮，相机却以为太亮而往下压，不加就会把雪拍成脏灰色。</dd>
+
+  <dt>往下减（黑减）</dt>
+  <dd>拍<strong>夜景、黑背景、舞台上一个人</strong>时。画面本来就暗，相机却以为太暗而往上提，不减就会整个发灰、噪点炸开。</dd>
+
+  <dt>手机上一格约 1/3 档</dt>
+  <dd>多数手机拖一小格约 <code>1/3 档</code>，也有按 <code>1/2 档</code> 的。两三格就是大约一整档，够用了。</dd>
+</dl>
+
+<h2 id="hist">五、直方图判读</h2>
+
+<p>横轴从左到右是「从最暗到最亮」，竖条高低是「有多少像素是这个亮度」。它只说亮度分布，不说好不好。</p>
+
+<table>
+  <thead>
+    <tr><th>看到的样子</th><th>说明</th><th>怎么办</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>一堆挤在左边</td><td>整体太暗（欠曝），阴影里的细节开始丢掉</td><td>往上加曝光（白加）</td></tr>
+    <tr><td>一堆挤在右边、顶到边</td><td>整体太亮（过曝），天空、白衫会变成一片死白，<strong>再也调不回来</strong></td><td>往下减曝光（黑减）</td></tr>
+    <tr><td>两头不堆、散在中间</td><td>曝光通常最省事，高低光都还在</td><td>可以按下快门了</td></tr>
+  </tbody>
+</table>
+
+<p class="refs">唯一要躲的是「一大片地方黑到失去细节」或「一大片地方白到失去细节」。<strong>直方图是仪表盘，不是评分表</strong>——
+拍夜景本来就该偏左，拍雪本来就该偏右。原理解释见
+<a href="https://www.cambridgeincolour.com/tutorials/histograms1.htm" target="_blank" rel="noopener">Cambridge in Colour：直方图</a>。</p>
+
+<h2 id="trouble">六、排错表：先动哪个旋钮</h2>
+
+<table>
+  <thead>
+    <tr><th>症状</th><th>第一步</th><th>还不够，再按这个顺序动</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>太暗</td>
+      <td>加曝光补偿（小太阳往上）</td>
+      <td>开大光圈（f 值调小）→ 放慢快门 → <strong>最后</strong>才抬 ISO</td>
+    </tr>
+    <tr>
+      <td>太亮</td>
+      <td>减曝光补偿（小太阳往下）</td>
+      <td>收小光圈（f 值调大）→ 加快快门 → 降低 ISO</td>
+    </tr>
+    <tr>
+      <td>主体糊了</td>
+      <td>加快快门</td>
+      <td>用抬 ISO 把亮度补回来；手抖就压低呼吸、夹紧双臂再按</td>
+    </tr>
+    <tr>
+      <td>背景太乱</td>
+      <td>开大光圈（f 值调小）</td>
+      <td>让背景虚下去，主体立刻跳出来</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="phone">七、手机操作三步</h2>
+
+<ol>
+  <li><strong>轻点主体</strong>：让相机知道对着谁测光。点人脸和点天空，得到的亮度可能完全不一样。</li>
+  <li><strong>拖动小太阳</strong>：往上是加曝光（白加），往下是减曝光（黑减）。一小格约 1/3 档。</li>
+  <li><strong>长按锁定 AE/AF</strong>：出现「已锁定」后再挪动画面，亮度就定住不动了。逆光拍人、拍雪、拍夜景特别有用。</li>
+</ol>
+
+<p class="refs">有「专业模式」的手机，第一次进去只做一件事：<strong>把 ISO 固定成最低，然后只调快门</strong>，直到亮度合适。</p>
+
+<h2 id="manual">八、什么时候该放弃自动</h2>
+
+<p>自动模式替你分配三档，却从不告诉你它选了什么。遇到下面三种需求，就该自己拧：</p>
+
+<dl>
+  <dt>需要特定景深 <span class="pill">光圈</span></dt>
+  <dd>要大景深拍风景（收小光圈），还是要窄景深把背景虚化（开大光圈）——只有你自己定得了。</dd>
+
+  <dt>需要凝固动作 <span class="pill">快门</span></dt>
+  <dd>跑步、跳跃、乱动的孩子，自动给的快门可能太慢。自己把快门加快，再用 ISO 补亮度。</dd>
+
+  <dt>需要压噪点 <span class="pill">ISO</span></dt>
+  <dd>弱光或想放大成品时，把 ISO 压到最低，用光圈和快门去凑亮度，画质才干净。</dd>
+</dl>
+
+<p class="ask">这张表只压结论。哪一格你想展开、想换成自己手机上的说法，回 OpenCode 问你的老师
+（那个正在运行 <code>teach</code> 的 agent）——告诉它你的机型，它就能把口诀落到真实的按钮上。</p>
+
+<p class="foot">
+  <strong>推荐一手资料：</strong>
+  <a href="https://search.douban.com/book/subject_search?search_text=%E7%BE%8E%E5%9B%BD%E7%BA%BD%E7%BA%A6%E6%91%84%E5%BD%B1%E5%AD%A6%E9%99%A2%E6%91%84%E5%BD%B1%E6%95%99%E6%9D%90" target="_blank" rel="noopener">《美国纽约摄影学院摄影教材》</a>
+  的「相机与曝光」部分。想看图解版，读
+  <a href="https://www.cambridgeincolour.com/tutorials/camera-exposure.htm" target="_blank" rel="noopener">Cambridge in Colour：曝光</a>
+  与 <a href="https://www.cambridgeincolour.com/tutorials/histograms1.htm" target="_blank" rel="noopener">直方图</a>。
+  <br />相关讲义：<a href="../lessons/0001-exposure-triangle.html">第 1 讲 · 曝光三角</a> ·
+  <a href="../lessons/0002-aperture-and-depth-of-field.html">第 2 讲 · 光圈与景深</a> ·
+  <a href="../lessons/0003-shutter-speed.html">第 3 讲 · 快门</a> ·
+  <a href="../lessons/0004-iso-and-noise.html">第 4 讲 · ISO 与噪点</a> ·
+  <a href="../lessons/0005-framing-the-four-decisions.html">第 5 讲 · 取景</a>
+  <br />词汇：<a href="0003-glossary.html">摄影词汇表</a>
+  <br />图片来源与授权：<a href="../assets/CREDITS.md">图片版权说明</a>。
+</p>
+
+</body>
+</html>

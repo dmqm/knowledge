@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 6 讲 · 光线的方向与质感</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="kicker">摄影 · 第 6 讲</p>
+<h1>光从哪里来，比什么光更重要</h1>
+<p class="lede">同一张脸，站在窗口左边和窗口右边，会是两个人。这一讲只教你两件事：怎么判断光从哪个方向来，以及这束光是硬的还是软的。</p>
+
+<p class="toc" style="margin:.1rem 0 1.6rem;font-family:var(--sans);font-size:.82rem;color:var(--muted);">
+  &nbsp;上一讲 <a href="0005-framing-the-four-decisions.html">第 5 讲 · 取景的四个决定</a>
+  &nbsp;·&nbsp; 下一讲 <a href="0007-photographing-people.html">第 7 讲 · 怎样拍人 →</a>
+  &nbsp;·&nbsp; 参考 <a href="../reference/0002-composition-and-light.html">构图与用光</a>
+</p>
+
+<p>前面几讲我们一直在跟<strong>相机</strong>打交道：光圈、快门、ISO、景深、取景。
+那些都是「怎么把已经在那里的光收进来」。这一讲不一样——我们开始动<strong>光本身</strong>。</p>
+
+<p>好消息是：用光这件事听起来玄，其实入门只需要两根轴。
+所有布光的书、所有影棚的灯位图、所有「为什么这张照片好看」的解释，
+最后都能挂回这两根轴上：<strong>光从哪个方向来</strong>，以及<strong>它有多硬</strong>。</p>
+
+<h2>只有两根轴值得先学会</h2>
+
+<p>第一根轴是<strong>方向</strong>：光从相机背后打过来（顺光）、从侧面打过来（侧光）、
+还是从主体背后打过来（逆光）。第二根轴是<strong>质感</strong>：这束光落在主体上的边缘是锋利的还是柔和的，
+也就是<strong>硬光</strong>还是<strong>软光</strong>。</p>
+
+<p>为什么先学这两根？因为它们<strong>可以现场改变</strong>。亮度、颜色、器材你可能改不了，
+但你可以挪一步、转个身、拉半扇窗帘——方向就变了。一个摄影师最值钱的动作，
+往往不是按快门，而是<strong>绕着主体走那几步</strong>。</p>
+
+<h2>方向：顺光、侧光、逆光</h2>
+
+<p>把相机、主体、光源摆在桌面上看，就只有这三种关系。下面的图是俯视图：
+上北下南，相机在下方，主体在中间，三个光源分别站在三个位置——注意每个光源对应的<strong>影子落在哪一边</strong>。</p>
+
+<figure class="figure">
+  <svg viewBox="0 0 420 330" role="img" aria-labelledby="fig-dir-t">
+    <title id="fig-dir-t">俯视图：顺光、侧光、逆光三个位置的光源，以及阴影各自落向哪边</title>
+    <defs>
+      <marker id="dir-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" markerUnits="userSpaceOnUse" orient="auto">
+        <path d="M0 0 L10 5 L0 10 Z" class="f-muted" />
+      </marker>
+    </defs>
+
+    <ellipse cx="140" cy="72" rx="40" ry="16" class="f-muted" opacity="0.28" transform="rotate(48 140 72)" />
+    <ellipse cx="292" cy="140" rx="46" ry="16" class="f-muted" opacity="0.28" />
+    <ellipse cx="210" cy="214" rx="16" ry="44" class="f-muted" opacity="0.28" />
+
+    <line x1="336" y1="288" x2="234" y2="158" class="s-accent" stroke-width="1.8" marker-end="url(#dir-arrow)" />
+    <line x1="52" y1="140" x2="178" y2="140" class="s-accent" stroke-width="1.8" marker-end="url(#dir-arrow)" />
+    <line x1="210" y1="34" x2="210" y2="108" class="s-accent" stroke-width="1.8" marker-end="url(#dir-arrow)" />
+
+    <circle cx="356" cy="300" r="8" class="f-accent" />
+    <text x="356" y="326" text-anchor="middle" font-size="12" font-weight="600" class="t-accent">① 顺光</text>
+
+    <circle cx="34" cy="140" r="8" class="f-accent" />
+    <text x="34" y="170" text-anchor="middle" font-size="12" font-weight="600" class="t-accent">② 侧光</text>
+
+    <circle cx="210" cy="18" r="8" class="f-accent" />
+    <text x="242" y="22" font-size="12" font-weight="600" class="t-accent">③ 逆光</text>
+
+    <circle cx="210" cy="140" r="26" class="f-surface s-ink" stroke-width="2" />
+    <text x="210" y="145" text-anchor="middle" font-size="13">主体</text>
+
+    <rect x="182" y="266" width="56" height="34" rx="8" class="f-surface s-ink" stroke-width="2" />
+    <circle cx="210" cy="266" r="5" class="f-muted" />
+    <text x="210" y="288" text-anchor="middle" font-size="12">相机</text>
+
+    <text x="14" y="322" font-size="11" class="t-muted">灰色椭圆 = 影子落在哪边</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>相机固定在下方不动，光源换位置，画面的性格就全变了。
+    <b>① 顺光</b>站在相机背后，影子被推到主体<b>身后</b>，正好被主体自己挡住——所以画面最干净，也最平。
+    <b>② 侧光</b>从左边来，影子横着拖到<b>右边</b>，中间那条明暗交界就是立体感的来源。
+    <b>③ 逆光</b>在主体背后，影子朝<b>相机的方向</b>铺过来，直接躺进画面前景；
+    主体自己则压成暗的一团，只剩边缘一圈亮光。
+  </figcaption>
+</figure>
+
+<dl>
+  <dt>顺光 <span class="pill">光从相机背后打向主体</span></dt>
+  <dd>最安全的一档。影子全部藏在主体背后，颜色最容易还原，皮肤上的瑕疵也被顺手抹平。
+  <em>代价</em>：平。没有明暗交界，就没有立体感和质感，很容易拍出「证件照感」——
+  不是丑，是像一张登记表。手机默认闪光灯、正午顶着太阳拍正面，都是顺光。</dd>
+
+  <dt>侧光 <span class="pill">光从侧面来，45°~90°</span></dt>
+  <dd><strong>最有用的一档</strong>。明暗交界把形状、纹理、立体感一次交代清楚：
+  人脸被切成亮的一半和暗的一半，颧骨就出来了；老墙的坑洼、食物的油光、布料的褶皱也是一样。
+  前侧光（约 45°）拍人最讨喜，正侧光（90°）拍肌理最狠。<strong>拿不准的时候，用侧光。</strong></dd>
+
+  <dt>逆光 <span class="pill">光从主体背后打向相机</span></dt>
+  <dd>最容易出彩、也最容易翻车的一档。它只给你两条路，两条都要你自己选，相机不会替你选——
+  而且它两条都可能选错。下面单独讲。</dd>
+</dl>
+
+<h3>逆光的两条路，各有一套操作</h3>
+
+<p><strong>第一条路：干脆不要脸，要形状。</strong>曝光对着画面里最亮的地方（天空），
+主体就沉成一片黑——<strong>剪影</strong>。这条路适合形态本身就清楚的东西：一双手、一棵树、一条船、
+一个人走路时挺直的轮廓。剪影的规矩是<strong>形状必须一眼认得出</strong>，
+认不出的黑块只是曝光失误。<em>手机操作</em>：点一下天空，把画面压暗，然后别再管主体。</p>
+
+<p><strong>第二条路：留住脸，让背景白掉。</strong>曝光对着人脸，
+背景于是过曝成一整片亮，人物被光「包」住，气氛立刻变温柔。
+<em>手机操作</em>：先点住人脸对焦，再把小太阳<strong>往上</strong>拖一到两档
+（大约 <code>+0.7</code> 到 <code>+2 EV</code>）。代价明确：背景里的天空、树叶、远处的灯会丢细节。
+接受它，这张照片就是对的；不接受，就走第一条路。</p>
+
+<p>还有一条小路：如果既不想黑脸也不想过曝，让光只从肩膀或头发边缘漏一点出来，
+描一圈细亮线——这圈线叫<strong>轮廓光</strong>。合照里站在别人头后面的人，
+常常靠这条线才不至于和背景糊在一起。</p>
+
+<h2>质感：光源越大，光越软</h2>
+
+<p>「软硬」不是形容光的强弱，是形容<strong>影子边缘的形状</strong>。
+而决定软硬的只有一件事：<strong>光源相对于主体有多大</strong>。大，就软；小，就硬。
+注意这里的关键词是「相对」——同一盏灯，贴着人脸就是个大光源，退到房间另一头就变成小光点。</p>
+
+<figure class="figure">
+  <svg viewBox="0 0 420 230" role="img" aria-labelledby="fig-hard-t">
+    <title id="fig-hard-t">同一个球体在点光源与大面积光源下，阴影边缘一个锋利、一个柔和</title>
+
+    <line x1="14" y1="152" x2="196" y2="152" class="s-rule" />
+    <circle cx="100" cy="32" r="7" class="f-accent" />
+    <text x="118" y="36" font-size="11" class="t-muted">点光源（小）</text>
+    <line x1="95" y1="40" x2="74" y2="102" class="s-faint" stroke-width="1.3" />
+    <line x1="108" y1="42" x2="148" y2="142" class="s-faint" stroke-width="1.3" />
+    <ellipse cx="160" cy="152" rx="42" ry="12" class="f-muted" opacity="0.5" />
+    <circle cx="100" cy="122" r="30" class="f-surface s-ink" stroke-width="1.8" />
+    <text x="100" y="188" text-anchor="middle" font-size="13.5" font-weight="600">硬光</text>
+    <text x="100" y="206" text-anchor="middle" font-size="11.5" class="t-muted">阴影边缘锋利，明暗一刀切开</text>
+
+    <line x1="224" y1="152" x2="406" y2="152" class="s-rule" />
+    <rect x="270" y="22" width="96" height="22" rx="11" class="f-wash s-accent" stroke-width="1.6" />
+    <text x="318" y="37" text-anchor="middle" font-size="10.5" class="t-accent">大面积光源</text>
+    <line x1="278" y1="46" x2="268" y2="100" class="s-faint" stroke-width="1.3" />
+    <line x1="356" y1="46" x2="368" y2="128" class="s-faint" stroke-width="1.3" />
+    <ellipse cx="366" cy="152" rx="46" ry="16" class="f-muted" opacity="0.11" />
+    <ellipse cx="366" cy="152" rx="36" ry="12" class="f-muted" opacity="0.2" />
+    <ellipse cx="366" cy="152" rx="26" ry="8" class="f-muted" opacity="0.34" />
+    <circle cx="315" cy="122" r="30" class="f-surface s-ink" stroke-width="1.8" />
+    <text x="315" y="188" text-anchor="middle" font-size="13.5" font-weight="600">软光</text>
+    <text x="315" y="206" text-anchor="middle" font-size="11.5" class="t-muted">阴影边缘化开，明暗慢慢过渡</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>同一个球、同一面地，只换了光源的大小。
+    左边是小光点（比如正午的太阳、手机闪光灯）：影子边界是一条<b>明确的线</b>，
+    亮部和暗部像被刀切开。
+    右边是一整片大光源（比如阴天的天空、蒙了窗帘的窗）：照到球上的每一小点光，
+    都在影子里「各投一个影子」，几十个小影子叠在一起，
+    边界就被<b>摊成一段渐变</b>——所以看着柔。
+    <b>记住一句：不是灯够不够亮，是光源够不够大。</b>
+  </figcaption>
+</figure>
+
+<ul>
+  <li><strong>阴天</strong>：整片天空就是一个巨大的柔光箱，是全免费、不用搬运的柔光设备。</li>
+  <li><strong>正午的太阳</strong>：在天上是一个极小的点光源，所以阴影边缘锋利、明暗对比凶。</li>
+  <li><strong>室内</strong>：拉上一层纱帘，等于把窗从一个亮方块变成一面更大的柔光箱。</li>
+  <li><strong>距离也是大小</strong>：灯（或窗）离主体越近，「相对大小」就越大，光就越软。手机闪光灯贴脸拍之所以难看，就是因为它又小又近，是标准的硬光。</li>
+</ul>
+
+<p>顺手说一句颜色：光不但有软硬，还有冷暖。<strong>影子里偏蓝、黄昏偏暖</strong>不是错觉，
+是<strong>色温</strong>在起作用；原理和怎么对付，见
+<a href="https://www.cambridgeincolour.com/tutorials/white-balance.htm" target="_blank" rel="noopener">Cambridge in Colour：白平衡</a>。</p>
+
+<h2>硬光做什么，软光做什么</h2>
+
+<p>没有「哪种光更好」，只有<strong>你想让观众看见什么</strong>。</p>
+
+<p><strong>硬光的活</strong>是线条、戏剧性和纹理。沙丘的脊线、老人的脸、建筑的外立面、
+食物表面的那层油光——都是硬光才拍得出来的东西，因为它把微小的起伏变成明确的明暗块。
+硬光也负责强烈，一个黑影砸在墙上，画面立刻有了脾气。</p>
+
+<p><strong>软光的活</strong>是好看、温柔、什么都不丢。它把脸上的每一点细节都照到，
+却又不会夸张，所以<strong>拍人时软光通常更省事</strong>：不用求对方姿势，也不用担心鼻影和眼窝被放大。
+阴天、窗边、树荫底、傍晚——都是自带的软光棚。</p>
+
+<p>反过来说，硬光拍人很容易出事：鼻影重、眼窝黑、皮肤纹理加倍。
+真要用，就把它当风格用（比如让光从一侧斜切过脸），而不是当默认用。</p>
+
+<table>
+  <thead>
+    <tr><th>方向 × 场合</th><th>光从哪来</th><th>画面效果</th><th>什么时候用它</th><th>小心</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>顺光</b></td>
+      <td>相机背后</td>
+      <td>平、亮、颜色准；阴影藏在主体背后</td>
+      <td>想让肤色干净、想保险；证件照、记录型的合影</td>
+      <td>没立体感、容易「证件照感」；闪光灯正面直打最典型</td>
+    </tr>
+    <tr>
+      <td><b>侧光</b></td>
+      <td>侧面，约 45°~90°</td>
+      <td>明暗交界清楚，形状、纹理、立体感都出来</td>
+      <td>拍人、拍食物、拍老墙与树皮；<b>拿不准就用它</b></td>
+      <td>明暗差可能超出相机能同时留住的量，暗部会糊成一团</td>
+    </tr>
+    <tr>
+      <td><b>逆光</b></td>
+      <td>主体背后，打向相机</td>
+      <td>剪影，或背景过曝、主体被光包住</td>
+      <td>要形状（剪影）、要温柔的氛围、要轮廓光</td>
+      <td>不选路就两头落空：脸黑、背景还亮</td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+    <tr><th>硬光 / 软光</th><th>硬光</th><th>软光</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><b>光源</b></td><td>相对很小：正午太阳、裸灯泡、手机闪光灯</td><td>相对很大：阴天天空、纱帘后的窗、灯加柔光罩、白墙反弹的光</td></tr>
+    <tr><td><b>阴影边缘</b></td><td>锋利、像一条线</td><td>模糊、拖成一段渐变</td></tr>
+    <tr><td><b>擅长</b></td><td>线条、戏剧性、纹理（沙丘、老墙、食物油光）</td><td>肤色好看、温柔、细节都留住</td></tr>
+    <tr><td><b>风险</b></td><td>明暗差太大，暗部丢细节</td><td>太平、没立体感、缺层次</td></tr>
+    <tr><td><b>拍人</b></td><td>当成风格工具，慎用</td><td>首选</td></tr>
+    <tr><td><b>什么时候遇到</b></td><td>晴天正午、直闪、头顶灯</td><td>阴天、清晨黄昏、窗边、树荫下</td></tr>
+  </tbody>
+</table>
+
+<h2>一天里的光</h2>
+
+<p>如果只能记一个时段，记这个：<strong>清晨和黄昏</strong>。太阳低，光斜着扫过地面，
+于是阴影被拉长、方向变成天然的侧光，色温偏暖，人脸上的过渡也变软。这是最省事的时段，
+好到有人叫它「黄金时段」。</p>
+
+<ul>
+  <li><strong>清晨 / 黄昏</strong>：低、暖、影子长。侧光和逆光随手可得，是拍人拍街的备用答案。</li>
+  <li><strong>正午</strong>：高、硬、色难处理。影子缩到脚底下，脸上容易一块亮一块黑；阴影里还会偏蓝，肉眼不一定察觉，照片里很明显。</li>
+  <li><strong>阴天</strong>：一整天的柔光箱，不生动但很稳。拍人、拍细节、拍食物都合适；拍风景会显得平，靠构图和色彩去救。</li>
+  <li><strong>日落后的十几分钟</strong>：天还亮、灯刚点起来，两种光色混在一起，是城市里最好看的一段。</li>
+</ul>
+
+<p>正午非拍不可的话，有两个便宜办法：把人挪到<strong>墙或建筑的阴影里</strong>（那里是顺光，反面还是软的），
+或者干脆接受硬光，把它当风格——找一个侧脸、一个浮雕、一道栏杆的影子。</p>
+
+<h2>三位摄影师，三种光</h2>
+
+<p>看照片的时候，除了「好不好看」之外，多加一句「他当时在跟哪一种光打交道」。
+下面三张，恰好是三种完全不同的处境。</p>
+
+<figure class="figure photo">
+  <img src="../assets/img/cameron-darwin.jpg" alt="查尔斯·达尔文的侧面肖像，面部柔和、没有硬阴影" />
+  <figcaption>
+    <b>查尔斯·达尔文肖像</b>——Julia Margaret Cameron 摄于约 1868 年。
+    那时候感光材料还很慢，快门需要好几秒，而且她用的是大画幅相机：底片越大，细节越多，
+    但需要的曝光时间也越长。她没有别的选择，只能把人物安排在<strong>窗边</strong>，
+    让一整面窗当柔光箱——光必须又大又软，脸才不会在漫长的曝光里出现硬影，
+    人也必须一动不动地待住。整张照片的柔和不是滤镜，是<strong>那时唯一可行的用光方式</strong>。
+    <span class="exif">Julia Margaret Cameron · 约 1868 · 柔光 · 大画幅长曝光</span>
+  </figcaption>
+</figure>
+
+<figure class="figure photo">
+  <img src="../assets/img/curtis-inupiat-family.jpg" alt="一位因纽皮亚特人与孩子的肖像，侧光勾出面部与衣物的结构" />
+  <figcaption>
+    <b>《诺阿塔克的因纽皮亚特一家》</b>——Edward S. Curtis 摄于 1929 年。
+    他不躲在正面的平光里：光从一侧来，把颧骨、鼻梁和皮衣的褶皱一档一档地交代出来。
+    这是<strong>侧光</strong>的典型用处——它不美化，也不掩饰，而是说清楚「这个人长什么样、
+    穿什么、从哪里来」。他要拍的是正在消失的生活方式，所以照片需要有分量，而不是好看。
+    <span class="exif">Edward S. Curtis · 1929 · 侧光</span>
+  </figcaption>
+</figure>
+
+<figure class="figure photo">
+  <img src="../assets/img/adams-mt-williamson.jpg" alt="农场工人与远处的威廉森山，天空明亮、人物与衣物仍有层次" />
+  <figcaption>
+    <b>《农场工人与威廉森山》（Manzanar）</b>——Ansel Adams 摄于 1943 年。
+    这是一个<strong>大光比</strong>的场景：远处的雪山亮得刺眼，前景的人物和深色衣服暗得多，
+    普通曝光只能二选一——要么天空一片死白，要么人变成一块黑。
+    Adams 的本事是在这两头之间做<strong>影调管理</strong>：让最黑的地方仍有布料的褶皱，
+    让最白的地方仍有雪的纹理，从最暗到最亮全都留住。这是第 8 讲（影调）的正题，
+    这里先记住一件事：<strong>看到「亮得没法拍、暗得没法拍」，那是影调问题，不是器材问题。</strong>
+    <span class="exif">Ansel Adams · 1943 · Manzanar · 大光比</span>
+  </figcaption>
+</figure>
+
+<p>想自己去看原作的高清细节——那些影调层次在缩略图上根本看不出来——
+可以从<a href="https://www.metmuseum.org/art/collection" target="_blank" rel="noopener">纽约大都会艺术博物馆</a>、
+<a href="https://www.getty.edu/art/collection/" target="_blank" rel="noopener">盖蒂博物馆</a>
+和<a href="https://www.rijksmuseum.nl/en" target="_blank" rel="noopener">荷兰国立博物馆</a>
+的藏品页开始。<strong>看原作本身就是学习</strong>，尤其是看阴影里到底剩下了什么。</p>
+
+<h2>手机上：先找光，再取景</h2>
+
+<p>手机上的用光，九成不是「加设备」，而是「挪位置」。顺序也和其他讲不一样——
+不是先构图，而是<strong>先找光</strong>。</p>
+
+<ol>
+  <li><strong>绕主体走一圈</strong>：让光依次变成顺光、侧光、逆光。每换一个位置，就看一眼
+  影子的方向和脸上的明暗交界。<strong>选定位置，再开始取景。</strong>
+  这一步花十秒，比事后调半小时有用。</li>
+  <li><strong>要纹理就站到侧面</strong>：拍食物、拍老墙、拍树皮，先让光横着扫过来，
+  再决定怎么框。顺光会让纹理全部消失，因为它把起伏照得一样亮。</li>
+  <li><strong>逆光拍人：点住人脸，把小太阳往上拖</strong>。宁可背景白掉，也要留住脸的层次。
+  如果背景白掉太可惜，就退到第一条路——干脆拍剪影，只留形状。</li>
+  <li><strong>室内：先拉窗帘，别先开灯</strong>。把窗帘拉开一点，整面窗就成了一个大光源，
+  比再点一盏小灯更柔、更耐看。嫌硬就在窗上挂一层薄纱。</li>
+  <li><strong>阴天不是坏天气</strong>：它是免费柔光箱。人像、细节、花草，都适合在阴天出片，
+  而且一天里光线几乎不变，不用赶时间。</li>
+</ol>
+
+<div class="card">
+  <p><strong>练习（十五分钟）：绕着一件东西走一圈</strong></p>
+  <ol>
+    <li>挑一个不动的对象：一只杯子、一个水果、或者请一个人坐着别动。</li>
+    <li>手机设置从头到尾<strong>不改</strong>。围着它走一整圈，大约每 45° 拍一张，共八张。</li>
+    <li>丢开前几张，把八张并排看，回答三个问题：
+    <strong>哪一张最有立体感？哪一张最平？哪一张影子的方向最好看？</strong></li>
+    <li>再补一组：站到同一个位置，把光调硬一次、调软一次
+    （晴天站到墙的阴影边缘，或把薄窗帘拉上），对比同一个对象在两种光下的影子边缘。</li>
+  </ol>
+  <p>做完你会得到一个比公式更好用的东西——<strong>身体记住了「光在哪」和「我该站哪」之间的关系</strong>。</p>
+</div>
+
+<h2>回顾：三个自测</h2>
+<div class="quiz">
+  <h3>先合上讲义，自己回答，再看核对</h3>
+
+  <p class="prompt">1. 顺光、侧光、逆光，影子分别落在哪一边？哪一种最平，哪一种最有用？</p>
+  <details><summary>看答案</summary>
+    <p>顺光的影子落在主体<strong>背后</strong>，被主体自己挡住，所以画面最干净也最平（容易有证件照感）；
+    侧光的影子横向拖到主体<strong>一侧</strong>，中间那条明暗交界把形状和纹理交代出来，是最有用的一档；
+    逆光的影子朝<strong>相机的方向</strong>铺过来，主体压成暗块、只留边缘亮光，出彩也最容易翻车。</p>
+  </details>
+
+  <p class="prompt">2. 为什么阴天的光很软，正午的太阳很硬？「软硬」到底由什么决定？</p>
+  <details><summary>看答案</summary>
+    <p>由<strong>光源相对于主体的大小</strong>决定：光源越大越软，越小越硬。
+    阴天时整片天空都是光源，等于一个巨大的柔光箱，无数个小影子叠在一起，阴影边界被摊成渐变；
+    正午的太阳在天上只是一个极小的点光源，影子边界就被切得很锋利。
+    室内同理——窗帘、薄纱、把灯挪近，都是在「把光源变大」。</p>
+  </details>
+
+  <p class="prompt">3. 逆光拍人、想让脸是亮的，手机上要做什么？代价是什么？</p>
+  <details><summary>看答案</summary>
+    <p>两步：先<strong>点住人脸对焦测光</strong>，再把小太阳<strong>往上拖一到两档</strong>
+    （约 <code>+0.7</code>~<code>+2 EV</code>）。代价是背景过曝——天空、树叶、远处的灯会丢掉细节，
+    可能变成一整片白。如果不接受这个代价，就走另一条路：曝光对着亮处，干脆拍成剪影，只保留形状。</p>
+  </details>
+</div>
+
+<p class="ask">这一讲哪里没说清？回到 OpenCode 里直接问你的老师（那个正在运行 <code>teach</code>
+的 agent）——它比你更懂你的目标，可以为你重新举例、加练，或跳到你想深入的部分。
+告诉它你常拍什么（家人、食物、街景），它就能把「先找光，再取景」那一节换成你真实场景里的走位路线。</p>
+
+<p class="foot">
+  <strong>推荐一手资料：</strong>
+  <a href="https://search.douban.com/book/subject_search?search_text=%E7%BE%8E%E5%9B%BD%E7%BA%BD%E7%BA%A6%E6%91%84%E5%BD%B1%E5%AD%A6%E9%99%A2%E6%91%84%E5%BD%B1%E6%95%99%E6%9D%90" target="_blank" rel="noopener">《美国纽约摄影学院摄影教材》</a>
+  的「用光」部分 —— 顺光、侧光、逆光与软硬光那一章，配合本讲读一遍，方向感会稳得多。
+  想再往深走一步，可以找《Light: Science and Magic》读：它讲的是光为什么会这样跑，是本讲的延伸
+  （书目见课程 <a href="../RESOURCES.md">资料清单</a>）。
+  <br />图片来源与授权：<a href="../assets/CREDITS.md">图片版权说明</a>
+  （Cameron、Curtis、Adams 三张均为公有领域，署名见该文件）。
+  <br />上一讲：<a href="0005-framing-the-four-decisions.html">第 5 讲 · 取景的四个决定</a> ·
+  下一讲：<a href="0007-photographing-people.html">第 7 讲 · 怎样拍人</a>
+  <br />参考：<a href="../reference/0002-composition-and-light.html">构图与用光</a> ·
+  <a href="../reference/0003-glossary.html">术语表</a>
+</p>
+
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 2 讲 · 光圈与景深</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="kicker">摄影 · 第 2 讲</p>
+<h1>光圈与景深：什么清楚，什么模糊</h1>
+<p class="lede">上一讲留了一句话没说透：光圈数字为什么长得那么怪？这一讲先把它讲圆，再回答一个更实用的问题——<strong>怎么让背景糊掉，怎么让一整片风景都清楚</strong>。</p>
+
+<p class="toc" style="margin:.1rem 0 1.6rem;font-family:var(--sans);font-size:.82rem;color:var(--muted);">
+  <a href="0001-exposure-triangle.html">← 上一讲 · 曝光三角</a>
+  &nbsp;·&nbsp; <a href="0003-shutter-speed.html">下一讲 · 快门速度 →</a>
+  &nbsp;·&nbsp; <a href="../reference/0001-exposure-cheatsheet.html">曝光速查表</a>
+</p>
+
+<p>先记住一个反直觉的事实：<strong>光圈数字其实是个分数</strong>。<code>f/2</code> 的意思是「镜头的有效孔径 = 焦距 ÷ 2」，
+<code>f/8</code> 的意思是「焦距 ÷ 8」。分母越大，得数越小，孔就越小。
+所以那条最容易记反的规律其实很讲道理：<strong>数字小 = 孔大 = 进光多</strong>。</p>
+
+<h2>光圈数字为什么长得这么怪</h2>
+
+<p>看这串数：<code>f/1.4 · 2 · 2.8 · 4 · 5.6 · 8 · 11 · 16</code>。
+它看着毫无规律，其实只遵守一条规则——<strong>每相邻一格，孔的面积正好差一倍</strong>。</p>
+
+<p>那为什么是 1.4 而不是 1.5？因为圆的面积和直径的<strong>平方</strong>成正比。
+想让面积翻倍，直径就得乘以 √2 ≈ 1.414。于是：
+1 × 1.414 = <code>1.4</code>，1.4 × 1.414 ≈ <code>2</code>，2 × 1.414 ≈ <code>2.8</code>……
+一路乘下去，就是那串数字。它们不是随便定的，是<strong>算出来的</strong>。</p>
+
+<figure class="figure">
+  <svg viewBox="0 0 420 250" role="img" aria-labelledby="fig-aperture-t">
+    <title id="fig-aperture-t">同一只镜头在 f/2 与 f/8 下的孔径对比</title>
+
+    <text x="210" y="20" text-anchor="middle" font-size="11.5" class="t-muted">同一只镜头，只改光圈：孔的面积每差一档差一倍</text>
+
+    <circle cx="110" cy="108" r="62" class="f-wash s-rule" stroke-width="1.4" />
+    <circle cx="110" cy="108" r="33" class="f-accent" />
+
+    <circle cx="310" cy="108" r="62" class="f-wash s-rule" stroke-width="1.4" />
+    <circle cx="310" cy="108" r="8.5" class="f-accent" />
+
+    <text x="110" y="196" text-anchor="middle" font-size="15" font-weight="600">f/2</text>
+    <text x="110" y="214" text-anchor="middle" font-size="11" class="t-muted">孔最大 · 进光最多</text>
+
+    <text x="310" y="196" text-anchor="middle" font-size="15" font-weight="600">f/8</text>
+    <text x="310" y="214" text-anchor="middle" font-size="11" class="t-muted">孔径缩到 1/4 · 进光 1/16</text>
+
+    <text x="210" y="238" text-anchor="middle" font-size="11" class="t-faint">f/2 → f/8 相差 4 档，进光量相差 16 倍</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>外面那圈浅色的是镜筒（镜头能开到的最大孔径），里面深色的圆才是<b>此刻孔开多大</b>。
+    同样的镜头，<b>f/2</b> 的孔比 <b>f/8</b> 的孔周长长一倍、直径大四倍，算成面积，正好差 <b>16 倍</b>。
+    <b>记住这个比例，比记住数字有用</b>：f/2 → f/8 相差 4 档，也就是 2⁴ = 16 倍的进光量。
+    反过来说，从 f/8 开到 f/2，你可以把快门加快 4 档，或者把 ISO 降 4 档，画面照样亮。
+  </figcaption>
+</figure>
+
+<p>到这里，上一讲那句「三档联动、亮度不变」才真正成立：光圈的每一档，和快门、ISO 的每一档，
+进光量都差一倍，所以它们之间可以<strong>互相兑换</strong>。光圈的特别之处在于，它是三者里唯一
+会改变画面<strong>内容</strong>的那个——它会决定什么清楚、什么模糊。</p>
+
+<h2>景深的三个决定因素</h2>
+
+<p>先给个定义。<strong>景深</strong>（depth of field）指的是：画面里<strong>看起来足够清楚</strong>的那一段距离。
+真正对焦的那个平面上最锐利；离开这个平面，模糊程度就不断增加，只是增加得快慢不同而已。</p>
+
+<figure class="figure">
+  <svg viewBox="0 0 440 240" role="img" aria-labelledby="fig-dof-t">
+    <title id="fig-dof-t">景深示意：清楚的范围随光圈变大而变薄</title>
+    <defs>
+      <marker id="dof-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" markerUnits="userSpaceOnUse" orient="auto">
+        <path d="M0 0 L10 5 L0 10 Z" class="f-muted" />
+      </marker>
+    </defs>
+
+    <line x1="112" y1="72" x2="112" y2="176" class="s-rule" stroke-dasharray="3 4" />
+    <line x1="416" y1="72" x2="416" y2="176" class="s-rule" stroke-dasharray="3 4" />
+    <line x1="226" y1="136" x2="226" y2="176" class="s-accent" stroke-dasharray="3 4" stroke-width="1.2" />
+    <line x1="302" y1="136" x2="302" y2="176" class="s-accent" stroke-dasharray="3 4" stroke-width="1.2" />
+
+    <text x="112" y="34" font-size="11.5" class="t-muted">小光圈 f/16：清楚的范围很宽</text>
+    <rect x="112" y="42" width="304" height="30" rx="6" class="f-accent" opacity="0.18" />
+    <rect x="112" y="42" width="304" height="30" rx="6" fill="none" class="s-accent" stroke-width="1.2" />
+
+    <text x="226" y="98" font-size="11.5" class="t-muted">大光圈 f/2：只有薄薄一层实</text>
+    <rect x="226" y="106" width="76" height="30" rx="6" class="f-accent" opacity="0.5" />
+    <rect x="226" y="106" width="76" height="30" rx="6" fill="none" class="s-accent" stroke-width="1.4" />
+
+    <rect x="12" y="159" width="48" height="34" rx="7" class="f-surface s-ink" stroke-width="1.5" />
+    <rect x="24" y="151" width="16" height="9" rx="3" class="f-surface s-ink" stroke-width="1.2" />
+    <circle cx="60" cy="176" r="9" class="f-accent" />
+    <text x="36" y="210" text-anchor="middle" font-size="10.5" class="t-muted">相机</text>
+
+    <line x1="70" y1="176" x2="426" y2="176" class="s-rule" stroke-width="1.4" marker-end="url(#dof-arrow)" />
+
+    <line x1="150" y1="170" x2="150" y2="182" class="s-muted" stroke-width="1.4" />
+    <circle cx="150" cy="176" r="4" class="f-muted" />
+    <text x="150" y="200" text-anchor="middle" font-size="12" font-weight="600">近景</text>
+    <text x="150" y="216" text-anchor="middle" font-size="10" class="t-muted">离相机近</text>
+
+    <line x1="264" y1="168" x2="264" y2="184" class="s-accent" stroke-width="1.8" />
+    <circle cx="264" cy="176" r="5.5" class="f-accent" />
+    <text x="264" y="200" text-anchor="middle" font-size="12" font-weight="600">主体</text>
+    <text x="264" y="216" text-anchor="middle" font-size="10" class="t-muted">你对它对焦</text>
+
+    <line x1="370" y1="170" x2="370" y2="182" class="s-muted" stroke-width="1.4" />
+    <circle cx="370" cy="176" r="4" class="f-muted" />
+    <text x="370" y="200" text-anchor="middle" font-size="12" font-weight="600">远景</text>
+    <text x="370" y="216" text-anchor="middle" font-size="10" class="t-muted">背景</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>那条带箭头的线是镜头看出去的方向，<b>距离从左到右越来越远</b>。
+    上面那条厚重的色带是<b>小光圈</b>（f/16）——清楚的范围从近到远铺得很开；
+    下面窄窄的一段是<b>大光圈</b>（f/2）——清楚的只有主体前后薄薄一片。
+    两条色带都<b>以主体为中心</b>，因为两次对焦在同一个地方，变的只是「这一层有多厚」。
+    完整图解见 <a href="https://www.cambridgeincolour.com/tutorials/depth-of-field.htm" target="_blank" rel="noopener">Cambridge in Colour：景深</a>。
+  </figcaption>
+</figure>
+
+<p>决定这一层有多厚的，只有三样东西，而且全是<strong>几何</strong>，不是玄学：</p>
+
+<dl>
+  <dt>光圈 <span class="pill">孔越大越浅</span></dt>
+  <dd>光圈开得越大（<code>f</code> 数字越小），景深越浅。因为光线是从更大的角度射进来的，
+  对焦平面之外那点偏差被放大得更厉害，糊得也更快。</dd>
+
+  <dt>焦距 <span class="pill">越长越浅</span></dt>
+  <dd>镜头越长（视角越窄），景深越浅。长焦把远处的东西放大，同时也把「模糊」一起放大了——
+  这也是为什么手机上的「长焦镜头」拍背景比广角镜头更容易化开。</dd>
+
+  <dt>拍摄距离 <span class="pill">越近越浅</span></dt>
+  <dd>你离主体越近，景深越浅。拍特写时这条最明显：一只手表占满画面时，
+  可能只有指针尖那一两毫米是实的。三个因素里，<strong>距离是最容易被忽略、也最好用的一条</strong>。</dd>
+</dl>
+
+<p>把这三条并成一句能背下来的话：<strong>想虚化背景，就靠近、拉长、开大</strong>。
+（反过来，想让前后都清楚，就<strong>退远、用广角、收小光圈</strong>。）</p>
+
+<h2>为什么大光圈能把背景化开</h2>
+
+<p>道理上面的图已经看了一半：清晰的范围其实只有薄薄一层。光圈开大，这一层就变得很薄——
+薄到只有离你最近的那只眼睛是实的，另一只眼睛已经开始发虚。</p>
+
+<p>至于背景里那些花花绿绿的形状，它们并没有「变成」模糊，而是<strong>从一开始就没有被聚焦</strong>：
+背景上每一个亮点，穿过镜头后都会在传感器上摊成一个小圆盘（摄影里叫<strong>弥散圆</strong>）。
+光圈越大，这个圆盘越大；无数个圆盘彼此重叠，就变成一片奶油似的、没有边界的糊。
+<strong>虚化不是后期加上去的效果，而是光学的必然结果。</strong></p>
+
+<p>还有一件事能让背景糊得更干净：<strong>让主体离背景远一点</strong>。
+主体和背景的间距越大，背景的弥散圆扩散得越充分，虚化就越夸张、越没有破绽。
+这一条不用花钱、不用换器材，效果却常常比把光圈从 f/4 开到 f/1.8 还明显。</p>
+
+<h2>什么时候要浅，什么时候要深</h2>
+
+<p>没有「该用多少光圈」这回事，只有「这张照片想让谁说话」。下面这张表是常用的判断起点，
+不是铁律——先按它拍，再按你看到的结果调整。</p>
+
+<table>
+  <thead>
+    <tr><th>场合</th><th>想要的效果</th><th>光圈方向</th><th>注意</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>单人像</td><td>主体突出，背景化开</td><td><code>f/1.8 – f/2.8</code></td><td>对焦点放在离你近的那只眼睛上</td></tr>
+    <tr><td>特写（花、食物、手）</td><td>只有一小点实</td><td><code>f/2 – f/4</code></td><td>先凑近，再开大，效果最强</td></tr>
+    <tr><td>街头抓拍</td><td>人清楚，街道也读得出</td><td><code>f/5.6 – f/8</code></td><td>留一点环境，照片才有故事</td></tr>
+    <tr><td>风景、建筑</td><td>从脚边到天边都实</td><td><code>f/8 – f/11</code></td><td>对焦点放在画面下三分之一处</td></tr>
+    <tr><td>一排人合影</td><td>每张脸都清楚</td><td><code>f/8</code> 左右</td><td>让大家尽量站在同一条线上</td></tr>
+    <tr><td>夜景、手持弱光</td><td>先保住亮度</td><td>能开多大开多大</td><td>代价是背景会很糊</td></tr>
+  </tbody>
+</table>
+
+<p>注意最后一行。弱光的时候开大光圈有双重好处：进光多，而且<strong>不必提高 ISO</strong>，
+所以它是暗处唯一「不增加噪点」的那条路。你付出的代价是景深变浅——这是明码标价，不是坏事。</p>
+
+<h2>手机上的真相：虚化是「算」出来的</h2>
+
+<p>这一节要说得直白一点，因为绝大多数人手里只有手机。</p>
+
+<p>手机镜头的物理光圈其实很小。它要把「薄」和「广角」同时做到，所以焦距极短
+（等效 26 mm 左右，实际焦距可能只有四五毫米），<code>f/1.8</code> 换算下来真实孔径就那么两三毫米。
+孔径小、距离又近，几何上<strong>本来就很难做出背景化开</strong>的效果。</p>
+
+<p>所以手机里的「人像模式」「大光圈模式」，背景的模糊<strong>主要是算法合成</strong>的：
+先连拍若干张、估出一张深度图（这一步经常估错），再判断哪些像素属于背景，
+把它们模糊掉，贴回主体后面。算法不懂光学，它只认「边缘」和「距离」，
+所以下面这些地方最容易穿帮：</p>
+
+<ul>
+  <li><strong>头发、毛绒、树枝</strong>——边缘太碎，算法分不清哪儿算主体，常常糊掉一半，或留一圈硬边。</li>
+  <li><strong>眼镜框和镜片</strong>——镜片后面的背景是透过去的，算法容易把镜框里面也一起模糊掉。</li>
+  <li><strong>透明与半透明的东西</strong>——玻璃杯、纱帘、水花，根本不符合「主体是不透明的」这个假设。</li>
+  <li><strong>紧贴主体的背景</strong>——深度信息连成一片分不开，交界处会出现一圈怪异的轮廓。</li>
+</ul>
+
+<div class="card">
+  <p><strong>让算法少犯错的三件事：</strong></p>
+  <ol>
+    <li><strong>选干净的背景</strong>：一面墙、一片天、一块草地，都比枝叶和人群好算得多。</li>
+    <li><strong>让主体边缘简单</strong>：头发收拢一点、摘掉眼镜再拍一张；避开栏杆、细网、纱帘。</li>
+    <li><strong>让主体离背景远一点</strong>：人往前提两步，算法更容易把主体和背景分开，虚化也更自然。</li>
+  </ol>
+  <p>但请记住最后这一句：<strong>手机上真想虚化，最有效的还是「靠近主体 + 让主体离背景远」</strong>——
+  那是光学在替你干活，算法只是替补。</p>
+</div>
+
+<h2>小光圈的代价：衍射与暗光</h2>
+
+<p>既然收小光圈能让前后都清楚，那是不是一路收到 <code>f/16</code>、<code>f/22</code> 最保险？不是。
+收得太小要付两种代价。</p>
+
+<dl>
+  <dt>衍射 <span class="pill">整体变软</span></dt>
+  <dd>光经过孔的边缘时会「拐一下弯」，这叫衍射。孔越小，拐弯占的比例越大，
+  于是<strong>连原本该清楚的地方也一起变软</strong>。多数镜头在 <code>f/8 – f/11</code> 附近最锐，
+  再往下收，锐度反而掉。原理见
+  <a href="https://www.cambridgeincolour.com/tutorials/diffraction-photography.htm" target="_blank" rel="noopener">Cambridge in Colour：衍射</a>。</dd>
+
+  <dt>进光变少 <span class="pill">快门 / ISO 遭殃</span></dt>
+  <dd>孔小就等于进光少。想保持同样的亮度，你要么把快门放慢（手抖、人物拖影），
+  要么把 ISO 调高（噪点变多）。这两样都是第 1 讲里说过的副作用，现在被光圈逼出来了。</dd>
+</dl>
+
+<p>所以「为了清楚就拼命收小光圈」是个典型陷阱：你以为在拿光圈换清晰，
+其实是在<strong>拿锐度换景深</strong>，还顺带把快门和 ISO 逼到墙角。
+一句经验值：多数情况下 <code>f/8</code> 附近是「既够清楚、又最锐」的甜点。</p>
+
+<h2>一句可带走的规则</h2>
+
+<div class="card">
+  <p><strong>先用光圈决定「什么该清楚」，再让它和快门、ISO 一起把亮度凑对。</strong></p>
+  <p>顺序很关键。光圈要先定，因为它管的是<strong>内容</strong>——背景糊了就是糊了，后期救不回来；
+  而亮度是可以事后微调、甚至重新拍一张的。所以老手调参数的第一下几乎永远落在光圈上，
+  第二下才去补亮度。第 1 讲讲的是三者如何互换，这一讲讲的是<strong>先从哪一个开始换</strong>。</p>
+</div>
+
+<h2>回顾：三个自测</h2>
+<div class="quiz">
+  <h3>先合上讲义，自己回答，再看核对</h3>
+
+  <p class="prompt">1. 为什么光圈的整档序列是 <code>1.4 · 2 · 2.8 · 4 · 5.6 · 8</code>，而不是 <code>1 · 2 · 3 · 4 · 5</code>？</p>
+  <details><summary>看答案</summary>
+    <p>因为每相邻一档要差一倍进光量，而进光量取决于孔的面积，面积又和直径的平方成正比。面积想翻倍，直径就得乘以 √2 ≈ 1.414。所以每一档都是上一档乘 1.4 得到的：1.4 × 1.414 ≈ 2，2 × 1.414 ≈ 2.8……这就是那串怪数字的来历。</p>
+  </details>
+
+  <p class="prompt">2. 你想拍一张背景化开的人像，手里只有一台套机，最大光圈 <code>f/4</code>。除了开大光圈，你还能做哪三件事？</p>
+  <details><summary>看答案</summary>
+    <p>靠近被摄的人（缩短拍摄距离）、把镜头变焦到最长的那一端（加长焦距）、让被摄者离背景尽量远（加大主体与背景的间距）。三条都在改变几何关系，效果常常比把 f/4 换成 f/1.8 还明显。当然，光圈开到 f/4 也同时做。</p>
+  </details>
+
+  <p class="prompt">3. 手机人像模式拍一个戴眼镜、头发蓬松的人，结果镜框附近糊成一片、头发边缘一圈硬边。为什么？下次怎么避免？</p>
+  <details><summary>看答案</summary>
+    <p>因为手机的虚化主要是算法合成的：它靠深度估计和边缘判断来区分主体与背景。镜片是透明的、镜框很细，头发边缘又碎，算法都会算错。下次换一个干净的背景、让对方把头发收拢、摘掉眼镜或把脸侧一点，并让主体离背景远一些——同时别忘了物理上「靠近主体」永远是第一位的。</p>
+  </details>
+</div>
+
+<p class="ask">这一讲哪里没说清？回到 OpenCode 里直接问你的老师（那个正在运行 <code>teach</code>
+的 agent）——它比你更懂你的目标，可以为你重新举例、加练，或跳到你想深入的部分。
+比如告诉你手边的器材是什么，它就能把这套「靠近、拉长、开大」换算成你镜头上真实的刻度：
+套头在 18 mm 和 55 mm 两端的最大光圈是多少、该退到多远。</p>
+
+<p class="foot">
+  <strong>推荐一手资料：</strong>
+  <a href="https://search.douban.com/book/subject_search?search_text=%E7%BE%8E%E5%9B%BD%E7%BA%BD%E7%BA%A6%E6%91%84%E5%BD%B1%E5%AD%A6%E9%99%A2%E6%91%84%E5%BD%B1%E6%95%99%E6%9D%90" target="_blank" rel="noopener">《美国纽约摄影学院摄影教材》</a>
+  的「镜头与光圈」和「景深」两部分 —— 光圈数值怎么标、景深的三个变量，它讲得比本讲更细、图也更多。
+  想看图解版，读 <a href="https://www.cambridgeincolour.com/tutorials/depth-of-field.htm" target="_blank" rel="noopener">Cambridge in Colour：景深</a>。
+  <br />图片来源与授权：<a href="../assets/CREDITS.md">图片版权说明</a>（本讲没有真实照片，两张图都是手写 SVG）。
+  <br />上一讲：<a href="0001-exposure-triangle.html">第 1 讲 · 曝光三角</a> ·
+  下一讲：<a href="0003-shutter-speed.html">第 3 讲 · 快门速度</a> ·
+  速查：<a href="../reference/0001-exposure-cheatsheet.html">曝光速查表</a> ·
+  词汇：<a href="../reference/0003-glossary.html">术语表</a>
+</p>
+
+</body>
+</html>

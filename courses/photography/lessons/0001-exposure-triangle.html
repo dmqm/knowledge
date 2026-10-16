@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 1 讲 · 曝光三角</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="kicker">摄影 · 第 1 讲</p>
+<h1>曝光三角：光的三条闸门</h1>
+<p class="lede">画面有多亮，从来不是相机替你决定的事——它只是替你<strong>猜</strong>。这一讲把那三个旋钮从黑箱里取出来，交到你手上。</p>
+
+<p class="toc" style="margin:.1rem 0 1.6rem;font-family:var(--sans);font-size:.82rem;color:var(--muted);">
+  课程起点
+  &nbsp;·&nbsp; <a href="0002-aperture-and-depth-of-field.html">下一讲 · 光圈与景深 →</a>
+  &nbsp;·&nbsp; <a href="../reference/0001-exposure-cheatsheet.html">曝光速查表</a>
+</p>
+
+<p>先看一张照片。</p>
+
+<figure class="figure photo">
+  <img src="../assets/img/niepce-le-gras.png" alt="一张灰暗模糊的窗外屋顶照片，是人类现存最早的照片" />
+  <figcaption>
+    <b>《勒格拉窗外的景色》</b>——人类现存最早的一张照片。1826 年前后，法国人 Joseph Nicéphore Niépce
+    把一块涂了沥青的锡板放进暗箱，对着自家窗外曝了很长时间，才有了屋脊和烟囱的轮廓。
+    <span class="exif">Joseph Nicéphore Niépce · 约 1826 · 曝光约 8 小时</span>
+  </figcaption>
+</figure>
+
+<p>同一个窗口，今天你用手机按下快门，大约 <strong>1/125 秒</strong>。光没有任何变化，
+变的是<strong>控制光的手段</strong>。这张照片之所以糊、暗、看不清，不是因为那时的人不会取景，
+而是因为曝光时间长得离谱，中途的阳光角度、天气、甚至苍蝇落上去都会留下痕迹。</p>
+
+<p>这一讲只回答一个问题：<strong>画面亮度是谁定的？</strong>
+答案只有三样东西——光圈、快门、ISO。把这三位弄明白，你才算第一次真正「拍」照片，
+而不是「被相机拍」。</p>
+
+<h2>光走到画面里，要过三道关</h2>
+
+<p>把相机想成一段水管：光从镜头进来，经过三个可以调节的地方，最后落在传感器上。
+这三个地方各管一件事，各自负责把进光量乘以一个倍数。</p>
+
+<figure class="figure">
+  <svg viewBox="0 0 400 300" role="img" aria-labelledby="fig-tri-t">
+    <title id="fig-tri-t">曝光三角：三个旋钮指向同一个结果——画面亮度</title>
+    <defs>
+      <marker id="tri-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" markerUnits="userSpaceOnUse" orient="auto">
+        <path d="M0 0 L10 5 L0 10 Z" class="f-muted" />
+      </marker>
+    </defs>
+
+    <line x1="200" y1="60" x2="64" y2="228" class="s-rule" stroke-dasharray="4 5" />
+    <line x1="200" y1="60" x2="336" y2="228" class="s-rule" stroke-dasharray="4 5" />
+    <line x1="64" y1="228" x2="336" y2="228" class="s-rule" stroke-dasharray="4 5" />
+
+    <line x1="200" y1="62" x2="200" y2="110" class="s-muted" stroke-width="1.6" marker-end="url(#tri-arrow)" />
+    <line x1="88" y1="226" x2="168" y2="186" class="s-muted" stroke-width="1.6" marker-end="url(#tri-arrow)" />
+    <line x1="312" y1="226" x2="232" y2="186" class="s-muted" stroke-width="1.6" marker-end="url(#tri-arrow)" />
+
+    <circle cx="200" cy="152" r="44" class="f-wash s-accent" />
+    <text x="200" y="147" text-anchor="middle" font-size="15" font-weight="600" class="t-accent">画面</text>
+    <text x="200" y="167" text-anchor="middle" font-size="15" font-weight="600" class="t-accent">亮度</text>
+
+    <rect x="140" y="12" width="120" height="48" rx="10" class="f-surface s-rule" />
+    <text x="200" y="34" text-anchor="middle" font-size="14" font-weight="600">光圈</text>
+    <text x="200" y="51" text-anchor="middle" font-size="12" class="t-muted">孔开多大</text>
+
+    <rect x="4" y="228" width="120" height="48" rx="10" class="f-surface s-rule" />
+    <text x="64" y="250" text-anchor="middle" font-size="14" font-weight="600">快门</text>
+    <text x="64" y="267" text-anchor="middle" font-size="12" class="t-muted">开多久</text>
+
+    <rect x="276" y="228" width="120" height="48" rx="10" class="f-surface s-rule" />
+    <text x="336" y="250" text-anchor="middle" font-size="14" font-weight="600">ISO</text>
+    <text x="336" y="267" text-anchor="middle" font-size="12" class="t-muted">放大多少倍</text>
+
+    <text x="200" y="221" text-anchor="middle" font-size="12" class="t-muted">三档联动，亮度不变</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>三个旋钮都指向同一个结果——<b>画面亮度</b>。每个旋钮动「一整档」，
+    亮度就翻一倍或减一半（图下那条虚线边：两边各让一档、第三边不动，亮度就不变）。
+    <b>不同的地方在副作用</b>：动<b>光圈</b>会改变景深（前后哪一段清楚）；
+    动<b>快门</b>会改变动作被凝固还是被拖成影子；动 <b>ISO</b> 会改变噪点和画质。
+    <b>这就是「曝光三角」真正的意思</b>——你选的从来不只是亮度，而是用哪种代价换来这个亮度。
+  </figcaption>
+</figure>
+
+<dl>
+  <dt>光圈 <span class="pill">孔的大小</span></dt>
+  <dd>镜头里那个可以放大缩小的孔，用 <code>f/2.8</code>、<code>f/8</code> 这样的数字表示。
+  <strong>数字越小，孔越大，进光越多</strong>——这一点最容易记反。每开大一整档（f/8 → f/5.6），进光量翻倍。
+  <em>副作用</em>：孔越大，清楚的范围（景深）越窄。</dd>
+
+  <dt>快门 <span class="pill">孔开多久</span></dt>
+  <dd>快门帘幕打开的时间，<strong>时间越长，进光越多</strong>。1/125 秒 → 1/60 秒，
+  曝光时间翻倍，进光也翻倍。<em>副作用</em>：时间越长，走路的人会拖出虚影，你的手抖也会被记下来。</dd>
+
+  <dt>ISO <span class="pill">放大倍数</span></dt>
+  <dd>传感器把光变成电信号之后，整体<strong>放大</strong>多少倍。ISO 100 → ISO 400 是放大四倍，画面亮四倍。
+  <em>副作用</em>：放大的是「信号 + 噪声」，所以 ISO 越高，颗粒和色斑（噪点）越明显。</dd>
+</dl>
+
+<p>把这三条放在一起，就能读出任何一张照片的亮度来源。下面这张表里，每一行的亮度几乎一样，
+但「换来的东西」完全不同：</p>
+
+<table>
+  <thead>
+    <tr><th>整档</th><th>光圈</th><th>快门</th><th>ISO</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>暗一半</td><td><code>f/5.6</code></td><td><code>1/500 s</code></td><td><code>ISO 100</code></td></tr>
+    <tr><td>基准</td><td><code>f/4</code></td><td><code>1/250 s</code></td><td><code>ISO 200</code></td></tr>
+    <tr><td>亮一倍</td><td><code>f/2.8</code></td><td><code>1/125 s</code></td><td><code>ISO 400</code></td></tr>
+  </tbody>
+</table>
+
+<p class="refs">
+  整档序列（每相邻一格，进光量差一倍）：光圈 <code>f/1.4 · 2 · 2.8 · 4 · 5.6 · 8 · 11 · 16</code>；
+  快门 <code>1/1000 · 1/500 · 1/250 · 1/125 · 1/60 · 1/30 · 1/15 · 1/8 · 1/4 · 1/2 · 1"</code>；
+  ISO <code>100 · 200 · 400 · 800 · 1600 · 3200 · 6400</code>。
+  规律只有一条：<strong>每格乘以二</strong>。数字为什么长得这么怪，看完<a href="0002-aperture-and-depth-of-field.html">下一讲</a>就明白了。
+</p>
+
+<h2>互换：曝光三角真正的用处</h2>
+
+<p>既然三个旋钮都在管同一件事，那么一个变亮、另一个变暗，亮度就能原地不动。
+这种「换一换」是摄影里最常用的一步棋，因为它能让你<strong>保住想要的副作用</strong>。</p>
+
+<table>
+  <thead>
+    <tr><th>组合</th><th>设置</th><th>换来什么</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>A</td><td><code>f/4 · 1/250 s · ISO 200</code></td><td>基准</td></tr>
+    <tr><td>B</td><td><code>f/5.6 · 1/125 s · ISO 200</code></td><td>清楚的范围变大（拍风景更稳），但更容易拍糊</td></tr>
+    <tr><td>C</td><td><code>f/4 · 1/500 s · ISO 400</code></td><td>跑动的人被定住，代价是噪点变多</td></tr>
+    <tr><td>D</td><td><code>f/2.8 · 1/500 s · ISO 200</code></td><td>背景更糊、动作更凝固，代价是清楚的范围变窄</td></tr>
+  </tbody>
+</table>
+
+<p>A、B、C、D 四张照片的亮度几乎一模一样。区别只在于：<strong>你想让什么清楚、想让什么定住、愿意忍受多少噪点</strong>。
+这就是为什么「手动」值得学——不是因为手动更高级，而是因为自动模式在这些取舍上替你做了决定，
+而且从不告诉你它选了什么。</p>
+
+<div class="card">
+  <p><strong>一句话记住三档的关系：</strong>
+  孔开大一档，就等于时间少一半；时间多一倍，就等于 ISO 低一半。
+  三者此消彼长，决定亮度；而各自的副作用，才是你真正在选的东西。</p>
+</div>
+
+<h2>相机为什么会「算错」</h2>
+
+<p>那自动模式是怎么猜的呢？绝大多数相机按同一套假设工作：<strong>它假定整个画面平均起来是中等亮度</strong>
+（大约 18% 灰），然后调整三个旋钮，把这个平均值拉到中间。
+平时这个假设挺好用，但只要你拍的东西不是「平均地灰」，它就一定猜错。
+相机测光的原理可参考 <a href="https://www.cambridgeincolour.com/tutorials/camera-metering.htm" target="_blank" rel="noopener">Cambridge in Colour：测光</a>。</p>
+
+<ul>
+  <li><strong>大片雪、白墙、逆光的天空</strong>——画面本来就亮，相机却以为太亮了，于是往下压，结果雪变成脏灰色。</li>
+  <li><strong>夜景、黑背景、舞台上的一个人</strong>——画面本来就暗，相机却以为太暗了，于是往上提，结果整个画面发灰、噪点炸开。</li>
+</ul>
+
+<p>对策叫<strong>曝光补偿</strong>，写在相机上就是 <code>±EV</code>，手机上就是那个能拖动的小太阳。
+记住老摄影师的口诀：<strong>白加黑减</strong>——拍白的要往上加，拍黑的要往下减。</p>
+
+<figure class="figure">
+  <svg viewBox="0 0 420 200" role="img" aria-labelledby="fig-hist-t">
+    <title id="fig-hist-t">欠曝、正常、过曝三种画面与各自的直方图</title>
+
+    <rect x="6" y="6" width="128" height="74" fill="#262c31" />
+    <rect x="6" y="54" width="128" height="26" fill="#1b2024" />
+    <circle cx="100" cy="28" r="10" fill="#3d454c" />
+    <rect x="146" y="6" width="128" height="74" fill="#909aa2" />
+    <rect x="146" y="54" width="128" height="26" fill="#7c868e" />
+    <circle cx="240" cy="28" r="10" fill="#b9c2c9" />
+    <rect x="286" y="6" width="128" height="74" fill="#eef1f2" />
+    <rect x="286" y="54" width="128" height="26" fill="#dde3e7" />
+    <circle cx="380" cy="28" r="10" fill="#ffffff" />
+
+    <line x1="6" y1="156" x2="414" y2="156" class="s-rule" />
+
+    <rect x="8" y="110" width="8" height="46" class="f-muted" />
+    <rect x="18" y="112" width="8" height="44" class="f-muted" />
+    <rect x="28" y="116" width="8" height="40" class="f-muted" />
+    <rect x="38" y="122" width="8" height="34" class="f-muted" />
+    <rect x="48" y="130" width="8" height="26" class="f-muted" />
+    <rect x="58" y="138" width="8" height="18" class="f-muted" />
+    <rect x="68" y="144" width="8" height="12" class="f-muted" />
+    <rect x="78" y="148" width="8" height="8" class="f-muted" />
+    <rect x="88" y="151" width="8" height="5" class="f-muted" />
+    <rect x="98" y="153" width="8" height="3" class="f-muted" />
+    <rect x="108" y="154" width="8" height="2" class="f-muted" />
+    <rect x="118" y="155" width="8" height="1" class="f-muted" />
+
+    <rect x="148" y="154" width="8" height="2" class="f-muted" />
+    <rect x="158" y="151" width="8" height="5" class="f-muted" />
+    <rect x="168" y="144" width="8" height="12" class="f-muted" />
+    <rect x="178" y="134" width="8" height="22" class="f-muted" />
+    <rect x="188" y="120" width="8" height="36" class="f-muted" />
+    <rect x="198" y="110" width="8" height="46" class="f-muted" />
+    <rect x="208" y="110" width="8" height="46" class="f-muted" />
+    <rect x="218" y="120" width="8" height="36" class="f-muted" />
+    <rect x="228" y="134" width="8" height="22" class="f-muted" />
+    <rect x="238" y="144" width="8" height="12" class="f-muted" />
+    <rect x="248" y="151" width="8" height="5" class="f-muted" />
+    <rect x="258" y="154" width="8" height="2" class="f-muted" />
+
+    <rect x="288" y="155" width="8" height="1" class="f-muted" />
+    <rect x="298" y="154" width="8" height="2" class="f-muted" />
+    <rect x="308" y="153" width="8" height="3" class="f-muted" />
+    <rect x="318" y="151" width="8" height="5" class="f-muted" />
+    <rect x="328" y="148" width="8" height="8" class="f-muted" />
+    <rect x="338" y="144" width="8" height="12" class="f-muted" />
+    <rect x="348" y="138" width="8" height="18" class="f-muted" />
+    <rect x="358" y="130" width="8" height="26" class="f-muted" />
+    <rect x="368" y="122" width="8" height="34" class="f-muted" />
+    <rect x="378" y="116" width="8" height="40" class="f-muted" />
+    <rect x="388" y="112" width="8" height="44" class="f-muted" />
+    <rect x="398" y="110" width="8" height="46" class="f-muted" />
+
+    <text x="70" y="176" text-anchor="middle" font-size="13" font-weight="600">欠曝</text>
+    <text x="210" y="176" text-anchor="middle" font-size="13" font-weight="600">正常</text>
+    <text x="350" y="176" text-anchor="middle" font-size="13" font-weight="600">过曝</text>
+    <text x="70" y="192" text-anchor="middle" font-size="11" class="t-muted">直方图挤在左边</text>
+    <text x="210" y="192" text-anchor="middle" font-size="11" class="t-muted">直方图散在中间</text>
+    <text x="350" y="192" text-anchor="middle" font-size="11" class="t-muted">直方图挤在右边</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>上面三格是同一场景在三种亮度下的样子，下面是各自对应的<b>直方图</b>——
+    横轴从左到右代表「从最暗到最亮」，竖条高低代表「有多少像素是这个亮度」。
+    <b>左边挤成一堆</b>说明画面整体太暗（欠曝），阴影里的细节已经丢掉；
+    <b>右边顶到边</b>说明太亮（过曝），天空、白衬衫之类的地方会变成一片死白，再也调不回来；
+    <b>中间散开、两头不堆</b>通常最省事。直方图的原理解释见
+    <a href="https://www.cambridgeincolour.com/tutorials/histograms1.htm" target="_blank" rel="noopener">Cambridge in Colour：直方图</a>。
+  </figcaption>
+</figure>
+
+<p>注意直方图只看<strong>亮度分布</strong>，它不判断「好不好」。拍夜景本来就该偏左，
+拍雪本来就该偏右——<strong>直方图是仪表盘，不是评分表</strong>。它唯一的硬用途是告诉你两件事：
+有没有一大片地方黑到失去细节，有没有一大片地方白到失去细节。</p>
+
+<h2>手机上怎么拧这三个旋钮</h2>
+
+<p>好消息是：手机上你不需要一上来就学会三个都拧。默认相机已经替你调好了三个，
+只留给你一个最好用的旋钮——<strong>曝光补偿</strong>。它能解决上面九成的问题：</p>
+
+<figure class="figure">
+  <svg viewBox="0 0 400 250" role="img" aria-labelledby="fig-phone-t">
+    <title id="fig-phone-t">手机相机上调整曝光的三步操作</title>
+
+    <rect x="14" y="10" width="170" height="230" rx="16" class="f-surface s-ink" stroke-width="2" />
+    <rect x="24" y="20" width="150" height="210" rx="9" fill="#7f8b95" />
+    <rect x="24" y="130" width="150" height="100" fill="#4a545b" />
+
+    <rect x="112" y="78" width="56" height="56" rx="4" class="s-accent" fill="none" stroke-width="2" />
+    <text x="140" y="152" text-anchor="middle" font-size="11" class="t-muted">对焦框</text>
+
+    <line x1="164" y1="52" x2="164" y2="176" class="s-ink" stroke-width="1.4" />
+    <circle cx="164" cy="114" r="9" class="f-accent" />
+    <line x1="164" y1="98" x2="164" y2="92" class="s-ink" stroke-width="1.6" />
+    <line x1="164" y1="130" x2="164" y2="136" class="s-ink" stroke-width="1.6" />
+    <line x1="148" y1="114" x2="142" y2="114" class="s-ink" stroke-width="1.6" />
+    <line x1="180" y1="114" x2="186" y2="114" class="s-ink" stroke-width="1.6" />
+
+    <text x="186" y="118" font-size="11" class="t-accent">小太阳</text>
+
+    <circle cx="220" cy="52" r="11" class="f-wash s-accent" />
+    <text x="220" y="56" text-anchor="middle" font-size="12" font-weight="600" class="t-accent">1</text>
+    <text x="240" y="48" font-size="12.5" font-weight="600">轻点要拍的东西</text>
+    <text x="240" y="64" font-size="12" class="t-muted">出现对焦框，主体才对得上</text>
+
+    <circle cx="220" cy="118" r="11" class="f-wash s-accent" />
+    <text x="220" y="122" text-anchor="middle" font-size="12" font-weight="600" class="t-accent">2</text>
+    <text x="240" y="114" font-size="12.5" font-weight="600">上下拖小太阳</text>
+    <text x="240" y="130" font-size="12" class="t-muted">上 = 更亮，下 = 更暗</text>
+
+    <circle cx="220" cy="184" r="11" class="f-wash s-accent" />
+    <text x="220" y="188" text-anchor="middle" font-size="12" font-weight="600" class="t-accent">3</text>
+    <text x="240" y="180" font-size="12.5" font-weight="600">长按 2 秒</text>
+    <text x="240" y="196" font-size="12" class="t-muted">锁定 AE/AF，再自由构图</text>
+
+    <text x="20" y="234" font-size="11" class="t-muted">示意图，不同手机界面略有差别</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>默认相机里，三档由相机自己分配，你只握着一个旋钮——<b>曝光补偿</b>（那个小太阳）。
+    第 3 步的「长按」是在告诉相机「亮度就按现在这个定住，别算了」，这样你才能移动画面、
+    等人物走到你想要的位置而不改变亮度。
+  </figcaption>
+</figure>
+
+<ol>
+  <li><strong>轻点主体</strong>：让相机知道要对着谁测光。点人脸和点天空，得到的亮度可能完全不一样。</li>
+  <li><strong>拖动小太阳</strong>：往上是加曝光（白加），往下是减曝光（黑减）。多数手机一小格约 1/3 档，也有按 1/2 档的。</li>
+  <li><strong>长按锁定</strong>：出现「AE/AF 锁定」后再挪动画面，亮度就固定住了。逆光拍人、拍雪、拍夜景时特别有用。</li>
+</ol>
+
+<p>如果你的手机有「专业模式」（多数安卓机都有，iPhone 需要借助第三方相机 App），
+那你就能直接拧三个数了。第一次进去不要慌，只做一件事：<strong>把 ISO 固定成最低，
+然后只调快门，直到亮度合适</strong>。这是最接近老式胶片相机的用法，也是最容易看懂三档关系的用法。</p>
+
+<h2>今天就能用：拍一组「同亮不同味」</h2>
+
+<div class="card">
+  <p><strong>练习（十分钟）：</strong>找一朵花、一个水果或一个人，在同一个位置拍四张，亮度刻意保持接近，但设置全不一样。</p>
+  <ol>
+    <li>第 1 张：手机默认，点一下主体，不动小太阳。</li>
+    <li>第 2 张：把小太阳往上加两三格，再拍一张——画面更亮，注意白色的地方有没有变成一片死白。</li>
+    <li>第 3 张：把小太阳往下减两三格，再拍一张——注意暗的地方是不是糊成一团黑。</li>
+    <li>第 4 张：如果你有专业模式，把 ISO 调到最低、快门调到最慢（手持尽量别低于 1/30 秒），再拍一张。</li>
+  </ol>
+  <p>然后在手机相册里放大四张对比：<strong>哪一张的细节最多？哪一张最接近你眼睛看到的样子？</strong>
+  把这个答案记住，比背下所有档位有用得多。</p>
+</div>
+
+<h2>回顾：三个自测</h2>
+<div class="quiz">
+  <h3>先合上讲义，自己回答，再看核对</h3>
+
+  <p class="prompt">1. 画面亮度由哪三样决定？它们各自的「副作用」是什么？</p>
+  <details><summary>看答案</summary>
+    <p>光圈（孔的大小）、快门（开多久）、ISO（电信号放大多少倍）。光圈影响景深，快门影响动作被凝固还是被拖影/手抖，ISO 影响噪点多少。三样一起决定亮度，副作用则是它们真正互相区别的地方。</p>
+  </details>
+
+  <p class="prompt">2. 为什么 <code>f/4 · 1/250 s</code> 和 <code>f/5.6 · 1/125 s</code> 拍出来一样亮？</p>
+  <details><summary>看答案</summary>
+    <p>因为光圈从 f/4 收到 f/5.6 是少进一半光，而快门从 1/250 秒放慢到 1/125 秒是多进一倍光，两者正好抵消。这就是「互换」：亮度不变，但景深和凝固能力被交换了。</p>
+  </details>
+
+  <p class="prompt">3. 拍雪景时相机把雪拍成了脏灰色，为什么？你该动哪个旋钮、往哪边动？</p>
+  <details><summary>看答案</summary>
+    <p>因为相机默认把整个画面平均成中等亮度（约 18% 灰），大片白雪让它以为过亮了，于是自动压暗。对策是加曝光补偿（白加），往上推小太阳一到两档，雪才回到白色。反过来拍夜景、拍黑背景要往下减。</p>
+  </details>
+</div>
+
+<p class="ask">这一讲哪里没说清？回到 OpenCode 里直接问你的老师（那个正在运行 <code>teach</code>
+的 agent）——它比你更懂你的目标，可以为你重新举例、加练，或跳到你想深入的部分。
+比如告诉它你用的是哪款手机，它就能把「专业模式」那一节写成你手机上真实的按钮位置。</p>
+
+<p class="foot">
+  <strong>推荐一手资料：</strong>
+  <a href="https://search.douban.com/book/subject_search?search_text=%E7%BE%8E%E5%9B%BD%E7%BA%BD%E7%BA%A6%E6%91%84%E5%BD%B1%E5%AD%A6%E9%99%A2%E6%91%84%E5%BD%B1%E6%95%99%E6%9D%90" target="_blank" rel="noopener">《美国纽约摄影学院摄影教材》</a>
+  的「相机与曝光」部分 —— 本课程的骨干教材，配合本讲读一遍，概念会扎实很多。
+  想看图解版，读 <a href="https://www.cambridgeincolour.com/tutorials/camera-exposure.htm" target="_blank" rel="noopener">Cambridge in Colour：曝光</a>。
+  <br />图片来源与授权：<a href="../assets/CREDITS.md">图片版权说明</a>。
+  <br />下一讲：<a href="0002-aperture-and-depth-of-field.html">第 2 讲 · 光圈与景深</a> ·
+  速查：<a href="../reference/0001-exposure-cheatsheet.html">曝光速查表</a>
+</p>
+
+</body>
+</html>

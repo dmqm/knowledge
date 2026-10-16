@@ -1,0 +1,457 @@
+/* ============================================================
+   摄影 · 共享样式表
+   所有讲义（lessons/*.html）与参考文件（reference/*.html）都链接本文件。
+   离线可用：不依赖任何 CDN、外部字体或网络资源。
+   设计取向：银盐相纸的克制排版——冷调纸白、银灰的规整、
+   蓝晒（cyanotype）蓝作唯一点缀。结构类名与门户其他课程一致，
+   配色故意不同，让这门课有自己的身份。
+   字体栈沿用门户既有设置（衬线正文 + 中文回退），保证设备上的一致性。
+   ============================================================ */
+
+:root {
+  /* 相纸与银盐 */
+  --bg:        #f4f6f7;
+  --surface:   #ffffff;
+  --ink:       #14181c;
+  --muted:     #5b6570;
+  --faint:     #8b95a1;
+  --rule:      #dce1e6;
+
+  /* 点缀色：蓝晒（cyanotype）蓝 */
+  --accent:      #2f6f9e;
+  --accent-ink:  #26597f;
+  --accent-wash: #e7eff6;
+
+  /* 代码 / 参数 */
+  --code-bg: #ecf0f3;
+
+  /* 反馈色（用于测验与图解） */
+  --ok:    #2f7d54;
+  --ok-bg: #e7f2ea;
+  --bad:    #a4442f;
+  --bad-bg: #f7e9e4;
+
+  /* 度量与字体栈 */
+  --measure: 44rem;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
+           "Songti SC", "STSong", "Noto Serif CJK SC", "PingFang SC", serif;
+  --sans:  ui-sans-serif, system-ui, -apple-system, "PingFang SC",
+           "Microsoft YaHei", "Segoe UI", sans-serif;
+  --mono:  ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace;
+}
+
+/* ---------- 深色模式：暗房 ---------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:        #0f1214;
+    --surface:   #171b1f;
+    --ink:       #e6eaee;
+    --muted:     #9aa5b1;
+    --faint:     #6f7b88;
+    --rule:      #262c33;
+
+    --accent:      #6cb0dc;
+    --accent-ink:  #8ec6ea;
+    --accent-wash: #16222c;
+
+    --code-bg: #1b2026;
+
+    --ok:    #82d3a5;
+    --ok-bg: #17281d;
+    --bad:    #ec9a84;
+    --bad-bg: #2c1c17;
+  }
+}
+
+/* ---------- 基础 ---------- */
+* { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0 auto;
+  max-width: var(--measure);
+  padding: 3.2rem 1.4rem 6rem;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 1.0625rem;
+  line-height: 1.72;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- 标题 ---------- */
+.kicker {
+  margin: 0 0 .2rem;
+  font-family: var(--sans);
+  font-size: .74rem;
+  font-weight: 600;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+h1 {
+  margin: 0 0 .35em;
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -.01em;
+}
+
+.lede {
+  margin: 0 0 1.4em;
+  font-size: 1.08rem;
+  color: var(--muted);
+}
+
+h2 {
+  margin: 2.7em 0 .6em;
+  padding-top: .8em;
+  border-top: 1px solid var(--rule);
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+h3 {
+  margin: 1.8em 0 .4em;
+  font-size: 1.06rem;
+  font-weight: 600;
+}
+
+p { margin: .85em 0; }
+
+strong { font-weight: 600; }
+
+/* ---------- 链接 ---------- */
+a {
+  color: var(--accent-ink);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  transition: background-color .15s ease, border-color .15s ease;
+}
+a:hover {
+  background: var(--accent-wash);
+  border-bottom-color: var(--accent);
+}
+
+/* 页脚/工具链接不要下划线 */
+.foot a,
+.toc a { border-bottom: 0; }
+
+/* ---------- 列表 ---------- */
+ul, ol { padding-left: 1.3em; }
+li { margin: .35em 0; }
+
+/* ---------- 定义列表（术语） ---------- */
+dl { margin: 1.3em 0; }
+dt {
+  margin: 1.1em 0 .15em;
+  font-weight: 600;
+}
+dt:first-of-type { margin-top: 0; }
+dd {
+  margin: 0 0 .2em;
+  padding-left: 1.1em;
+  border-left: 2px solid var(--rule);
+  color: var(--muted);
+}
+
+/* ---------- 引用 ---------- */
+blockquote {
+  margin: 1.5em 0;
+  padding: .2em 0 .2em 1.2em;
+  border-left: 3px solid var(--accent);
+  color: var(--muted);
+  font-style: italic;
+}
+blockquote cite {
+  display: block;
+  margin-top: .5em;
+  font-size: .88rem;
+  font-style: normal;
+  color: var(--faint);
+}
+
+/* ---------- 代码 / 参数 ---------- */
+code {
+  padding: .1em .35em;
+  border-radius: 4px;
+  background: var(--code-bg);
+  font-family: var(--mono);
+  font-size: .86em;
+}
+pre {
+  margin: 1.2em 0;
+  padding: 1em 1.1em;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--code-bg);
+  overflow-x: auto;
+}
+pre code { padding: 0; background: none; }
+
+/* ---------- 卡片 ---------- */
+.card {
+  margin: 1.5em 0;
+  padding: 1.1em 1.25em;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, .02);
+}
+.card > :first-child { margin-top: 0; }
+.card > :last-child { margin-bottom: 0; }
+
+/* ---------- 表格 ---------- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.3em 0;
+  font-size: .95rem;
+}
+th, td {
+  padding: .62em .7em;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--rule);
+}
+th {
+  font-family: var(--sans);
+  font-size: .76rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+tbody tr:hover { background: var(--accent-wash); }
+
+/* ---------- 小标签 ---------- */
+.pill {
+  display: inline-block;
+  padding: .12em .5em;
+  border-radius: 999px;
+  font-family: var(--sans);
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .03em;
+  color: var(--accent-ink);
+  background: var(--accent-wash);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+/* ---------- 图示 ---------- */
+/* .figure 同时服务两种内容：
+   1) 内联 SVG 图解       → <figure class="figure"><svg>…</svg><figcaption>…</figcaption></figure>
+   2) 真实照片（.photo）  → <figure class="figure photo"><img src="../assets/img/x.jpg" alt="…">
+   两种都用 <figcaption> 收尾；照片的 figcaption 里请用 <span class="exif"> 放作者与年份。 */
+.figure {
+  margin: 1.9em 0;
+  padding: 1.15em 1.2em .95em;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+}
+.figure svg { display: block; width: 100%; height: auto; }
+.figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid color-mix(in srgb, var(--rule) 75%, transparent);
+  border-radius: 4px;
+  background: #000;
+}
+.figure figcaption {
+  margin-top: .85em;
+  padding-top: .65em;
+  border-top: 1px solid var(--rule);
+  font-family: var(--sans);
+  font-size: .84rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.figure figcaption b { color: var(--ink); }
+
+/* 照片的参数行：f/2 · 1/250s · ISO 100 这种写法是摄影自己的语言 */
+.figure .exif {
+  display: block;
+  margin-top: .3em;
+  font-family: var(--mono);
+  font-size: .78rem;
+  letter-spacing: .01em;
+  color: var(--faint);
+}
+
+/* 图内元素用主题变量着色，深浅色模式自动适配 */
+.figure svg text { font-family: var(--sans); fill: var(--ink); }
+.figure svg .t-muted   { fill: var(--muted); }
+.figure svg .t-accent  { fill: var(--accent-ink); }
+.figure svg .t-faint   { fill: var(--faint); }
+.figure svg .t-ok      { fill: var(--ok); }
+.figure svg .t-bad     { fill: var(--bad); }
+.figure svg .s-rule    { stroke: var(--rule); }
+.figure svg .s-muted   { stroke: var(--muted); }
+.figure svg .s-faint   { stroke: var(--faint); }
+.figure svg .s-accent  { stroke: var(--accent); }
+.figure svg .s-ink     { stroke: var(--ink); }
+.figure svg .s-ok      { stroke: var(--ok); }
+.figure svg .s-bad     { stroke: var(--bad); }
+.figure svg .f-surface { fill: var(--surface); }
+.figure svg .f-bg      { fill: var(--bg); }
+.figure svg .f-accent  { fill: var(--accent); }
+.figure svg .f-wash    { fill: var(--accent-wash); }
+.figure svg .f-rule    { fill: var(--rule); }
+.figure svg .f-ink     { fill: var(--ink); }
+.figure svg .f-muted   { fill: var(--muted); }
+.figure svg .f-ok      { fill: var(--ok); }
+.figure svg .f-bad     { fill: var(--bad); }
+
+/* ---------- 并排对照（宽屏才分栏，手机上自然堆叠） ---------- */
+.split { margin: 1.6em 0; }
+.split > * { margin-top: 0; }
+@media (min-width: 640px) {
+  .split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.1em;
+    align-items: start;
+  }
+}
+
+/* ---------- 引用来源清单 ---------- */
+.refs {
+  margin: 1.5em 0;
+  padding-left: 1.2em;
+  font-size: .9rem;
+  color: var(--muted);
+}
+.refs li { margin: .45em 0; }
+
+/* ---------- 测验 ---------- */
+.quiz {
+  margin: 1.6em 0;
+  padding: 1.1em 1.25em 1.3em;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+}
+.quiz > h3 { margin-top: 0; }
+
+.quiz .q {
+  margin: 1.1em 0;
+  padding: 0;
+  border: 0;
+}
+.quiz .q:first-of-type { margin-top: .6em; }
+.quiz .prompt { margin: 0 0 .6em; font-weight: 600; }
+
+.quiz .options {
+  display: grid;
+  gap: .45em;
+}
+.quiz button {
+  width: 100%;
+  padding: .62em .85em;
+  text-align: left;
+  font-family: var(--serif);
+  font-size: .98rem;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background-color .12s ease, border-color .12s ease;
+}
+.quiz button:hover:enabled {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+}
+.quiz button:disabled { cursor: default; }
+.quiz button.correct {
+  border-color: var(--ok);
+  background: var(--ok-bg);
+  color: var(--ok);
+  font-weight: 600;
+}
+.quiz button.wrong {
+  border-color: var(--bad);
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+.quiz .fb {
+  margin: .55em 0 0;
+  min-height: 1.2em;
+  font-family: var(--sans);
+  font-size: .86rem;
+  color: var(--muted);
+}
+.quiz .fb.ok  { color: var(--ok); }
+.quiz .fb.bad { color: var(--bad); }
+
+/* 无 JS 的回想式自测 */
+.quiz details,
+.quiz > details {
+  margin: .5em 0;
+  padding: .5em .7em;
+  border: 1px solid var(--rule);
+  border-radius: 9px;
+  background: var(--bg);
+}
+.quiz details[open] { border-color: var(--accent); }
+.quiz summary {
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: .84rem;
+  color: var(--accent-ink);
+}
+.quiz summary::marker { color: var(--accent); }
+.quiz details > p:last-child { margin-bottom: .2em; }
+
+/* ---------- 提醒框（向老师追问） ---------- */
+.ask {
+  margin: 2.6em 0 0;
+  padding: .95em 1.15em;
+  border-left: 3px solid var(--accent);
+  background: var(--surface);
+  border-radius: 0 10px 10px 0;
+  font-size: .95rem;
+  color: var(--muted);
+}
+
+/* ---------- 页脚 ---------- */
+.foot {
+  margin-top: 3em;
+  padding-top: 1.1em;
+  border-top: 1px solid var(--rule);
+  font-size: .87rem;
+  color: var(--muted);
+}
+.foot strong { color: var(--ink); }
+
+/* ---------- 打印 ---------- */
+@media print {
+  :root {
+    --bg: #fff;
+    --surface: #fff;
+    --ink: #000;
+    --muted: #444;
+    --accent: #1d4f74;
+    --accent-ink: #1d4f74;
+    --accent-wash: #f2f2f2;
+    --rule: #bbb;
+    --code-bg: #f2f2f2;
+  }
+  body { max-width: none; padding: 0; font-size: 11pt; }
+  a { border-bottom: 0; color: #000; }
+  .card, .quiz, .ask, .figure { box-shadow: none; }
+  .figure { break-inside: avoid; border: 1px solid var(--rule); }
+  .figure img { break-inside: avoid; }
+  .quiz button { border: 1px solid #bbb; }
+  .quiz details { break-inside: avoid; }
+}

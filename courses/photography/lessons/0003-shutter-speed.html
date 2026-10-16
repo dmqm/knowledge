@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 3 讲 · 快门</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="kicker">摄影 · 第 3 讲</p>
+<h1>快门：凝固，还是留痕</h1>
+<p class="lede">光圈决定光有多少，快门决定光来多久。而「多久」这两个字，直接决定了一件事：画面里的动作，是被<b>切下来</b>，还是<b>流过去</b>。这一讲只教你选这一个数。</p>
+
+<p class="toc" style="margin:.1rem 0 1.6rem;font-family:var(--sans);font-size:.82rem;color:var(--muted);">
+  曝光三角 · 第二只旋钮
+  &nbsp;·&nbsp; <a href="0002-aperture-and-depth-of-field.html">← 上一讲 · 光圈与景深</a>
+  &nbsp;·&nbsp; <a href="0004-iso-and-noise.html">下一讲 · ISO 与噪点 →</a>
+</p>
+
+<p>先看一张照片。</p>
+
+<figure class="figure photo">
+  <img src="../assets/img/muybridge-horse-in-motion.jpg" alt="一匹奔跑的马的连续动作分解：一排连续拍摄的画面，马在其中的一格四蹄同时离地" />
+  <figcaption>
+    <b>《运动的马》（Sallie Gardner）</b>——1878 年，Eadweard Muybridge 沿着跑道摆了一排相机，
+    用细线牵着快门，马跑过时依次触发。他要回答一个当时吵得很凶的问题：<b>马奔跑时，四蹄会不会同时离地？</b>
+    照片给出的答案是：会。当时的人们<b>不相信</b>——不是因为他们没见过马跑，
+    而是因为眼睛看不过来。快门替他们看见了眼睛漏掉的东西。
+    <span class="exif">Eadweard Muybridge · 1878 · Public domain</span>
+  </figcaption>
+</figure>
+
+<p>注意这件事的顺序：<strong>相机先把那一瞬间拍出来，人才学会在奔跑的马身上「看见」它。</strong>
+在那之前不是没人盯着马看，而是人眼跟不上——四蹄同时离地只有几十毫秒，眼睛直接把它糊掉了。
+快门第一次替人类看见了自己看不见的时间。</p>
+
+<p>这一讲就把这段时间拿到你手上。它没有别的作用，只回答一个问题：
+<strong>从按下快门到关上，让光进来多久？</strong>——而这个「多久」，正是画面里所有动作的命运。</p>
+
+<h2>快门：一段时间，不是一个瞬间</h2>
+
+<p>上一讲讲的是光圈：孔开多大，决定单位时间里进多少光。快门管的是另一半——<strong>让光进来多久</strong>。
+快门帘打开的那段时间里，落在传感器上的所有光都会被<strong>加起来</strong>，最后写成一张照片。</p>
+
+<p>所以一张照片从来不是「一个瞬间」，而是<strong>一段时间</strong>。<code>1/500 s</code> 就是 2 毫秒，
+比一次眨眼（大约 100 毫秒）短五十倍；而 <code>1/4 s</code> 比一次眨眼还长两倍多。
+你在照片上看到的，是这段时间里<strong>发生的全部事情的叠加</strong>——包括你不想要的那些。</p>
+
+<p class="refs">
+  快门时间序列（<strong>每相邻一格，进光量正好差一倍</strong>，和第 1 讲那张表完全一样）：
+  <code>1/1000 · 1/500 · 1/250 · 1/125 · 1/60 · 1/30 · 1/15 · 1/8 · 1/4 · 1/2 · 1"</code>。
+  往左一格，时间减半、画面暗一半；往右一格，时间翻倍、画面亮一倍。
+  <code>1"</code> 表示一整秒，<code>2"</code>、<code>4"</code> 就继续往慢里数。
+  记住这条规律，也就记住了最重要的一件事：<strong>换快门从来不是免费的</strong>——
+  你不是在调亮度，而是在<strong>拿亮度换运动的样子</strong>。
+</p>
+
+<figure class="figure">
+  <svg viewBox="0 0 440 256" role="img" aria-labelledby="fig-shutter-t">
+    <title id="fig-shutter-t">快门时间轴：不同速度的主体在哪一段被凝固、在哪一段被拖成影子</title>
+
+    <text x="40" y="13" font-size="10.5" class="t-muted">越往左越快（时间更短）</text>
+    <rect x="286" y="6" width="10" height="8" rx="2" class="f-ok" />
+    <text x="300" y="13.5" font-size="10" class="t-muted">凝固</text>
+    <rect x="340" y="6" width="10" height="8" rx="2" class="f-muted" opacity="0.4" />
+    <text x="354" y="13.5" font-size="10" class="t-muted">半糊</text>
+    <rect x="394" y="6" width="10" height="8" rx="2" class="f-bad" opacity="0.35" />
+    <text x="408" y="13.5" font-size="10" class="t-muted">拖影</text>
+
+    <text x="40" y="42" font-size="11">走路的人</text>
+    <rect x="40" y="48" width="76" height="12" rx="3" class="f-ok" />
+    <rect x="116" y="48" width="76" height="12" rx="3" class="f-muted" opacity="0.38" />
+    <rect x="192" y="48" width="228" height="12" rx="3" class="f-bad" opacity="0.3" />
+
+    <text x="40" y="82" font-size="11">跑步的人</text>
+    <rect x="40" y="88" width="38" height="12" rx="3" class="f-ok" />
+    <rect x="78" y="88" width="76" height="12" rx="3" class="f-muted" opacity="0.38" />
+    <rect x="154" y="88" width="266" height="12" rx="3" class="f-bad" opacity="0.3" />
+
+    <text x="40" y="122" font-size="11">行驶的汽车（横穿画面）</text>
+    <rect x="40" y="128" width="38" height="12" rx="3" class="f-muted" opacity="0.38" />
+    <rect x="78" y="128" width="342" height="12" rx="3" class="f-bad" opacity="0.3" />
+
+    <text x="40" y="162" font-size="11">你的手（拍不动的静物）</text>
+    <rect x="40" y="168" width="152" height="12" rx="3" class="f-ok" />
+    <rect x="192" y="168" width="38" height="12" rx="3" class="f-muted" opacity="0.38" />
+    <rect x="230" y="168" width="190" height="12" rx="3" class="f-bad" opacity="0.3" />
+
+    <line x1="40" y1="205" x2="420" y2="205" class="s-rule" stroke-width="1.2" />
+    <path d="M40 205 V211 M78 205 V211 M116 205 V211 M154 205 V211 M192 205 V211 M230 205 V211 M268 205 V211 M306 205 V211 M344 205 V211 M382 205 V211 M420 205 V211" class="s-rule" stroke-width="1.2" />
+
+    <text x="40" y="222" text-anchor="end" font-size="10.5" class="t-muted" transform="rotate(-55 40 222)">1/1000</text>
+    <text x="78" y="222" text-anchor="end" font-size="10.5" class="t-muted" transform="rotate(-55 78 222)">1/500</text>
+    <text x="116" y="222" text-anchor="end" font-size="10.5" class="t-muted" transform="rotate(-55 116 222)">1/250</text>
+    <text x="154" y="222" text-anchor="end" font-size="10.5" class="t-muted" transform="rotate(-55 154 222)">1/125</text>
+    <text x="192" y="222" text-anchor="end" font-size="10.5" class="t-muted" transform="rotate(-55 192 222)">1/60</text>
+    <text x="230" y="222" text-anchor="end" font-size="10.5" class="t-muted" transform="rotate(-55 230 222)">1/30</text>
+    <text x="268" y="222" text-anchor="end" font-size="10.5" class="t-muted" transform="rotate(-55 268 222)">1/15</text>
+    <text x="306" y="222" text-anchor="end" font-size="10.5" class="t-muted" transform="rotate(-55 306 222)">1/8</text>
+    <text x="344" y="222" text-anchor="end" font-size="10.5" class="t-muted" transform="rotate(-55 344 222)">1/4</text>
+    <text x="382" y="222" text-anchor="end" font-size="10.5" class="t-muted" transform="rotate(-55 382 222)">1/2</text>
+    <text x="420" y="222" text-anchor="end" font-size="10.5" class="t-muted" transform="rotate(-55 420 222)">1"</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>横轴就是你在相机里能拧到的那些数字，<b>每一格差一倍光量</b>。
+    每一行是一种被拍的东西，绿色是「它被定住了」，灰色是「糊了一点点」，红色是「已经拖成影子」。
+    <b>同一个走路的人</b>，在 <code>1/1000 s</code> 下是一根一根清楚的腿，在 <code>1/15 s</code> 下就变成一团影子——
+    <b>主体没变，变的是你留给它的时间</b>。
+    最下面那行最容易被忽略：即使被拍的东西完全不动，<b>你的手一直在动</b>，
+    所以慢到某个程度，画面会自己糊掉——这就是下一节要讲的安全快门。
+  </figcaption>
+</figure>
+
+<h2>两个选择：凝固，还是留痕</h2>
+
+<p>把上面这张图收成一句话，快门其实只有两个方向：<strong>凝固</strong>，或者<strong>留痕</strong>。
+剩下全是细节。</p>
+
+<dl>
+  <dt>凝固 <span class="pill">时间短</span></dt>
+  <dd>快门时间短到主体在曝光期间几乎没移动，于是它的样子被<strong>切</strong>了下来：飞溅的水花、
+  腾空的脚、头发甩到一半。<em>代价</em>：进光少，画面容易暗；暗了就要开大光圈或抬高 ISO，
+  而这两者又各自带副作用。参考快门：<code>1/500 – 1/1000 s</code>。</dd>
+
+  <dt>留痕 <span class="pill">时间长</span></dt>
+  <dd>快门时间长得足以让主体<strong>走完一段路</strong>，它在传感器上留下的就不是一个点，
+  而是一条线、一片影子。车灯变光带、瀑布变丝绸、人群变幽灵，都是这个。<em>代价</em>：
+  你必须把相机彻底架稳，否则连不动的背景都会一起糊。参考快门：<code>1/2 s – 15 s</code>。</dd>
+
+  <dt>追随 <span class="pill">相机跟着动</span></dt>
+  <dd>第三种走法：让相机跟着主体一起转，背景就会拉成横向的线，而主体保持相对清楚。
+  它其实是用「留痕」拍「凝固」——背景在流，人在停。手机上需要专业模式配合手动跟焦，
+  练起来不便宜，但效果一眼认得出。</dd>
+</dl>
+
+<p>那具体怎么选？判断依据只有两条，缺一不可：<strong>主体动得多快</strong>，
+以及<strong>你的相机要怎么走</strong>（站住不动、跟着主体转，还是干脆架起来让它自己曝）。
+第一条决定「多快才够」，第二条决定「能不能慢」。</p>
+
+<figure class="figure">
+  <svg viewBox="0 0 400 186" role="img" aria-labelledby="fig-smear-t">
+    <title id="fig-smear-t">同一段时间下，凝固与留痕的两种结果</title>
+    <defs>
+      <g id="sm-walker">
+        <circle cx="0" cy="-27" r="6" class="f-ink" />
+        <line x1="0" y1="-20" x2="0" y2="0" class="s-ink" stroke-width="3" stroke-linecap="round" />
+        <path d="M0 0 L-8 14 M0 0 L8 14" class="s-ink" stroke-width="3" stroke-linecap="round" />
+        <path d="M0 -15 L-9 -4 M0 -15 L9 -4" class="s-ink" stroke-width="2.6" stroke-linecap="round" />
+      </g>
+      <marker id="sm-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" markerUnits="userSpaceOnUse" orient="auto">
+        <path d="M0 0 L10 5 L0 10 Z" class="f-muted" />
+      </marker>
+    </defs>
+
+    <rect x="4" y="6" width="190" height="152" rx="10" class="f-surface s-rule" />
+    <rect x="206" y="6" width="190" height="152" rx="10" class="f-surface s-rule" />
+
+    <text x="18" y="30" font-size="12.5" font-weight="600" class="t-accent">凝固 · 1/500 s</text>
+    <text x="18" y="47" font-size="10.5" class="t-muted">快门只开 2 毫秒，动作被切成薄片</text>
+    <line x1="16" y1="128" x2="182" y2="128" class="s-rule" />
+    <use href="#sm-walker" x="100" y="128" />
+
+    <text x="220" y="30" font-size="12.5" font-weight="600" class="t-accent">留痕 · 1/4 s</text>
+    <text x="220" y="47" font-size="10.5" class="t-muted">快门一直开着，身影叠在一起</text>
+    <line x1="218" y1="128" x2="384" y2="128" class="s-rule" />
+    <use href="#sm-walker" x="232" y="128" opacity="0.12" />
+    <use href="#sm-walker" x="252" y="128" opacity="0.17" />
+    <use href="#sm-walker" x="272" y="128" opacity="0.24" />
+    <use href="#sm-walker" x="292" y="128" opacity="0.33" />
+    <use href="#sm-walker" x="312" y="128" opacity="0.45" />
+    <use href="#sm-walker" x="332" y="128" opacity="0.62" />
+    <use href="#sm-walker" x="352" y="128" opacity="0.8" />
+    <use href="#sm-walker" x="372" y="128" />
+
+    <line x1="222" y1="64" x2="382" y2="64" class="s-muted" stroke-width="1.3" stroke-dasharray="3 4" marker-end="url(#sm-arrow)" />
+
+    <text x="100" y="176" text-anchor="middle" font-size="11" class="t-ok">每一张都清楚，但你看不出他在动</text>
+    <text x="301" y="176" text-anchor="middle" font-size="11" class="t-bad">他去了哪里，全写在这一张里</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>同样是一个人走过同样一段路，左边拍出来是「他在走路」，右边拍出来是「他走过来了」。
+    左图用的是 <code>1/500 s</code>，快门只打开 2 毫秒，动作被切成薄片，每一片都清楚；
+    右图用的是 <code>1/4 s</code>，快门一直开着，八个位置的身影全叠在同一张照片上，
+    越早的位置越淡——<b>时间本身被拍进去了</b>。
+    <b>两张都不算错</b>，它们只是回答了不同的问题。你按下快门之前要想清楚：这一张，我要哪一个？
+  </figcaption>
+</figure>
+
+<h2>手抖：安全快门</h2>
+
+<p>慢下来之前，先得知道你手里的相机能撑多久。老规矩叫<strong>安全快门</strong>：
+手持时，快门时间不要慢于 <code>1/焦距</code>。焦距 50 毫米就用 <code>1/50 s</code> 左右，
+焦距 200 毫米就要 <code>1/200 s</code>——镜头越长，同样的手抖在画面里被放得越大。
+这条经验在 <a href="https://www.kenrockwell.com/tech.htm" target="_blank" rel="noopener">Ken Rockwell 的技术栏目</a>
+里被反复强调，他讲得直白：糊掉的照片没有任何后期能救。</p>
+
+<p>手机上的账要另算。手机主摄的等效焦距大约 24 毫米，按公式算 <code>1/25 s</code> 就该稳；
+但手机是<strong>伸着手臂、单手拿着</strong>拍的，支点比贴着眼睛的相机差得多。
+所以实用上把线画在 <strong><code>1/60 s</code></strong>：</p>
+
+<ul>
+  <li><strong><code>1/125 s</code> 或更快</strong>——随便怎么拿都稳，日常拍静物和风景就停在这里。</li>
+  <li><strong><code>1/60 s</code></strong>——基本安全，但别再一边走一边拍。</li>
+  <li><strong><code>1/30 s</code></strong>——要用持机姿势去换：<strong>稳住呼吸</strong>（吸半口、停住），
+  <strong>夹紧手肘</strong>（手肘收进身体两侧，让手臂和身体连成一个三角），双手握机，按下时不要点、要「压」。</li>
+  <li><strong><code>1/15 s</code> 或更慢</strong>——不要试图靠肌肉硬撑，去找一个支撑面：栏杆、桌面、墙壁、柱子。</li>
+</ul>
+
+<p>手机的光学防抖（OIS）确实能救一点，通常等于送你一两档，让你在更慢的速度下勉强站得住。
+但要把这句话记牢：<strong>防抖只抵消相机的抖动，救不了移动的主体。</strong>
+它能让静止的夜景更清楚，绝不能让跑过去的小孩变清楚——那件事只有快门能做。</p>
+
+<h2>长曝光能做什么</h2>
+
+<p>一旦你愿意把相机架住，快门就变成了另一件工具。同样是「时间长」，它能把日常场景改写成四种样子：</p>
+
+<ul>
+  <li><strong>车灯轨迹</strong>——夜晚站在天桥或路口，几秒到十几秒，车灯连成一条条彩色光带。</li>
+  <li><strong>水流成丝绸</strong>——<code>1/2 s</code> 到 2 秒，瀑布和溪流里每一滴水都糊在一起，变成白绸子。</li>
+  <li><strong>人群走成影子</strong>——在热闹的街口架住相机，走过的人只剩下半透明的残影，建筑却清清楚楚。</li>
+  <li><strong>光绘</strong>——快门开着的这段时间里，你拿手电或手机屏在空中画，画什么就留在画面里。</li>
+</ul>
+
+<p>手机上怎么做到这四件事？核心只有两步：<strong>先把相机固定住</strong>，再去<strong>把快门拉长</strong>。
+固定不一定要三脚架——把手机靠在栏杆、桌面、窗台或背包上，效果已经比手持好一个档次；
+真要拍 10 秒以上，还是需要一个手机夹加三脚架。然后打开相机的<strong>专业模式 / 手动模式</strong>，
+把 ISO 压到最低（通常是 25–100），再把快门慢慢往慢里调，直到画面亮度合适。
+如果专业模式最短只给到 <code>1/4 s</code>（有些机型是这样），那就借夜景模式来补。
+关于长曝光的各类拍法，<a href="https://www.photographylife.com/" target="_blank" rel="noopener">Photography Life</a>
+上有不少成体系的实例，值得对着看。</p>
+
+<div class="card">
+  <p><strong>关于「夜景模式」的真相，一句话：</strong>它<b>不是</b>一次长曝光，而是<b>快速拍很多张、
+  再对齐叠加</b>成一张。所以它能手持拍，因为每张都很短；但也正因为主体在每张里的位置都要对齐，
+  <b>主体一动就会糊</b>——你端得很稳，走过的路人却还是虚的。想拍会动的东西，
+  老老实实去专业模式把快门拉长、把相机架稳。</p>
+</div>
+
+<h2>反直觉：模糊不一定是失败</h2>
+
+<p>到这里必须打破一个默认假设：<strong>清楚不等于好。</strong>
+水流、人群、舞者，常常是「留痕」比「凝固」更好看——因为照片要说的事，本来就是
+「水在流」「人在动」「这一秒在走」。一张把瀑布冻成冰柱的照片虽然技术漂亮，
+却可能把瀑布最动人的部分（它在流动）删掉了。</p>
+
+<p>所以真正的决定权在你，不在相机：<strong>先决定这张照片要让观者「看清一个动作」，
+还是「感到一段时间」</strong>，再去拧快门。自动模式永远替你做的是前者，
+它默认「清楚 = 正确」——这就是为什么想拍出留痕，你必须自己动手。</p>
+
+<h2>速查：拍什么，用什么快门</h2>
+
+<table>
+  <thead>
+    <tr><th>你想拍的东西</th><th>建议快门区间</th><th>注意事项</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>站着的人、静物、风景</td><td><code>1/125 – 1/250 s</code></td><td>手持别慢于 <code>1/60 s</code>；光不够就先抬 ISO，别贪慢</td></tr>
+    <tr><td>散步的人</td><td><code>1/250 s</code></td><td>手脚一直在动，<code>1/125 s</code> 常会留下一点点糊</td></tr>
+    <tr><td>跑步的人、小孩、宠物</td><td><code>1/500 – 1/1000 s</code></td><td>进光量掉得飞快，宁可开大光圈、抬 ISO 来补</td></tr>
+    <tr><td>横穿画面的汽车、自行车</td><td><code>1/1000 s</code> 或更快</td><td>侧面横穿最难；迎面而来相对好拍</td></tr>
+    <tr><td>舞台上的舞者</td><td><code>1/250 s</code> 定格，或 <code>1/15 s</code> 留痕</td><td>先用上面那节想清楚要哪一种，中间值最容易两头不讨好</td></tr>
+    <tr><td>瀑布、溪流</td><td><code>1/2 – 2 s</code>（丝滑）或 <code>1/250 s</code>（水花清楚）</td><td>长的必须架稳；白天光太亮，往往还要减光镜才慢得下来</td></tr>
+    <tr><td>夜晚的车流（车灯拉线）</td><td><code>2 – 15 s</code></td><td>必须架稳，ISO 压到最低，手持没戏</td></tr>
+    <tr><td>光绘、星轨</td><td><code>10 s</code> 到几分钟</td><td>三脚架加最低 ISO；同时要会算电量</td></tr>
+  </tbody>
+</table>
+
+<div class="card">
+  <p><strong>一句可带走的规则：</strong>按快门之前先问自己——
+  <strong>这张照片里，我要凝固谁，又要留下谁的痕迹？</strong>
+  问完再拿快门去换：要<strong>凝固</strong>，就把时间往短里买，用光圈和 ISO 付钱；
+  要<strong>留痕</strong>，就把时间往长里买，用支撑和耐心付钱。
+  快门只回答这一个问题，也只需要你回答这一个问题。</p>
+</div>
+
+<h2>今天就能用：同一个人，五档快门</h2>
+
+<div class="card">
+  <p><strong>练习（十五分钟）：</strong>找一个会规律移动的东西——走路的家人、跑过的小孩、
+  阳台上被风吹的叶子、水龙头下的水流都行。其余设置尽量不变，只改快门，拍五张。</p>
+  <ol>
+    <li>第 1 张：<code>1/1000 s</code>——是不是每一根腿都清清楚楚？画面有没有变暗？</li>
+    <li>第 2 张：<code>1/250 s</code>——多数情况下，这一张就是「安全又好看」的日常值。</li>
+    <li>第 3 张：<code>1/60 s</code>——看边缘，是不是开始有一点点毛？</li>
+    <li>第 4 张：<code>1/15 s</code>——把手肘夹紧、稳住呼吸再按。这回是动作在糊，还是整个画面在糊？</li>
+    <li>第 5 张：如果手机有专业模式且能拉到 1 秒以上，把手机靠住栏杆或桌面，拍一张 <code>1"</code> 或更慢的。</li>
+  </ol>
+  <p>然后把五张并排看，回答一个问题：<strong>哪一张最接近你当时眼睛看到的感觉？</strong>
+  通常不是你猜的那一张。把这个答案记住，比背下所有档位有用得多。</p>
+</div>
+
+<h2>回顾：三个自测</h2>
+<div class="quiz">
+  <h3>先合上讲义，自己回答，再看核对</h3>
+
+  <p class="prompt">1. 什么叫「安全快门」？为什么手机手持拍静物，实用上尽量别慢于 <code>1/60 s</code>？</p>
+  <details><summary>看答案</summary>
+    <p>安全快门是手持时的经验下限：快门时间不要慢于 <code>1/焦距</code>，因为焦距越长，同样的手抖在画面里被放得越大。手机主摄等效焦距约 24 毫米，按公式 <code>1/25 s</code> 就该稳；但手机是伸展手臂、单手拿着拍的，支点远比贴在脸上的相机差，所以实用上把线画在 <code>1/60 s</code>。再慢就得靠支撑面或防抖——而防抖只抵消相机抖动，救不了移动的主体。</p>
+  </details>
+
+  <p class="prompt">2. 傍晚站在天桥上，想拍车灯拉成的光带。快门往哪边调？代价是什么，怎么补？</p>
+  <details><summary>看答案</summary>
+    <p>往长里调：<code>2 – 15 s</code>。代价有三个：进光量涨得很快（画面会过曝，要把 ISO 压到最低，白天甚至需要减光镜）、时间越长越必须把相机架稳（栏杆、桌面或三脚架）、以及这段曝光的全部时间都会被叠进画面（有东西走过就留痕）。光带的长度也正是这么来的——车在这几秒里走了多远，光带就有多长。</p>
+  </details>
+
+  <p class="prompt">3. 手机「夜景模式」是一次长时间曝光吗？为什么手持也能用，又为什么主体一动就糊？</p>
+  <details><summary>看答案</summary>
+    <p>不是。夜景模式是快速拍很多张短曝光，再把它们对齐叠加起来。每张都很短，所以手持也站得住——它把「一次长曝光」拆成了许多次短曝光，抖动的部分被对齐平均掉了。但也正因为对齐的前提是「每张里同一物体还在原来的位置」，主体一移动，叠加时就会错位，结果就是糊。想拍会动的东西，得去专业模式把快门真正拉长，并把相机架稳。</p>
+  </details>
+</div>
+
+<p class="ask">这一讲哪里没说清？回到 OpenCode 里直接问你的老师（那个正在运行 <code>teach</code>
+的 agent）——它比你更懂你的目标，可以为你重新举例、加练，或跳到你想深入的部分。
+比如告诉它你手头有没有三脚架、常用哪款手机，它就能把「长曝光」那一节改成你能立刻照做的步骤。</p>
+
+<p class="foot">
+  <strong>推荐一手资料：</strong>
+  <a href="https://search.douban.com/book/subject_search?search_text=%E7%BE%8E%E5%9B%BD%E7%BA%BD%E7%BA%A6%E6%91%84%E5%BD%B1%E5%AD%A6%E9%99%A2%E6%91%84%E5%BD%B1%E6%95%99%E6%9D%90" target="_blank" rel="noopener">《美国纽约摄影学院摄影教材》</a>
+  的「快门与运动」部分——本课程的骨干教材，它把「多快才够」讲得比本讲细。
+  想看图解和实例，读 <a href="https://www.photographylife.com/" target="_blank" rel="noopener">Photography Life</a>
+  与 <a href="https://www.kenrockwell.com/tech.htm" target="_blank" rel="noopener">Ken Rockwell：Tech</a>。
+  <br />图片来源与授权：<a href="../assets/CREDITS.md">图片版权说明</a>。
+  <br />上一讲：<a href="0002-aperture-and-depth-of-field.html">第 2 讲 · 光圈与景深</a> ·
+  下一讲：<a href="0004-iso-and-noise.html">第 4 讲 · ISO 与噪点</a>
+  <br />速查：<a href="../reference/0001-exposure-cheatsheet.html">曝光速查表</a> ·
+  词汇：<a href="../reference/0003-glossary.html">术语表</a>
+</p>
+
+</body>
+</html>
