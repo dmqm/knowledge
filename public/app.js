@@ -22,6 +22,9 @@ const esc = (s) =>
 
 const state = { courses: [], course: null, progress: {} };
 
+// Arrow-key handler for the reader; swapped on every render so it can't pile up.
+let readerKeys = null;
+
 // ------------------------------------------------------------ data source ----
 // Every read/write the app needs goes through these, so the two modes stay
 // honest and the rendering code below never has to know which one is active.
@@ -196,6 +199,10 @@ function parseHash() {
 
 async function render() {
   document.body.classList.remove('reader-open');
+  if (readerKeys) {
+    document.removeEventListener('keydown', readerKeys);
+    readerKeys = null;
+  }
   const { path, params } = parseHash();
   let m;
   if ((m = path.match(/^\/c\/(.+)$/))) return renderCourse(decodeURIComponent(m[1]));
@@ -403,7 +410,7 @@ function lessonRows(lessons) {
         <span class="idx">${String(i + 1).padStart(2, '0')}</span>
         <div class="body">
           <div class="t">${esc(l.title)}</div>
-          <div class="s">${l.words ? `${l.words} 词 · ` : ''}${esc(l.file)}</div>
+          <div class="s">${l.words ? `${l.words} 词` : ''}<span class="dev">${l.words ? ' · ' : ''}${esc(l.file)}</span></div>
         </div>
         <button class="check ${done ? 'on' : ''}" data-toggle="${esc(l.file)}" title="标记完成">✓</button>
       </div>`;
@@ -418,7 +425,7 @@ function docRows(docs) {
       (d) => `
       <div class="row" data-openref="1" data-file="${esc(d.file)}" data-kind="${esc(d.kind)}">
         <span class="idx">§</span>
-        <div class="body"><div class="t">${esc(d.title)}</div><div class="s">${esc(d.file)}</div></div>
+        <div class="body"><div class="t">${esc(d.title)}</div><div class="s"><span class="dev">${esc(d.file)}</span></div></div>
         <span class="faint">›</span>
       </div>`,
     )
@@ -453,17 +460,38 @@ function wireLessonRows(course) {
 
 // ---------------------------------------------------------------- reader ----
 
-function renderReader(id, kind, file) {
+async function renderReader(id, kind, file) {
   setTopbar('');
+
+  // Deep links land straight on a lesson, so the course (and its progress) may
+  // not be in memory yet. Reuse it when it is — that's the common case.
+  if (!(state.course && state.course.id === id)) {
+    try {
+      const detail = await loadCourse(id);
+      state.course = detail.course;
+      state.progress = detail.progress || {};
+    } catch {
+      /* no course data → still render the file, just without lesson nav */
+    }
+  }
+
+  const lessons = kind === 'lessons' && state.course ? state.course.lessons || [] : [];
+  const at = lessons.findIndex((l) => l.file === file);
+  const prev = at > 0 ? lessons[at - 1] : null;
+  const next = at >= 0 && at < lessons.length - 1 ? lessons[at + 1] : null;
+  const label = at >= 0 ? lessons[at].title : file.replace(/\.html?$/i, '');
+
   const src = fileUrl(id, kind, file);
   const done = (state.progress[file] || {}).status === 'done';
   app.innerHTML = `
     <div class="reader">
       <div class="rbar">
         <button class="back" id="r-back">‹ 返回</button>
-        <div class="rt">${esc(file.replace(/\.html?$/i, ''))}</div>
+        <div class="rt" title="${esc(file)}">${esc(label)}</div>
+        <button class="iconbtn nav" id="r-prev" title="上一讲" ${prev ? '' : 'disabled'}>‹</button>
+        <button class="iconbtn nav" id="r-next" title="下一讲" ${next ? '' : 'disabled'}>›</button>
         <button class="iconbtn" id="r-done" title="标记完成" style="${done ? 'background:var(--good);border-color:var(--good);color:#fff' : ''}">✓</button>
-        <a class="iconbtn" href="${esc(src)}" target="_blank" rel="noopener" title="新标签打开">⤢</a>
+        <a class="iconbtn open-tab" href="${esc(src)}" target="_blank" rel="noopener" title="新标签打开">⤢</a>
       </div>
       <iframe id="r-frame" src="${esc(src)}" referrerpolicy="no-referrer"></iframe>
     </div>
@@ -476,6 +504,18 @@ function renderReader(id, kind, file) {
   });
 
   document.getElementById('r-back').onclick = () => history.back();
+
+  const gotoLesson = (l) => go(`#/read/${encodeURIComponent(id)}/lessons/${encodeURIComponent(l.file)}`);
+  if (prev) document.getElementById('r-prev').onclick = () => gotoLesson(prev);
+  if (next) document.getElementById('r-next').onclick = () => gotoLesson(next);
+
+  // Arrow keys read like a book on a desktop browser.
+  readerKeys = (e) => {
+    if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowLeft' && prev) gotoLesson(prev);
+    else if (e.key === 'ArrowRight' && next) gotoLesson(next);
+  };
+  document.addEventListener('keydown', readerKeys);
 
   const btn = document.getElementById('r-done');
   btn.onclick = async () => {
