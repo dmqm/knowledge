@@ -44,7 +44,8 @@
   <a href="#s3">三、光线</a> ·
   <a href="#s4">四、构图与取景</a> ·
   <a href="#s5">五、器材与文件</a> ·
-  <a href="#s6">六、影调与色彩</a>
+  <a href="#s6">六、影调与色彩</a> ·
+  <a href="#s7">七、视频</a>
 </p>
 
 <h2 id="s1">一、曝光</h2>
@@ -239,7 +240,7 @@
 
   <dt>DNG <span class="pill">通用原始格式</span></dt>
   <dd><strong>是什么：</strong>一种通用的原始文件格式。Osmo Pocket 4 可以拍 JPEG、DNG，或两者同存；DNG 保留完整原始数据，后期能重定亮度、白平衡与影调，代价是文件更大、噪点要自己降。
-  <br /><strong>什么时候用：</strong>想让照片经得起放大和调色、愿意花时间后期时选它；想立刻发就用 JPEG。对比见 <a href="../lessons/0009-two-cameras.html">第 9 讲 · 两台相机</a>，降噪见 <a href="../lessons/0004-iso-and-noise.html">第 4 讲 · 感光度与噪点</a>。
+  <br /><strong>什么时候用：</strong>想让照片经得起放大和调色、愿意花时间后期时选它；想立刻发就用 JPEG。对比见 <a href="../lessons/0009-two-cameras.html">第 9 讲 · 两台相机</a>，降噪见 <a href="../lessons/0004-iso-and-noise.html">第 4 讲 · 感光度与噪点</a>，完整修图流程见 <a href="../lessons/0012-post-processing-dng.html">第 12 讲 · 后期入门</a>。
   <br /><em>别混用：</em>RAW、原片——手机上你能拿到的原始格式是它；iOS 的 ProRAW 是另一套。</dd>
 
   <dt>无损变焦 / 数码变焦 <span class="pill">切一块 vs 强行拉大</span></dt>
@@ -265,11 +266,50 @@
   <dd><strong>是什么：</strong>颜色的鲜艳程度。推高会显眼，但也会假，肤色尤其容易发橙。
   <br /><strong>什么时候用：</strong>手机后期里最常被推过头的一项——先问「是真的更艳，还是只是更假」。
   <br /><em>别混用：</em>鲜艳度、彩度。</dd>
+</dl>
+
+<h2 id="s7">七、视频</h2>
+
+<dl>
+  <dt>帧率（fps） <span class="pill">fps</span></dt>
+  <dd><strong>是什么：</strong>一秒钟记录多少张画面，单位是 fps。24 / 30 看着自然，60 以上更顺，120 / 240 拍下来是为了之后放慢。
+  <br /><strong>什么时候用：</strong>想「像电影」还是「像新闻」、以及能不能做慢动作，先定的就是它。展开见 <a href="../lessons/0010-video-basics.html">第 10 讲 · 视频入门</a>。
+  <br /><em>别混用：</em>帧数、fps——它说的是每秒几张，不是每张有多少像素。</dd>
+
+  <dt>180° 快门（视频快门） <span class="pill">帧率的两倍</span></dt>
+  <dd><strong>是什么：</strong>拍视频常用的一条经验规则：快门时间约等于帧率的两倍——25p 用 <code>1/50 秒</code>、50p 用 <code>1/100 秒</code>，动起来的东西会带一点自然的拖影，不显得生硬。
+  <br /><strong>什么时候用：</strong>定好帧率之后照它设快门即可。它是<strong>行业惯例，不是硬规定</strong>，想要更干净、或故意要拖影，都可以自己改。见 <a href="../lessons/0010-video-basics.html">第 10 讲 · 视频入门</a>。
+  <br /><em>别混用：</em>快门角度——「180°」借的是胶片快门的角度说法，本质还是快门时间。</dd>
+
+  <dt>慢动作（高帧率拍摄） <span class="pill">拍慢动作</span></dt>
+  <dd><strong>是什么：</strong>用很高的帧率去拍，回放时再放慢，动作就被拉长、细节变多。Osmo Pocket 4 最高 <strong>4K / 240fps</strong>，iPhone Air 的慢动作是 <strong>1080p 120 / 240 fps</strong>。
+  <br /><strong>什么时候用：</strong>水花、跳跃、孩子跑过这类「一瞬间」的场面，想看清楚就切它。操作与取舍见 <a href="../lessons/0010-video-basics.html">第 10 讲 · 视频入门</a>。
+  <br /><em>别混用：</em>升格——「升格」说的是拍摄时抬高帧率，慢动作是它回放出来的结果。</dd>
+
+  <dt>码流（Mbps） <span class="pill">Mbps</span></dt>
+  <dd><strong>是什么：</strong>每秒钟写进卡里多少数据，单位是 Mbps。数字越大，画面里留下的信息越多，越经得起后期调色与裁切；Osmo Pocket 4 视频最高 <strong>180 Mbps</strong>。
+  <br /><strong>什么时候用：</strong>打算认真剪、认真调色就选高码流；只是随手一拍、马上发，够用即可。它和后期的关系见 <a href="../lessons/0010-video-basics.html">第 10 讲 · 视频入门</a>。
+  <br /><em>别混用：</em>比特率、文件大小——码流说的是每秒写多少，不是整段一共多大。</dd>
+
+  <dt>间隔拍摄（延时摄影） <span class="pill">延时摄影</span></dt>
+  <dd><strong>是什么：</strong>隔开一段固定时间拍一张，再把它们连起来放，看上去就像时间在快进。Osmo Pocket 4 的静止延时可选间隔，从 <code>0.5 秒</code> 一路到 <code>60 秒</code>。
+  <br /><strong>什么时候用：</strong>云在走、人在流、光在变这类「慢得看不出来」的过程，用它压成几十秒最合适。见 <a href="../lessons/0010-video-basics.html">第 10 讲 · 视频入门</a>。
+  <br /><em>别混用：</em>缩时摄影、快进——本课程统一用「间隔拍摄」说这件事。</dd>
 
   <dt>D-Log <span class="pill">只对视频</span></dt>
   <dd><strong>是什么：</strong>Osmo Pocket 4 的 10-bit 专业色彩模式：画面被压成低对比、发灰的样子，为的是把最多的高光与暗部信息留给后期去调色。
   <br /><strong>什么时候用：</strong><strong>只对视频有效</strong>，拍照片用不上——拍视频打算后期调色再开它，否则直出的灰片不好看。两台机的分工见 <a href="../lessons/0009-two-cameras.html">第 9 讲 · 两台相机</a>。
   <br /><em>别混用：</em>Log、灰片——它是视频的拍摄模式，不是照片格式。</dd>
+
+  <dt>LUT <span class="pill">一次还原颜色</span></dt>
+  <dd><strong>是什么：</strong>一组预先定好的对应关系：进来什么颜色，就出去什么颜色。把它套在发灰的 Log 画面上，一次就能还原成正常的颜色与对比。
+  <br /><strong>什么时候用：</strong>拍了 D-Log、剪辑时嫌画面发灰时用，套完再看要不要细调。它在后期流程里的位置见 <a href="../lessons/0012-post-processing-dng.html">第 12 讲 · 后期入门</a>。
+  <br /><em>别混用：</em>滤镜、预设——LUT 只管颜色，不负责构图与美化。</dd>
+
+  <dt>剪辑时间线 <span class="pill">排顺序</span></dt>
+  <dd><strong>是什么：</strong>把拍好的若干条片段按顺序排好、掐头去尾、配上声音的那条横条工作区——你在上面决定谁先谁后、各留多长。
+  <br /><strong>什么时候用：</strong>素材拍完、想让它们「讲成一个故事」时，工作就从这里开始。见 <a href="../lessons/0012-post-processing-dng.html">第 12 讲 · 后期入门</a>。
+  <br /><em>别混用：</em>时间轴——同一个东西的另一种叫法，本课程统一用「剪辑时间线」。</dd>
 </dl>
 
 <p class="ask">这张表只给定义与用法，不给例子。哪个词你还是说不顺、或者想知道它在哪一讲被讲过，
@@ -288,7 +328,10 @@
   <a href="../lessons/0006-light-direction-and-texture.html">第 6 讲 · 光线的方向与质感</a> ·
   <a href="../lessons/0007-photographing-people.html">第 7 讲 · 拍人</a> ·
   <a href="../lessons/0008-review-sorting-and-tone.html">第 8 讲 · 回看</a> ·
-  <a href="../lessons/0009-two-cameras.html">第 9 讲 · 两台相机</a>
+  <a href="../lessons/0009-two-cameras.html">第 9 讲 · 两台相机</a> ·
+  <a href="../lessons/0010-video-basics.html">第 10 讲 · 视频入门</a> ·
+  <a href="../lessons/0011-family-and-travel.html">第 11 讲 · 家庭与旅行</a> ·
+  <a href="../lessons/0012-post-processing-dng.html">第 12 讲 · 后期入门</a>
   <br />其他速查：<a href="0001-exposure-cheatsheet.html">曝光速查表</a> ·
   <a href="0002-composition-and-light.html">取景与用光速查表</a>
   <br />图片来源与授权：<a href="../assets/CREDITS.md">图片版权说明</a>。

@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 12 讲 · 后期入门</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="kicker">摄影 · 第 12 讲</p>
+<h1>后期：从 DNG 到成片</h1>
+<p class="lede">后期不是「把烂片救回来」——救不回来的东西，后期一点办法也没有。它做的事是：<strong>把已经拍对的那一张，调成你想要的样子</strong>。</p>
+
+<p class="toc" style="margin:.1rem 0 1.6rem;font-family:var(--sans);font-size:.82rem;color:var(--muted);">
+  <a href="0011-family-and-travel.html">← 上一讲 · 回看</a>
+  &nbsp;·&nbsp; <a href="../reference/0001-exposure-cheatsheet.html">曝光速查表</a>
+  &nbsp;·&nbsp; <a href="../reference/0003-glossary.html">词汇表</a>
+</p>
+
+<p>前面十一讲解决的都是「怎么拍」。这一讲是最后一讲，补上另一半：
+照片已经躺在你手机里了，接下来做什么。</p>
+
+<h2>前提：拍对了，才有的修</h2>
+
+<p><a href="0008-review-sorting-and-tone.html">第 8 讲</a>说过一句话，这里要再钉一遍：
+<strong>能修好的，只有「已经被记下来」的东西。</strong>
+HEIF 和 JPEG 在机内就已经压过、也修过一轮，爆成一片白的高光，后期软件拉回来的只是一块灰，不是细节。</p>
+
+<p>所以顺序永远是：<strong>先在按快门时拍对，再谈后期。</strong>
+把一张糊了、崩了的照片交给修图软件，就像拿一首缺了几个音的谱子去请人演奏——演奏得再好，缺的那个音还是缺的。</p>
+
+<p>DNG 不太一样。它记下的东西多得多，留给后期的窗口也长得多。
+两者的差别，用一张图就能看清：</p>
+
+<figure class="figure">
+  <svg viewBox="0 0 440 220" role="img" aria-labelledby="fig-window-t">
+    <title id="fig-window-t">DNG 与 HEIF/JPEG 各自的「能改的窗口」对比</title>
+
+    <text x="8" y="20" font-size="12.5" font-weight="600">能改的窗口，长短不一样</text>
+
+    <text x="8" y="58" font-size="12" font-weight="600">DNG</text>
+    <text x="8" y="74" font-size="10" class="t-muted">Pocket 4</text>
+    <rect x="72" y="40" width="113" height="34" class="f-wash s-accent" />
+    <rect x="185" y="40" width="113" height="34" class="f-wash s-accent" />
+    <rect x="298" y="40" width="114" height="34" class="f-wash s-accent" />
+    <text x="128" y="61" text-anchor="middle" font-size="11">白平衡</text>
+    <text x="241" y="61" text-anchor="middle" font-size="11">影调</text>
+    <text x="355" y="61" text-anchor="middle" font-size="11">降噪</text>
+    <text x="72" y="90" font-size="10.5" class="t-muted">这三样，后期都能从头再来</text>
+
+    <text x="8" y="158" font-size="11.5" font-weight="600">HEIF/</text>
+    <text x="8" y="173" font-size="11.5" font-weight="600">JPEG</text>
+    <rect x="72" y="142" width="90" height="34" class="f-wash s-accent" />
+    <rect x="162" y="142" width="250" height="34" fill="#c9d2d8" class="s-rule" />
+    <text x="117" y="163" text-anchor="middle" font-size="11">整体动作</text>
+    <text x="72" y="192" font-size="10.5" class="t-muted">蓝色段：亮度 / 白平衡 / 裁切这类整体动作，还能动</text>
+    <text x="72" y="207" font-size="10.5" class="t-muted">灰色段：拍摄时就定死了——爆掉的高光拉不回来</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>上面一条是 <b>DNG</b>，下面一条是 <b>HEIF / JPEG</b>。两条的起点一样，长度不一样。
+    蓝色段是「后期还能动」的范围：DNG 的白平衡、影调、降噪都能从头再来；
+    而 JPEG 通常只剩下亮度、白平衡、裁切这类<b>整体动作</b>，右边那一段灰色，是<b>按下快门那一刻就定死的</b>。
+    <b>结论：想给自己留余地，就拍 DNG；只当记录，JPEG 也够。</b>
+    格式与动态范围见 DJI 官方
+    <a href="https://www.dji.com/cn/osmo-pocket-4/specs" target="_blank" rel="noopener">Osmo Pocket 4 规格页</a>。
+  </figcaption>
+</figure>
+
+<h2>什么时候值得存 DNG</h2>
+
+<p>Pocket 4 在拍照设置里可以选 <strong>JPEG / DNG / JPEG+DNG</strong>；
+iPhone Air 没有 ProRAW，只有 HEIF 和 JPEG，没得选。
+所以「存不存 DNG」这个决定，只对 Pocket 4 成立。</p>
+
+<table>
+  <thead>
+    <tr><th>这张照片是</th><th>存什么</th><th>为什么</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>随手记录、拍完就发</td><td>JPEG</td><td>机内一次做完，省事也够用</td></tr>
+    <tr><td>专门出门、要放大或打印</td><td>DNG</td><td>细节与影调留得住</td></tr>
+    <tr><td>想自己调色</td><td>DNG</td><td>白平衡能后期从头重定</td></tr>
+    <tr><td>暗光、打算自己降噪</td><td>DNG</td><td>机内降噪少做，留给你处理</td></tr>
+  </tbody>
+</table>
+
+<p><strong>存 DNG 是给「以后还要动它」的照片买的保险，不是每张都买。</strong>
+只发朋友圈的那几张，让相机替你把降噪和色彩一次做完，反而更省心。
+DNG 的代价也实在：文件大得多，而且降噪这一步要你亲手做——下一节就说它。</p>
+
+<h2>四个动作，按这个顺序</h2>
+
+<p>修一张照片，动作其实没几个，但<strong>顺序比动作本身重要</strong>。
+顺序反了，会越调越脏——因为在错误的底色上做的每一个判断，后面都要推翻重来。
+记住这四步，依次往下走：</p>
+
+<figure class="figure">
+  <svg viewBox="0 0 440 148" role="img" aria-labelledby="fig-flow-t">
+    <title id="fig-flow-t">后期四个动作的顺序：白平衡、影调、对比与黑场、色彩</title>
+    <defs>
+      <marker id="flow-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" markerUnits="userSpaceOnUse" orient="auto">
+        <path d="M0 0 L10 5 L0 10 Z" class="f-muted" />
+      </marker>
+    </defs>
+
+    <rect x="8" y="20" width="94" height="68" rx="8" class="f-surface s-rule" />
+    <rect x="118" y="20" width="94" height="68" rx="8" class="f-surface s-rule" />
+    <rect x="228" y="20" width="94" height="68" rx="8" class="f-surface s-rule" />
+    <rect x="338" y="20" width="94" height="68" rx="8" class="f-surface s-rule" />
+
+    <line x1="104" y1="54" x2="113" y2="54" class="s-muted" stroke-width="1.6" marker-end="url(#flow-arrow)" />
+    <line x1="214" y1="54" x2="223" y2="54" class="s-muted" stroke-width="1.6" marker-end="url(#flow-arrow)" />
+    <line x1="324" y1="54" x2="333" y2="54" class="s-muted" stroke-width="1.6" marker-end="url(#flow-arrow)" />
+
+    <text x="55" y="48" text-anchor="middle" font-size="12" font-weight="600">① 白平衡</text>
+    <text x="55" y="70" text-anchor="middle" font-size="10" class="t-muted">先定白，再谈冷暖</text>
+
+    <text x="165" y="48" text-anchor="middle" font-size="12" font-weight="600">② 影调</text>
+    <text x="165" y="70" text-anchor="middle" font-size="10" class="t-muted">高光 / 阴影</text>
+
+    <text x="275" y="48" text-anchor="middle" font-size="12" font-weight="600">③ 对比与黑场</text>
+    <text x="275" y="70" text-anchor="middle" font-size="10" class="t-muted">把两端推开</text>
+
+    <text x="385" y="48" text-anchor="middle" font-size="12" font-weight="600">④ 色彩</text>
+    <text x="385" y="70" text-anchor="middle" font-size="10" class="t-muted">饱和 / 色温微调</text>
+
+    <text x="220" y="130" text-anchor="middle" font-size="11" class="t-accent">顺序不能反：白平衡和影调做对了，色彩才有意义</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>从左到右就是操作顺序，箭头是「做完了才往下走」。
+    <b>①</b> 先修白平衡，再谈冷暖；<b>②</b> 再动影调，压高光、提阴影；
+    <b>③</b> 然后拉对比、压黑场，把画面从「灰」推到「透」；
+    <b>④</b> 最后才碰色彩，而且饱和只加一点点。
+    <b>反过来做（先加饱和度）是最常见的错</b>——底色没修好，颜色越艳越脏。
+  </figcaption>
+</figure>
+
+<h3>① 先白平衡，再谈冷暖</h3>
+<p>第一件事是回答一个具体的问题：<strong>这张照片里的「白」，到底是不是白？</strong>
+先把它修正到中性，再决定要不要按口味加一点暖或冷。发黄、发蓝大多不是氛围，是白平衡没对——
+这两件事在画面上长得几乎一样，在心里却必须分清楚：一个是修，一个是调。原理在
+<a href="0008-review-sorting-and-tone.html">第 8 讲</a>里讲过一遍，这里只记住它排在第一。</p>
+
+<h3>② 再影调：高光与阴影</h3>
+<p>白平衡定了，才轮到明暗。先看两端的细节够不够——<strong>高光</strong>里的天空、白衣服还有没有纹理，
+<strong>阴影</strong>里的脸是不是黑成一团。这一步把已经存在的细节往中间挤一挤，让你看得见。
+DNG 的价值在这里最能体现：留给你的余地，比 JPEG 长得多。</p>
+
+<h3>③ 对比与黑场：把两端推开</h3>
+<p>这两步是连着的：高光阴影先把细节救回来，再拉<strong>对比</strong>、把<strong>黑场</strong>压下去，
+画面立刻从「蒙了一层雾」变得通透。第 8 讲那句「灰蒙蒙先动对比，不要先加饱和度」，说的就是这里。</p>
+
+<h3>④ 最后色彩：饱和与色温微调</h3>
+<p>影调稳了，颜色才有意义。这一步只做两件小事：
+<strong>饱和度少加</strong>（加多了皮肤会立刻变塑料），<strong>色温</strong>按口味微调一点。
+注意色温是「口味」，必须建立在白平衡已经正确的前提上——不然你只是在给一张修歪的照片再加一层歪。</p>
+
+<div class="card">
+  <p><strong>手机自带编辑够用 80%。</strong>上面这四个动作，手机相册的编辑里几乎都有对应的项，
+  不用装软件、也不用订阅。先把它们用熟，你才知道自己真正缺什么；
+  到那时候再换工具，那是「选择」，不是「碰运气」。</p>
+</div>
+
+<h2>降噪与锐化：DNG 的活儿是自己的</h2>
+
+<p>第 4 讲讲过，噪点的根子在光不够，ISO 只是把它如实放大。
+差别在于谁来收尾：<strong>JPEG 和 HEIF 的降噪，相机已经替你做了；
+DNG 里这一步基本留给你自己</strong>——暗光下拍的 DNG，修图时要记得降一遍噪。</p>
+
+<p>降噪和锐化是一对互相拉扯的动作，都作用在「细节」上：
+<strong>降噪抹掉颗粒，同时也抹掉纹理；锐化补回边缘，补过头就是一圈不自然的白光。</strong>
+所以两条都宁少勿多，做完先看皮肤——它有没有变成塑料，是最容易看出来的信号。</p>
+
+<p>还有一条顺序：<strong>先降噪，后锐化</strong>，而且锐化永远放在最后一步、只放一点点。
+一上来就锐化，等于在还没清理干净的画面上去描边，噪点也被一起描粗了。
+锐化补不回对焦，它只让已经清楚的地方看起来更利落。</p>
+
+<h2>导出与备份：原件不要覆盖</h2>
+
+<p>修完，<strong>导出成 JPEG</strong> 拿去看和发；但<strong>原来的 DNG 和 HEIF 一定要留着，不要覆盖</strong>。
+它是你的底片：你今天的判断，改天可能会推翻，留着原件，才还有重来一次的机会。
+一覆盖，这一张就永远只剩「今天这一版」了。</p>
+
+<p>存哪儿？回看<a href="0011-family-and-travel.html">第 11 讲</a>那句话：
+<strong>两处都有，才算真的存住。</strong>
+一张照片只待在一台设备上，那不叫备份，那叫唯一的一份。</p>
+
+<p>顺手把导出的照片按日期或地点归进一个相册，第 8 讲「每月十张」的习惯，就从这个动作接上。</p>
+
+<h2>工具选择：一句一件</h2>
+
+<p>不用贪多，按顺序来就好：</p>
+
+<ul>
+  <li><strong>手机修图 App 起步</strong>——先用手机自带的编辑，或任意一个能调白平衡、影调、色彩的修图 App，就够。</li>
+  <li><strong>想在桌面做</strong>——免费可以用
+  <a href="https://www.blackmagicdesign.com/products/davinciresolve/" target="_blank" rel="noopener">DaVinci Resolve</a>
+  （桌面免费版），它顺带能剪视频，Pocket 4 拍的片子能在同一处处理。</li>
+  <li><strong>想看中文工作流</strong>——<a href="https://sspai.com/search/post/%E6%91%84%E5%BD%B1" target="_blank" rel="noopener">少数派：摄影</a>
+  与 <a href="https://www.dgtle.com/" target="_blank" rel="noopener">数字尾巴</a>，手机摄影与后期的实操帖子最集中。</li>
+  <li><strong>要官方素材</strong>——去 DJI
+  <a href="https://www.dji.com/cn/osmo-pocket-4/downloads" target="_blank" rel="noopener">Osmo Pocket 4 下载页</a>。</li>
+</ul>
+
+<p>工具不是门槛。手机自带编辑要做的，也只是这四步——换的只是屏幕大小和手感，
+不是能不能做到。</p>
+
+<h2>不要做的三件事</h2>
+
+<ol>
+  <li><strong>别把饱和当调色。</strong>照片发灰、发闷，第一反应就去加饱和度，是新手最常见的错。
+  灰是<strong>影调</strong>的问题，不是颜色的问题：先按顺序把白平衡和影调做对，颜色自然就立起来。</li>
+  <li><strong>别把灰片当废片。</strong>Pocket 4 的 10-bit D-Log <strong>只对视频</strong>，照片用不上（见第 10 讲）。
+  看到视频灰蒙蒙就删掉，是误会——那正是它留给你去调的空间。</li>
+  <li><strong>别一上来就锐化。</strong>锐化是最后一步，而且只做一点点。它补不回对焦，
+  只会把噪点和毛病一起描出来，是最容易「一动手就露馅」的一步。</li>
+</ol>
+
+<h2>一条完整流程：从一张 DNG 到发出去</h2>
+
+<p>把上面这些东西连起来，就是一条真能跑的流程。假设你用 Pocket 4 拍回了一批 DNG：</p>
+
+<ol>
+  <li><strong>选</strong>——先删、再挑，只留下值得修的那一张（复习第 8 讲）。</li>
+  <li><strong>白平衡</strong>——把它修正到中性，白的东西要是白的。</li>
+  <li><strong>影调</strong>——压高光、提阴影，把该有的细节找回来。</li>
+  <li><strong>对比与黑场</strong>——把两端推开，画面从「灰」变「透」。</li>
+  <li><strong>色彩</strong>——少量加饱和，色温按口味微调一点。</li>
+  <li><strong>导出</strong>——导出成 JPEG，原件 DNG 留着不动；导出的那张和原件，两处都存一份。</li>
+</ol>
+
+<p>六步，慢的话二十分钟，熟了几分钟。它的价值不在快，而在于<strong>每一步都知道自己在干什么</strong>——
+这正是它和第 8 讲里「随手套个滤镜」的区别。</p>
+
+<h2>今天就能用：同一张 DNG，修两遍</h2>
+
+<div class="card">
+  <p><strong>练习（二十分钟）：</strong>挑一张你喜欢的 DNG，按上面的六步，修出<strong>两个版本</strong>。</p>
+  <ol>
+    <li>第一版叫<strong>「还原」</strong>——目标是尽量接近你当时眼睛看到的样子，不夸张、不炫技。</li>
+    <li>第二版叫<strong>「表达」</strong>——同一张原件，目标换成「我想要的氛围」，冷暖与明暗都可以更主观。</li>
+    <li>把两版并排放在一起看，然后说出一句话：<strong>我更喜欢哪一版，为什么？</strong></li>
+  </ol>
+  <p>同一个原件、两套判断，正是这一讲想让你用身体记住的事：
+  后期没有唯一正确的答案，只有<strong>你想说什么</strong>。</p>
+</div>
+
+<h2>回到第 1 讲：这套顺序本身就是一门课</h2>
+
+<p>十二讲讲完了。回头看，它的顺序不是随手排的：
+<strong>先决定曝光，再取景，再找光，然后才是拍、选、修。</strong>
+这是一条从判断走到成片的流水线，也是一套你可以自己循环走的流程——
+每拍一段时间，回到「选」，再回到「修」，再带着新的问题回去拍。</p>
+
+<p>所以最后一件事：<strong>回 <a href="0001-exposure-triangle.html">第 1 讲</a> 重读一遍。</strong>
+刚开课时你读它，看到的是一张三角图和三个旋钮；现在读它，
+你会看到拍、选、修每一环都从那里出发。同一页讲义，第二遍是不一样的。</p>
+
+<h2>回顾：三个自测</h2>
+<div class="quiz">
+  <h3>先合上讲义，自己回答，再看核对</h3>
+
+  <p class="prompt">1. 为什么说「后期救不回拍崩的照片」？DNG 和 HEIF / JPEG 的差别在哪？</p>
+  <details><summary>看答案</summary>
+    <p>因为能修好的，只有已经被记下来的东西。爆成一片白的高光、糊掉的细节，在按下快门那一刻就没被记进文件，滑杆只能把它们拉成灰色，拉不回纹理。
+    DNG 记下的信息多得多，白平衡、影调、降噪都能在后期从头重做；HEIF 和 JPEG 在机内就压过、也修过，通常只剩亮度、白平衡、裁切这类整体动作。
+    所以关键还是在拍摄：先拍对，再谈后期。</p>
+  </details>
+
+  <p class="prompt">2. 四个动作的顺序是什么？为什么不能先加饱和度？</p>
+  <details><summary>看答案</summary>
+    <p>① 白平衡 → ② 影调（压高光、提阴影）→ ③ 对比与黑场 → ④ 色彩（饱和与色温微调）。
+    因为影调是骨架、色彩是皮肤：照片发灰多半是最暗处不够暗、最亮处不够亮，是影调的问题，加饱和度只会让那层「雾」变得更艳。
+    底色没修好就上颜色，等于在歪的骨架上涂皮肤，后面还得推翻重来——而且饱和度加多了，皮肤会立刻变成塑料。</p>
+  </details>
+
+  <p class="prompt">3. 修完一张 DNG，为什么原件不能覆盖？它和备份是什么关系？</p>
+  <details><summary>看答案</summary>
+    <p>因为原件是底片：你今天的判断，改天可能会推翻，留着 DNG，才还有重来一次的机会；一覆盖，这一张就永远只剩今天的这一版了。
+    备份则是另一回事——按第 11 讲的规矩，两处都有才算真的存住；一张照片只待在一台设备上，那不是备份，是唯一的副本。所以两件事一起做：导出 JPEG 拿去看和发，原件留着，并再存一份到第二处。</p>
+  </details>
+</div>
+
+<p class="ask">这一讲哪里没说清？回到 OpenCode 里直接问你的老师（那个正在运行 <code>teach</code>
+的 agent）——它记得你手上是 iPhone Air 和 Osmo Pocket 4，可以让它按你的机型把某一讲的操作步骤再具体化：
+比如「在我这台 Pocket 4 上，白平衡该怎么动」，或者「iPhone Air 的 HEIF，用哪几步还能救回一点」。</p>
+
+<p class="foot">
+  <strong>推荐一手资料：</strong>
+  <a href="https://search.douban.com/book/subject_search?search_text=%E7%BE%8E%E5%9B%BD%E7%BA%BD%E7%BA%A6%E6%91%84%E5%BD%B1%E5%AD%A6%E9%99%A2%E6%91%84%E5%BD%B1%E6%95%99%E6%9D%90" target="_blank" rel="noopener">《美国纽约摄影学院摄影教材》</a>
+  的「后期与影调控制」部分 —— 本课程的骨干教材；想读影调体系的原典，再加一本
+  <a href="https://search.douban.com/book/subject_search?search_text=%E8%AE%BA%E5%BA%95%E7%89%87" target="_blank" rel="noopener">《论底片》The Negative</a>。
+  图解原理可读 <a href="https://www.cambridgeincolour.com/tutorials/color-management1.htm" target="_blank" rel="noopener">Cambridge in Colour：色彩管理</a>、
+  <a href="https://www.cambridgeincolour.com/tutorials/white-balance.htm" target="_blank" rel="noopener">白平衡</a> 与
+  <a href="https://www.cambridgeincolour.com/tutorials/histograms1.htm" target="_blank" rel="noopener">直方图</a>。
+  <br />图片来源与授权：<a href="../assets/CREDITS.md">图片版权说明</a>（本讲的图全部为手绘内联 SVG，不含照片）。
+  <br />上一讲：<a href="0011-family-and-travel.html">第 11 讲 · 回看</a> ·
+  回看第 1 讲：<a href="0001-exposure-triangle.html">第 1 讲 · 曝光三角</a> ·
+  速查：<a href="../reference/0001-exposure-cheatsheet.html">曝光速查表</a> ·
+  词汇表：<a href="../reference/0003-glossary.html">摄影词汇表</a>
+</p>
+
+</body>
+</html>
