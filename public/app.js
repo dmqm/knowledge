@@ -12,7 +12,6 @@ const PROGRESS_KEY = 'lc:progress';
 
 const app = document.getElementById('app');
 const topbar = document.getElementById('topbar');
-const modalRoot = document.getElementById('modal');
 const toastEl = document.getElementById('toast');
 
 const esc = (s) =>
@@ -212,12 +211,10 @@ async function renderHome() {
   setTopbar(`
     <div class="brand"><span class="dot"></span>学习中心</div>
     <div class="spacer"></div>
-    ${STATIC ? '' : '<button class="iconbtn" id="btn-add" title="新建主题">+</button>'}
     <button class="iconbtn" id="btn-refresh" title="刷新">↻</button>
   `);
   app.innerHTML = '<div class="spinner">加载中…</div>';
 
-  if (!STATIC) document.getElementById('btn-add').onclick = openNewCourseSheet;
   document.getElementById('btn-refresh').onclick = () => {
     loadHome(true);
   };
@@ -251,9 +248,6 @@ async function loadHome(refresh = false) {
     const courses = await listCourses();
     state.courses = courses;
     list.innerHTML = courses.length ? courseCards(courses) : emptyState();
-    if (!courses.length && !STATIC) {
-      document.getElementById('empty-add').onclick = openNewCourseSheet;
-    }
   } catch (err) {
     list.innerHTML = `<div class="empty"><div class="big">⚠︎</div>${esc(err.message)}</div>`;
   }
@@ -287,19 +281,11 @@ function courseCard(c) {
 }
 
 function emptyState() {
-  if (STATIC) {
-    return `
-    <div class="empty">
-      <div class="big">📚</div>
-      <p>还没有学习主题。</p>
-    </div>`;
-  }
   return `
     <div class="empty">
       <div class="big">📚</div>
       <p>还没有学习主题。</p>
-      <p class="small faint">用 <code>teach</code> 生成的内容会自动出现在这里，也可以先手动新建一个。</p>
-      <button class="btn primary" id="empty-add" style="margin-top:16px">新建主题</button>
+      <p class="small faint">用 <code>teach</code> 在某个课程目录里生成的内容会自动出现在这里。</p>
     </div>`;
 }
 
@@ -561,44 +547,8 @@ async function renderSearch(q) {
 }
 
 // ----------------------------------------------------------------- sheet ----
-
-function openNewCourseSheet() {
-  modalRoot.hidden = false;
-  modalRoot.innerHTML = `
-    <div class="modal-backdrop" id="mb"></div>
-    <div class="sheet">
-      <h2>新建学习主题</h2>
-      <p class="small faint">创建后会生成一个 teach workspace（含 MISSION.md 等），之后在里面运行 teach 技能即可。</p>
-      <input id="name" placeholder="例如：Rust / 力量训练 / 概率论" autofocus />
-      <div class="actions">
-        <button class="btn ghost" id="cancel">取消</button>
-        <button class="btn primary" id="ok">创建</button>
-      </div>
-    </div>`;
-  const close = () => {
-    modalRoot.hidden = true;
-    modalRoot.innerHTML = '';
-  };
-  document.getElementById('mb').onclick = close;
-  document.getElementById('cancel').onclick = close;
-
-  const submit = async () => {
-    const name = document.getElementById('name').value.trim();
-    if (!name) return;
-    try {
-      const res = await api('/api/courses', { method: 'POST', body: JSON.stringify({ name }) });
-      close();
-      toast('已创建');
-      go(`#/c/${encodeURIComponent(res.id)}`);
-    } catch (err) {
-      toast(err.message);
-    }
-  };
-  document.getElementById('ok').onclick = submit;
-  document.getElementById('name').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') submit();
-  });
-}
+// (Removed: new topics are always created by an agent / teach workflow,
+//  never through the UI.)
 
 // ------------------------------------------------------------------ boot ----
 

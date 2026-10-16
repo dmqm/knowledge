@@ -28,10 +28,10 @@ knowledge/
 
 前端 `public/app.js` 通过 `window.__LC_STATIC__` 区分:
 
-- **服务器模式**(本地 `node server.mjs`):走 JSON API,可读可写(新建 / 删除主题、
+- **服务器模式**(本地 `node server.mjs`):走 JSON API,可读可写(删除主题、
   进度写回 `data/progress.json`)。
 - **静态模式**(导出的 `dist/`,GitHub Pages):读 `api/*.json`,进度存浏览器
-  `localStorage`,隐藏"新建 / 删除"。**只读。**
+  `localStorage`,隐藏"删除"。**只读。**
 
 两套模式共用同一份 `public/app.js` 与同一套渲染逻辑,只有数据来源不同。
 
@@ -42,8 +42,8 @@ knowledge/
 1. 在 OpenCode 里把工作目录切到目标主题目录(如 `courses/rust/`),运行 `teach`。
 2. `teach` 会写入 `MISSION.md`、`lessons/*.html`、`reference/*.html`、
    `learning-records/*.md` 等,学习中心会自动收录。
-3. 需要新建目录时,在 `courses/` 下建一个含 `MISSION.md` 或 `lessons/` 的文件夹即可;
-   也可以本地跑服务器后用界面右上角 `＋` 生成骨架。
+3. 需要新建目录时,在 `courses/` 下建一个含 `MISSION.md` 或 `lessons/` 的文件夹即可。
+   **界面上没有"新建"入口——新建永远由 agent / 手动建目录完成。**
 
 > `teach` 与 `show-me` **不在技能默认列表里**,装在 `C:\Users\admin\.agents\skills\` 下;
 > 找不到时直接去该目录调用。

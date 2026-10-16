@@ -444,43 +444,6 @@ a.row:active { transform: none; opacity: 0.75; }
 .reader-load[hidden] { display: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ------------------------------------------------------------------ modal */
-.modal-root { position: fixed; inset: 0; z-index: 60; display: grid; place-items: end center; }
-.modal-root[hidden] { display: none; }
-.modal-backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.5); }
-.sheet {
-  position: relative;
-  width: min(100%, 520px);
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 20px 20px 0 0;
-  padding: 20px 20px calc(env(safe-area-inset-bottom) + 20px);
-  box-shadow: var(--shadow);
-  animation: rise 0.18s ease;
-  max-height: 85dvh;
-  overflow-y: auto;
-}
-@keyframes rise { from { transform: translateY(16px); opacity: 0.6; } to { transform: none; opacity: 1; } }
-@media (pointer: fine) {
-  .modal-root { place-items: center; }
-  .sheet { border-radius: 20px; animation: pop 0.18s ease; }
-  @keyframes pop { from { transform: scale(0.96); opacity: 0.5; } to { transform: none; opacity: 1; } }
-}
-.sheet h2 { margin: 0 0 4px; font-size: 18px; }
-.sheet input {
-  width: 100%;
-  font: inherit;
-  padding: 13px 14px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text);
-  margin-top: 14px;
-  outline: none;
-}
-.sheet .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
-.sheet .actions .btn { flex: 1; padding: 12px 16px; }
-
 /* ------------------------------------------------------------------ toast */
 .toast {
   position: fixed;
