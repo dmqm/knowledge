@@ -190,7 +190,9 @@ async function writeShell() {
   // are rewritten to relative ones and the static flag gets injected.
   const swaps = [
     ['href="/assets/styles.css"', 'href="assets/styles.css"'],
-    ['href="/favicon.ico"', 'href="assets/favicon.svg"'],
+    ['href="/assets/favicon.svg"', 'href="assets/favicon.svg"'],
+    ['href="/assets/apple-touch-icon.png"', 'href="assets/apple-touch-icon.png"'],
+    ['href="/site.webmanifest"', 'href="site.webmanifest"'],
     [
       '<script type="module" src="/assets/app.js"></script>',
       '<script src="assets/config.js"></script>\n    <script type="module" src="assets/app.js"></script>',
@@ -202,10 +204,19 @@ async function writeShell() {
   }
   await fs.writeFile(path.join(outDir, 'index.html'), html);
 
-  for (const name of ['app.js', 'styles.css', 'favicon.svg']) {
+  for (const name of [
+    'app.js',
+    'styles.css',
+    'favicon.svg',
+    'apple-touch-icon.png',
+    'icon-192.png',
+    'icon-512.png',
+  ]) {
     await copyFile(path.join(publicRoot, name), path.join(outDir, 'assets', name));
   }
   await fs.writeFile(path.join(outDir, 'assets', 'config.js'), 'window.__LC_STATIC__ = true;\n');
+  // 放在站点根目录,manifest 里的 start_url "./" 才会指向站点根(而不是 assets/)。
+  await copyFile(path.join(publicRoot, 'site.webmanifest'), path.join(outDir, 'site.webmanifest'));
   // Tell GitHub Pages to skip Jekyll, which would otherwise swallow files.
   await fs.writeFile(path.join(outDir, '.nojekyll'), '');
 }

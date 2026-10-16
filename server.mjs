@@ -76,6 +76,7 @@ const MIME = {
   '.gif': 'image/gif',
   '.webp': 'image/webp',
   '.ico': 'image/x-icon',
+  '.webmanifest': 'application/manifest+json',
   '.woff2': 'font/woff2',
   '.woff': 'font/woff',
 };
@@ -453,6 +454,11 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname === '/favicon.ico') {
       await sendFile(res, path.join(config.publicRoot, 'favicon.svg'));
+      return;
+    }
+
+    if (pathname === '/site.webmanifest') {
+      await sendFile(res, path.join(config.publicRoot, 'site.webmanifest'), { cache: true });
       return;
     }
 
