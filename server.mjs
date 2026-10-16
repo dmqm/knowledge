@@ -463,7 +463,9 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (pathname.startsWith('/assets/')) {
-      await serveStatic(res, config.publicRoot, pathname.slice('/assets/'.length), { cache: true });
+      // no-cache: the portal is edited locally, so a phone on the LAN must not
+      // keep a stale app.js/styles.css for an hour.
+      await serveStatic(res, config.publicRoot, pathname.slice('/assets/'.length));
       return;
     }
 
