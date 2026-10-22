@@ -364,32 +364,19 @@ function reduceMotion() {
   );
 }
 
-// Fade the current page to the destination surface, then reload. The reload is
-// what lets iOS repaint the status bar; the fade keeps it from looking like a
-// white flash. The old palette stays visible under the veil until it is opaque,
-// otherwise the colour change would snap before the fade. A short-lived flag
-// tells the next document to cover its first paint with the same colour.
+// Reload immediately: iOS only re-reads the status-bar style as the document
+// loads, and a navigation started inside the tap handler is the reliable path.
+// The next document covers its first paint with the destination colour (via the
+// short-lived flag), so the reload still reads as a fade rather than a flash.
 function beginIOSThemeSwap(theme) {
   themeSwapping = true;
-  if (reduceMotion()) {
-    commitTheme(theme);
-    location.reload();
-    return;
-  }
   try {
     sessionStorage.setItem(SWAP_KEY, JSON.stringify({ at: Date.now(), theme }));
   } catch {
     // no arrival cover; the reload is still correct
   }
-  const root = document.documentElement;
-  root.style.setProperty('--swap-bg', THEME_COLOR[theme]);
-  root.classList.add('theme-leaving');
-  void root.offsetWidth; // commit opacity:0 before flipping it to 1
-  root.classList.add('theme-leaving-on');
-  window.setTimeout(() => {
-    commitTheme(theme); // hidden by the now-opaque veil
-    location.reload();
-  }, 180);
+  commitTheme(theme);
+  location.reload();
 }
 
 // Called once the restored page (or the reader iframe) has painted.
@@ -419,12 +406,11 @@ function finishThemeArrival() {
 }
 
 // Apply a palette to the current document. Kept separate from the reload path so
-// the iOS swap can leave the old palette visible while the veil fades in.
+// the reload can update the meta before navigating.
 function commitTheme(theme) {
   const root = document.documentElement;
   root.dataset.theme = theme;
   root.style.colorScheme = theme;
-  root.style.backgroundColor = THEME_COLOR[theme];
   // Phone status bar / browser chrome: tint it to the reading surface, and let
   // the iOS status bar text invert too when the site runs as a home-screen app.
   setMetaContent('theme-color', THEME_COLOR[theme]);

@@ -529,23 +529,6 @@ a.row:active { transform: none; opacity: 0.75; }
 .reader-load.is-hidden { opacity: 0; pointer-events: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ------------------------------------------------------------------ theme swap
-   A home-screen iOS app only repaints its status bar when the document loads.
-   Fade through the destination surface before that reload so it reads as a
-   theme change instead of a flash; the next document starts behind the same
-   coloured cover (injected by the pre-paint script in index.html). */
-html.theme-leaving::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: var(--swap-bg, var(--bg));
-  opacity: 0;
-  transition: opacity 0.16s ease;
-  pointer-events: none;
-}
-html.theme-leaving.theme-leaving-on::before { opacity: 1; }
-
 /* ------------------------------------------------------------------ toast */
 .toast {
   position: fixed;
