@@ -3,53 +3,72 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#14130f" />
-  <meta name="color-scheme" content="light dark" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="学习中心" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <title>学习中心</title>
   <script>
-    // Paint in the reader's chosen theme before the stylesheet loads, so there
-    // is no dark→light flash on a phone. The server and static builds share it.
+    // Paint in the reader's chosen theme before anything else in <head>, and
+    // create the phone chrome hints here (not as static tags) so iOS cannot
+    // latch onto the opposite theme's status-bar value while parsing.
     (function () {
+      var t = null;
+      try { t = localStorage.getItem('lc:theme'); } catch (e) {}
+
+      // The iOS swap navigates with ?lc-theme=..., which also covers the case
+      // where storage is unavailable. The swap marker below stays authoritative.
+      var fromQuery = null;
       try {
-        // Read the one-shot swap marker first: it carries the destination even
-        // if localStorage is unavailable.
-        var swap = null;
+        var q = new URLSearchParams(location.search).get('lc-theme');
+        if (q === 'light' || q === 'dark') fromQuery = q;
+      } catch (e) {}
+      if (fromQuery) t = fromQuery;
+
+      // The one-shot swap marker carries the destination even if localStorage
+      // is unavailable; it is consumed here, before the app boots.
+      var swap = null;
+      try {
+        var raw = sessionStorage.getItem('lc:theme-swap');
+        if (raw) {
+          sessionStorage.removeItem('lc:theme-swap');
+          swap = JSON.parse(raw);
+          if (!swap || Date.now() - swap.at > 5000) swap = null;
+        }
+      } catch (e) {}
+      if (swap && (swap.theme === 'light' || swap.theme === 'dark')) {
+        t = swap.theme;
+        try { localStorage.setItem('lc:theme', t); } catch (e) {}
+      }
+
+      if (t !== 'light' && t !== 'dark') {
         try {
-          var raw = sessionStorage.getItem('lc:theme-swap');
-          if (raw) {
-            sessionStorage.removeItem('lc:theme-swap');
-            swap = JSON.parse(raw);
-            if (!swap || Date.now() - swap.at > 5000) swap = null;
-          }
-        } catch (e) {}
-
-        var t = localStorage.getItem('lc:theme');
-        if (swap && (swap.theme === 'light' || swap.theme === 'dark')) {
-          t = swap.theme;
-          try { localStorage.setItem('lc:theme', t); } catch (e) {}
+          t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        } catch (e) {
+          t = 'light';
         }
-        if (t !== 'light' && t !== 'dark') {
-          t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches
-            ? 'light'
-            : 'dark';
-        }
-        document.documentElement.dataset.theme = t;
-        document.documentElement.style.colorScheme = t;
-        document
-          .querySelectorAll('meta[name="theme-color"]')
-          .forEach(function (m) { m.setAttribute('content', t === 'light' ? '#f7f4ec' : '#14130f'); });
-        var bar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-        if (bar) bar.setAttribute('content', t === 'light' ? 'default' : 'black-translucent');
+      }
 
-        // An iOS home-screen app only re-reads the status-bar style on load, so
-        // app.js reloads after a theme choice. If that is happening, cover this
-        // document's first paint with the destination colour; it is faded out
-        // once the page (or reader) is restored.
-        if (swap) {
-          try { history.scrollRestoration = 'manual'; } catch (e) {}
+      document.documentElement.dataset.theme = t;
+      document.documentElement.style.colorScheme = t;
+
+      function setMeta(name, content) {
+        var m = document.querySelector('meta[name="' + name + '"]');
+        if (!m) {
+          m = document.createElement('meta');
+          m.setAttribute('name', name);
+          document.head.appendChild(m);
+        }
+        m.setAttribute('content', content);
+      }
+      setMeta('theme-color', t === 'light' ? '#f7f4ec' : '#14130f');
+      setMeta('color-scheme', 'light dark');
+      setMeta('apple-mobile-web-app-status-bar-style', t === 'light' ? 'default' : 'black-translucent');
+
+      // An iOS home-screen app only re-reads the status-bar style on load, so
+      // app.js navigates after a theme choice. If that is happening, cover this
+      // document's first paint with the destination colour; it is faded out
+      // once the page (or reader) is restored.
+      if (swap) {
+        try {
+          history.scrollRestoration = 'manual';
           var bg = t === 'light' ? '#f7f4ec' : '#14130f';
           var cover = document.createElement('style');
           cover.id = 'lc-swap-style';
@@ -71,10 +90,11 @@
               if (cover.parentNode) cover.parentNode.removeChild(cover);
             }, 260);
           }, 6000);
-        }
-      } catch (e) {}
+        } catch (e) {}
+      }
     })();
   </script>
+  <title>学习中心</title>
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
   <link rel="manifest" href="/site.webmanifest" />

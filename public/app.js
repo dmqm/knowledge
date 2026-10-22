@@ -364,19 +364,27 @@ function reduceMotion() {
   );
 }
 
-// Reload immediately: iOS only re-reads the status-bar style as the document
-// loads, and a navigation started inside the tap handler is the reliable path.
-// The next document covers its first paint with the destination colour (via the
-// short-lived flag), so the reload still reads as a fade rather than a flash.
+// Navigate immediately: iOS only re-reads the status-bar style as the document
+// loads. A distinct URL is treated as a real navigation (a plain reload can be
+// ignored), and the query also carries the destination if sessionStorage is
+// unavailable. The next document covers its first paint with the destination
+// colour (via the short-lived flag), so it still reads as a fade, not a flash.
 function beginIOSThemeSwap(theme) {
   themeSwapping = true;
   try {
     sessionStorage.setItem(SWAP_KEY, JSON.stringify({ at: Date.now(), theme }));
   } catch {
-    // no arrival cover; the reload is still correct
+    // no arrival cover; the query still carries the theme
   }
   commitTheme(theme);
-  location.reload();
+  try {
+    const url = new URL(location.href);
+    url.searchParams.set('lc-theme', theme);
+    url.searchParams.set('lc-swap', String(Date.now()));
+    location.replace(url.toString());
+  } catch {
+    location.reload();
+  }
 }
 
 // Called once the restored page (or the reader iframe) has painted.
@@ -949,6 +957,18 @@ async function renderSearch(q) {
 window.addEventListener('hashchange', render);
 
 (async function boot() {
+  // The swap URL exists only to force a fresh navigation for iOS; drop it so
+  // refreshes and shared links point at the canonical URL.
+  try {
+    const url = new URL(location.href);
+    if (url.searchParams.has('lc-theme') || url.searchParams.has('lc-swap')) {
+      url.searchParams.delete('lc-theme');
+      url.searchParams.delete('lc-swap');
+      history.replaceState(null, '', url.pathname + url.search + url.hash);
+    }
+  } catch {
+    // unsupported — harmless if the query stays
+  }
   applyTheme(currentTheme(), false); // sync meta color + buttons with the pre-paint choice
   if (!STATIC) {
     // Surfaces a login redirect via api() if a password is set.
