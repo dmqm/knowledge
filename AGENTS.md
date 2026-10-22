@@ -44,6 +44,8 @@ knowledge/
    `learning-records/*.md` 等,学习中心会自动收录。
 3. 需要新建目录时,在 `courses/` 下建一个含 `MISSION.md` 或 `lessons/` 的文件夹即可。
    **界面上没有"新建"入口——新建永远由 agent / 手动建目录完成。**
+4. 新主题默认落在首页的「更多主题」里;想给它归类,把目录名加进
+   `courses/categories.json` 对应分组的 `courses` 数组(该文件要提交)。
 
 > `teach` 与 `show-me` **不在技能默认列表里**,装在 `C:\Users\admin\.agents\skills\` 下;
 > 找不到时直接去该目录调用。

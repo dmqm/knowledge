@@ -163,7 +163,7 @@ button.iconbtn { -moz-appearance: none; -webkit-appearance: none; }
   text-transform: none;
   letter-spacing: 0.4px;
   color: var(--muted);
-  margin: 22px 4px 10px;
+  margin: 18px 4px 8px;
   font-weight: 600;
 }
 
@@ -205,35 +205,39 @@ button.iconbtn { -moz-appearance: none; -webkit-appearance: none; }
 .search .glass { color: var(--faint); flex: 0 0 auto; }
 
 /* ------------------------------------------------------------------ cards */
-.cards { display: grid; gap: 12px; }
+.cards { display: grid; gap: 7px; }
 
 @media (min-width: 640px) {
   .cards { grid-template-columns: 1fr 1fr; }
 }
 
+/* Compact row-like card: the home page shows five topics plus their groups
+   above the fold on a phone, so this is deliberately denser than a tile grid. */
 .card {
-  display: block;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
+  border-radius: 13px;
+  padding: 10px 13px 12px;
   cursor: pointer;
   transition: border-color 0.15s ease, transform 0.05s ease;
   color: var(--text);
+  overflow: hidden;
 }
-.card:active { transform: scale(0.985); }
+.card:active { transform: scale(0.99); }
 @media (hover: hover) { .card:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); } }
-
-.card-top { display: flex; gap: 12px; align-items: flex-start; }
 
 .card .tile {
   flex: 0 0 auto;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: grid;
   place-items: center;
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
   line-height: 1;
   color: #fff;
@@ -244,12 +248,16 @@ button.iconbtn { -moz-appearance: none; -webkit-appearance: none; }
 }
 
 .card .tile-txt { min-width: 0; flex: 1; }
-.card h3 { margin: 2px 0 0; font-size: 17px; line-height: 1.35; }
-.card .meta { display: flex; flex-wrap: wrap; gap: 6px 12px; color: var(--muted); font-size: 13px; margin-top: 8px; align-items: center; }
-.card > .meta { margin: 0 0 0 56px; } /* below tile, aligned with text */
+.card h3 { margin: 0; font-size: 15px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .meta { display: flex; flex-wrap: wrap; gap: 0 8px; color: var(--muted); font-size: 12px; margin-top: 2px; align-items: center; line-height: 1.5; }
+.card .stat { font-variant-numeric: tabular-nums; }
+.card .stat.good { color: var(--good); }
 
 .bar { height: 6px; border-radius: 999px; background: var(--panel-2); overflow: hidden; margin-top: 12px; }
 .bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--good)); border-radius: inherit; }
+
+/* Progress sits on the card's bottom edge instead of taking its own row. */
+.card > .bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; margin: 0; border-radius: 0; }
 
 .pill {
   display: inline-flex;

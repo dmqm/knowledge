@@ -217,6 +217,7 @@ function courseSummary(course, progress) {
   return {
     id: course.id,
     title: course.title,
+    group: course.group || '更多主题',
     counts: course.counts,
     done,
     total: lessons.length,

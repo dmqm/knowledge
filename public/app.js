@@ -385,8 +385,26 @@ async function loadHome(refresh = false) {
 }
 
 function courseCards(courses) {
-  return `<div class="section-title">全部主题 · ${courses.length}</div>
-  <div class="cards">${courses.map(courseCard).join('')}</div>`;
+  // Grouped home page. `group` comes from courses/categories.json (scanned into
+  // every course summary); courses keep that order, newest first within a group.
+  const groups = [];
+  const seen = new Map();
+  for (const c of courses) {
+    const name = c.group || '更多主题';
+    let group = seen.get(name);
+    if (!group) {
+      group = { name, courses: [] };
+      seen.set(name, group);
+      groups.push(group);
+    }
+    group.courses.push(c);
+  }
+  return groups
+    .map(
+      (g) => `<div class="section-title">${esc(g.name)} · ${g.courses.length}</div>
+  <div class="cards">${g.courses.map(courseCard).join('')}</div>`,
+    )
+    .join('');
 }
 
 function courseCard(c) {
@@ -395,19 +413,18 @@ function courseCard(c) {
   if (c.counts.lessons) parts.push(`${c.counts.lessons} 讲`);
   if (c.counts.reference) parts.push(`${c.counts.reference} 参考`);
   if (c.counts.records) parts.push(`${c.counts.records} 记录`);
+  const complete = c.total > 0 && c.done === c.total;
   return `
     <a class="card" style="--hue:${courseHue(c.id)}" href="#/c/${encodeURIComponent(c.id)}">
-      <div class="card-top">
-        <span class="tile">${esc(c.title.trim().charAt(0) || '?')}</span>
-        <div class="tile-txt">
-          <h3>${esc(c.title)}</h3>
-          <div class="meta">
-            ${c.total ? `<span class="pill ${c.done === c.total ? 'good' : ''}">${c.done}/${c.total} 已完成</span>` : ''}
-            <span>${esc(parts.join(' · ') || '尚无内容')}</span>
-          </div>
+      <span class="tile">${esc(c.title.trim().charAt(0) || '?')}</span>
+      <div class="tile-txt">
+        <h3>${esc(c.title)}</h3>
+        <div class="meta">
+          ${c.total ? `<span class="stat ${complete ? 'good' : ''}">${c.done}/${c.total} 已完成</span>` : ''}
+          <span>${esc(parts.join(' · ') || '尚无内容')}</span>
         </div>
       </div>
-      ${c.total ? `<div class="bar"><span style="width:${pct}%"></span></div>` : ''}
+      ${c.total ? `<span class="bar"><span style="width:${pct}%"></span></span>` : ''}
     </a>`;
 }
 

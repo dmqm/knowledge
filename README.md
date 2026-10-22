@@ -75,7 +75,9 @@ npx --yes serve dist      # 用任意静态服务器打开
 `teach` 会写入 `MISSION.md`、`lessons/*.html`、`reference/*.html`、`learning-records/*.md`
 等，学习中心会自动收录，无需手动登记。
 
-> 也可以直接在界面里点右上角 `＋` 新建主题，它会生成好 workspace 骨架，再进去运行 `teach`。
+首页按 `courses/categories.json` 分组展示。新增主题后，把它的目录名加进某个
+`groups[].courses`；没登记的会落在「更多主题」。这个文件需要一起提交，静态发布
+才会拿到同样的分组。
 
 ## 配置
 
@@ -99,6 +101,7 @@ knowledge/
 ├─ lib/                # scan / store / auth / markdown
 ├─ public/             # 前端（index.html / app.js / styles.css）
 ├─ courses/            # 每个子目录 = 一个 teach 主题
+│  └─ categories.json  # 首页分组（不提交也没关系，会全部归到「更多主题」）
 ├─ data/               # progress.json（进度）、secret（会话密钥）
 └─ config.json
 ```

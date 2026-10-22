@@ -1,0 +1,16 @@
+{
+  "groups": [
+    {
+      "name": "财富与社会",
+      "courses": ["duan-yongping", "inside-the-system"]
+    },
+    {
+      "name": "认知与工作",
+      "courses": ["thinking-fast-and-slow", "product-for-engineers"]
+    },
+    {
+      "name": "摄影与审美",
+      "courses": ["photography"]
+    }
+  ]
+}
