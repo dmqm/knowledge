@@ -7,6 +7,7 @@
    ============================================================ */
 
 :root {
+  color-scheme: light dark;
   /* 纸张与油墨 */
   --bg:        #fbf9f5;
   --surface:   #ffffff;
@@ -40,7 +41,7 @@
 
 /* ---------- 深色模式 ---------- */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg:        #15130e;
     --surface:   #1e1a14;
     --ink:       #ece6da;
@@ -59,6 +60,32 @@
     --bad:    #ec9a84;
     --bad-bg: #2c1c17;
   }
+}
+
+/* 手动切换：门户的白天/夜间开关会在 <html> 上写 data-theme。
+   上面的媒体查询只在读者没有明确选「白天」时生效。 */
+:root[data-theme="dark"] {
+  --bg:        #15130e;
+  --surface:   #1e1a14;
+  --ink:       #ece6da;
+  --muted:     #a79e8f;
+  --faint:     #837b6d;
+  --rule:      #322c22;
+
+  --accent:      #d8a26a;
+  --accent-ink:  #e3b884;
+  --accent-wash: #241d14;
+
+  --code-bg: #26201a;
+
+  --ok:    #82d3a5;
+  --ok-bg: #17281d;
+  --bad:    #ec9a84;
+  --bad-bg: #2c1c17;
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
 }
 
 /* ---------- 基础 ---------- */

@@ -6,6 +6,7 @@
    ========================================================================== */
 
 :root {
+  color-scheme: light dark;
   --bg:        #fbf9f5;   /* 页面底色 */
   --paper:     #ffffff;   /* 卡片底色 */
   --ink:       #1c1a17;   /* 正文 */
@@ -31,7 +32,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg:        #15140f;
     --paper:     #1d1b15;
     --ink:       #ece7dd;
@@ -47,6 +48,29 @@
     --bad-bg:    #2a1e1b;
     --shadow:    none;
   }
+}
+
+/* 手动切换：门户的白天/夜间开关会在 <html> 上写 data-theme。
+   上面的媒体查询只在读者没有明确选「白天」时生效。 */
+:root[data-theme="dark"] {
+  --bg:        #15140f;
+  --paper:     #1d1b15;
+  --ink:       #ece7dd;
+  --muted:     #a79f8f;
+  --rule:      #33302a;
+  --accent:    #d7a15f;
+  --accent-ink:#e7bd85;
+  --link-line: rgba(215, 161, 95, .40);
+  --code-bg:   #262319;
+  --ok:        #7cc79a;
+  --ok-bg:     #1e2a22;
+  --bad:       #e08d80;
+  --bad-bg:    #2a1e1b;
+  --shadow:    none;
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }

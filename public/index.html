@@ -7,6 +7,24 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="学习中心" />
   <title>学习中心</title>
+  <script>
+    // Paint in the reader's chosen theme before the stylesheet loads, so there
+    // is no dark→light flash on a phone. The server and static builds share it.
+    (function () {
+      try {
+        var t = localStorage.getItem('lc:theme');
+        if (t !== 'light' && t !== 'dark') {
+          t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches
+            ? 'light'
+            : 'dark';
+        }
+        document.documentElement.dataset.theme = t;
+        document.documentElement.style.colorScheme = t;
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', t === 'light' ? '#f4f5f7' : '#0f1115');
+      } catch (e) {}
+    })();
+  </script>
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
   <link rel="manifest" href="/site.webmanifest" />

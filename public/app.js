@@ -189,6 +189,111 @@ function go(hash) {
   else location.hash = hash;
 }
 
+// ------------------------------------------------------------------ theme ----
+// The reader can force a day or night palette at any time. The choice lives in
+// localStorage and is written as `data-theme` on <html>; the CSS (portal and
+// every course stylesheet) answers to that attribute. Without a saved choice we
+// simply follow the system setting, including live changes.
+
+const THEME_KEY = 'lc:theme';
+const THEME_COLOR = { dark: '#0f1115', light: '#f4f5f7' };
+
+const SUN_ICON = `<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.1"/><path d="M12 2.7v2.1M12 19.2v2.1M4.4 4.4l1.5 1.5M18.1 18.1l1.5 1.5M2.7 12h2.1M19.2 12h2.1M4.4 19.6l1.5-1.5M18.1 5.9l1.5-1.5"/></svg>`;
+const MOON_ICON = `<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.4 14.2A8.6 8.6 0 0 1 9.8 3.6a8.6 8.6 0 1 0 10.6 10.6Z"/></svg>`;
+
+function systemTheme() {
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches
+    ? 'light'
+    : 'dark';
+}
+
+function savedTheme() {
+  try {
+    const t = localStorage.getItem(THEME_KEY);
+    return t === 'light' || t === 'dark' ? t : null;
+  } catch {
+    return null;
+  }
+}
+
+function currentTheme() {
+  const t = document.documentElement.dataset.theme;
+  return t === 'light' || t === 'dark' ? t : savedTheme() || systemTheme();
+}
+
+// The button advertises the mode you'd switch *to*, which is what people expect
+// from a sun/moon toggle: tap the sun to get daylight.
+function nextTheme() {
+  return currentTheme() === 'dark' ? 'light' : 'dark';
+}
+
+function themeButtonHTML() {
+  const target = nextTheme();
+  const label = target === 'light' ? '切换到白天模式' : '切换到夜间模式';
+  return `<button class="iconbtn theme-toggle" data-theme-toggle title="${label}" aria-label="${label}">${
+    target === 'light' ? SUN_ICON : MOON_ICON
+  }</button>`;
+}
+
+function syncThemeButtons() {
+  const target = nextTheme();
+  const label = target === 'light' ? '切换到白天模式' : '切换到夜间模式';
+  const icon = target === 'light' ? SUN_ICON : MOON_ICON;
+  document.querySelectorAll('[data-theme-toggle]').forEach((btn) => {
+    btn.innerHTML = icon;
+    btn.title = label;
+    btn.setAttribute('aria-label', label);
+  });
+}
+
+// The lesson itself is an iframe (same origin, in both server and static
+// modes), so push the theme into that document as well.
+function syncReaderTheme() {
+  const frame = document.getElementById('r-frame');
+  if (!frame) return;
+  let doc;
+  try {
+    doc = frame.contentDocument;
+  } catch {
+    return; // navigated somewhere cross-origin — nothing we can style
+  }
+  if (!doc || !doc.documentElement) return;
+  const theme = currentTheme();
+  doc.documentElement.dataset.theme = theme;
+  doc.documentElement.style.colorScheme = theme;
+}
+
+function applyTheme(theme, persist = true) {
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
+  if (persist) {
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+    } catch {
+      // storage disabled — the switch still works for this visit
+    }
+  }
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[theme]);
+  syncThemeButtons();
+  syncReaderTheme();
+}
+
+// One delegated handler survives every re-render of the topbar / reader bar.
+document.addEventListener('click', (e) => {
+  const btn = e.target instanceof Element ? e.target.closest('[data-theme-toggle]') : null;
+  if (!btn) return;
+  applyTheme(currentTheme() === 'dark' ? 'light' : 'dark');
+});
+
+if (window.matchMedia) {
+  const mq = window.matchMedia('(prefers-color-scheme: light)');
+  const follow = () => {
+    if (!savedTheme()) applyTheme(systemTheme(), false);
+  };
+  if (mq.addEventListener) mq.addEventListener('change', follow);
+  else if (mq.addListener) mq.addListener(follow);
+}
+
 // --------------------------------------------------------------- routing ----
 
 function parseHash() {
@@ -218,6 +323,7 @@ async function renderHome() {
   setTopbar(`
     <div class="brand"><span class="dot"></span>学习中心</div>
     <div class="spacer"></div>
+    ${themeButtonHTML()}
     <button class="iconbtn" id="btn-refresh" title="刷新">↻</button>
   `);
   app.innerHTML = '<div class="spinner">加载中…</div>';
@@ -302,6 +408,7 @@ async function renderCourse(id) {
   setTopbar(`
     <button class="back" id="btn-back">‹ 返回</button>
     <div class="spacer"></div>
+    ${themeButtonHTML()}
     ${STATIC ? '' : '<button class="iconbtn" id="btn-more" title="更多">⋯</button>'}
   `);
   document.getElementById('btn-back').onclick = () => go('#/');
@@ -490,6 +597,7 @@ async function renderReader(id, kind, file) {
         <div class="rt" title="${esc(file)}">${esc(label)}</div>
         <button class="iconbtn nav" id="r-prev" title="上一讲" ${prev ? '' : 'disabled'}>‹</button>
         <button class="iconbtn nav" id="r-next" title="下一讲" ${next ? '' : 'disabled'}>›</button>
+        ${themeButtonHTML()}
         <button class="iconbtn" id="r-done" title="标记完成" style="${done ? 'background:var(--good);border-color:var(--good);color:#fff' : ''}">✓</button>
         <a class="iconbtn open-tab" href="${esc(src)}" target="_blank" rel="noopener" title="新标签打开">⤢</a>
       </div>
@@ -500,6 +608,7 @@ async function renderReader(id, kind, file) {
 
   // Cover the iframe until the lesson paints, so there's no white flash.
   document.getElementById('r-frame').addEventListener('load', () => {
+    syncReaderTheme(); // in-page links re-load the iframe; re-apply the choice
     document.getElementById('r-load').hidden = true;
   });
 
@@ -537,6 +646,7 @@ async function renderSearch(q) {
   setTopbar(`
     <button class="back" id="btn-back">‹ 返回</button>
     <div class="spacer"></div>
+    ${themeButtonHTML()}
   `);
   document.getElementById('btn-back').onclick = () => go('#/');
 
@@ -595,6 +705,7 @@ async function renderSearch(q) {
 window.addEventListener('hashchange', render);
 
 (async function boot() {
+  applyTheme(currentTheme(), false); // sync meta color + buttons with the pre-paint choice
   if (!STATIC) {
     // Surfaces a login redirect via api() if a password is set.
     try {

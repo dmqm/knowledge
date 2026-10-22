@@ -9,6 +9,7 @@
    ============================================================ */
 
 :root {
+  color-scheme: light dark;
   /* 相纸与银盐 */
   --bg:        #f4f6f7;
   --surface:   #ffffff;
@@ -42,7 +43,7 @@
 
 /* ---------- 深色模式：暗房 ---------- */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg:        #0f1214;
     --surface:   #171b1f;
     --ink:       #e6eaee;
@@ -61,6 +62,32 @@
     --bad:    #ec9a84;
     --bad-bg: #2c1c17;
   }
+}
+
+/* 手动切换：门户的白天/夜间开关会在 <html> 上写 data-theme。
+   上面的媒体查询只在读者没有明确选「白天」时生效。 */
+:root[data-theme="dark"] {
+  --bg:        #0f1214;
+  --surface:   #171b1f;
+  --ink:       #e6eaee;
+  --muted:     #9aa5b1;
+  --faint:     #6f7b88;
+  --rule:      #262c33;
+
+  --accent:      #6cb0dc;
+  --accent-ink:  #8ec6ea;
+  --accent-wash: #16222c;
+
+  --code-bg: #1b2026;
+
+  --ok:    #82d3a5;
+  --ok-bg: #17281d;
+  --bad:    #ec9a84;
+  --bad-bg: #2c1c17;
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
 }
 
 /* ---------- 基础 ---------- */
