@@ -14,7 +14,23 @@
     // is no dark→light flash on a phone. The server and static builds share it.
     (function () {
       try {
+        // Read the one-shot swap marker first: it carries the destination even
+        // if localStorage is unavailable.
+        var swap = null;
+        try {
+          var raw = sessionStorage.getItem('lc:theme-swap');
+          if (raw) {
+            sessionStorage.removeItem('lc:theme-swap');
+            swap = JSON.parse(raw);
+            if (!swap || Date.now() - swap.at > 5000) swap = null;
+          }
+        } catch (e) {}
+
         var t = localStorage.getItem('lc:theme');
+        if (swap && (swap.theme === 'light' || swap.theme === 'dark')) {
+          t = swap.theme;
+          try { localStorage.setItem('lc:theme', t); } catch (e) {}
+        }
         if (t !== 'light' && t !== 'dark') {
           t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches
             ? 'light'
@@ -27,6 +43,36 @@
           .forEach(function (m) { m.setAttribute('content', t === 'light' ? '#f7f4ec' : '#14130f'); });
         var bar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
         if (bar) bar.setAttribute('content', t === 'light' ? 'default' : 'black-translucent');
+
+        // An iOS home-screen app only re-reads the status-bar style on load, so
+        // app.js reloads after a theme choice. If that is happening, cover this
+        // document's first paint with the destination colour; it is faded out
+        // once the page (or reader) is restored.
+        if (swap) {
+          try { history.scrollRestoration = 'manual'; } catch (e) {}
+          var bg = t === 'light' ? '#f7f4ec' : '#14130f';
+          document.documentElement.style.backgroundColor = bg;
+          var cover = document.createElement('style');
+          cover.id = 'lc-swap-style';
+          cover.textContent =
+            'html.lc-arriving::before{content:"";position:fixed;inset:0;z-index:9999;' +
+            'pointer-events:none;background:' + bg + ';opacity:1;' +
+            'transition:opacity .22s ease}' +
+            'html.lc-arriving.lc-arriving-out::before{opacity:0}';
+          document.head.appendChild(cover);
+          document.documentElement.classList.add('lc-arriving');
+          // If app.js never gets far enough to call finishThemeArrival (failed
+          // asset, JS error), do not leave the reader staring at a blank cover.
+          window.setTimeout(function () {
+            var root = document.documentElement;
+            if (!root.classList.contains('lc-arriving')) return;
+            root.classList.add('lc-arriving-out');
+            window.setTimeout(function () {
+              root.classList.remove('lc-arriving', 'lc-arriving-out');
+              if (cover.parentNode) cover.parentNode.removeChild(cover);
+            }, 260);
+          }, 6000);
+        }
       } catch (e) {}
     })();
   </script>

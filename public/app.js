@@ -202,7 +202,10 @@ const THEME_KEY = 'lc:theme';
 const THEME_COLOR = { dark: '#14130f', light: '#f7f4ec' };
 const READER_RESTORE_KEY = 'lc:reader-restore';
 const SCROLL_RESTORE_KEY = 'lc:scroll-restore';
+const SWAP_KEY = 'lc:theme-swap';
 const RESTORE_TTL = 120000;
+let themeSwapping = false;
+let arrivalFinishing = false;
 
 const SUN_ICON = `<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.1"/><path d="M12 2.7v2.1M12 19.2v2.1M4.4 4.4l1.5 1.5M18.1 18.1l1.5 1.5M2.7 12h2.1M19.2 12h2.1M4.4 19.6l1.5-1.5M18.1 5.9l1.5-1.5"/></svg>`;
 const MOON_ICON = `<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.4 14.2A8.6 8.6 0 0 1 9.8 3.6a8.6 8.6 0 1 0 10.6 10.6Z"/></svg>`;
@@ -355,18 +358,73 @@ function takeScrollRestore() {
   }
 }
 
-function applyTheme(theme, persist = true) {
-  document.documentElement.dataset.theme = theme;
-  document.documentElement.style.colorScheme = theme;
-  let stored = false;
-  if (persist) {
-    try {
-      localStorage.setItem(THEME_KEY, theme);
-      stored = true;
-    } catch {
-      // storage disabled — the switch still works for this visit
-    }
+function reduceMotion() {
+  return !!(
+    window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
+}
+
+// Fade the current page to the destination surface, then reload. The reload is
+// what lets iOS repaint the status bar; the fade keeps it from looking like a
+// white flash. The old palette stays visible under the veil until it is opaque,
+// otherwise the colour change would snap before the fade. A short-lived flag
+// tells the next document to cover its first paint with the same colour.
+function beginIOSThemeSwap(theme) {
+  themeSwapping = true;
+  if (reduceMotion()) {
+    commitTheme(theme);
+    location.reload();
+    return;
   }
+  try {
+    sessionStorage.setItem(SWAP_KEY, JSON.stringify({ at: Date.now(), theme }));
+  } catch {
+    // no arrival cover; the reload is still correct
+  }
+  const root = document.documentElement;
+  root.style.setProperty('--swap-bg', THEME_COLOR[theme]);
+  root.classList.add('theme-leaving');
+  void root.offsetWidth; // commit opacity:0 before flipping it to 1
+  root.classList.add('theme-leaving-on');
+  window.setTimeout(() => {
+    commitTheme(theme); // hidden by the now-opaque veil
+    location.reload();
+  }, 180);
+}
+
+// Called once the restored page (or the reader iframe) has painted.
+function finishThemeArrival() {
+  const root = document.documentElement;
+  if (!root.classList.contains('lc-arriving') || arrivalFinishing) return;
+  arrivalFinishing = true;
+  const cover = document.getElementById('lc-swap-style');
+  const done = () => {
+    root.classList.remove('lc-arriving', 'lc-arriving-out');
+    if (cover) cover.remove();
+    // Let normal browser back/forward scroll behaviour resume after this load.
+    try {
+      history.scrollRestoration = 'auto';
+    } catch {
+      // unsupported — nothing to restore
+    }
+  };
+  if (reduceMotion()) {
+    done();
+    return;
+  }
+  requestAnimationFrame(() => {
+    root.classList.add('lc-arriving-out');
+    window.setTimeout(done, 240);
+  });
+}
+
+// Apply a palette to the current document. Kept separate from the reload path so
+// the iOS swap can leave the old palette visible while the veil fades in.
+function commitTheme(theme) {
+  const root = document.documentElement;
+  root.dataset.theme = theme;
+  root.style.colorScheme = theme;
+  root.style.backgroundColor = THEME_COLOR[theme];
   // Phone status bar / browser chrome: tint it to the reading surface, and let
   // the iOS status bar text invert too when the site runs as a home-screen app.
   setMetaContent('theme-color', THEME_COLOR[theme]);
@@ -374,23 +432,35 @@ function applyTheme(theme, persist = true) {
     'apple-mobile-web-app-status-bar-style',
     theme === 'dark' ? 'black-translucent' : 'default',
   );
+  syncThemeButtons();
+  syncReaderTheme();
+}
 
-  if (stored && isIOSStandalone()) {
+function applyTheme(theme, persist = true) {
+  if (persist) {
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+    } catch {
+      // storage disabled — the switch still works for this visit
+    }
+  }
+
+  // `persist` is only true for a real tap; boot and system-follow never reload.
+  if (persist && isIOSStandalone()) {
     // Park where the reader was, then reload so iOS re-reads the status bar
     // style from the pre-paint script. The hash already restores the route.
     if (!saveReaderRestore()) saveScrollRestore();
-    location.reload();
+    beginIOSThemeSwap(theme);
     return;
   }
 
-  syncThemeButtons();
-  syncReaderTheme();
+  commitTheme(theme);
 }
 
 // One delegated handler survives every re-render of the topbar / reader bar.
 document.addEventListener('click', (e) => {
   const btn = e.target instanceof Element ? e.target.closest('[data-theme-toggle]') : null;
-  if (!btn) return;
+  if (!btn || themeSwapping) return;
   applyTheme(currentTheme() === 'dark' ? 'light' : 'dark');
 });
 
@@ -758,8 +828,17 @@ async function renderReader(id, kind, file) {
   const frame = document.getElementById('r-frame');
   let pendingScroll = restore ? restore.y : 0;
   frame.addEventListener('load', () => {
+    // A freshly inserted iframe can emit a load for about:blank; ignore that,
+    // and ignore cross-origin pages we cannot reach into.
+    let href = '';
+    try {
+      href = frame.contentWindow.location.href;
+    } catch {
+      return;
+    }
+    if (!href || href === 'about:blank') return;
+
     syncReaderTheme(); // in-page links re-load the iframe; re-apply the choice
-    document.getElementById('r-load').hidden = true;
     if (pendingScroll) {
       const y = pendingScroll;
       pendingScroll = 0;
@@ -768,6 +847,26 @@ async function renderReader(id, kind, file) {
       } catch {
         // cross-origin — nothing to restore
       }
+    }
+
+    // Reveal only after the scroll is in place, otherwise the lesson paints at
+    // the top for a frame and then visibly jumps to the restored position.
+    const veil = document.getElementById('r-load');
+    if (veil) {
+      if (document.documentElement.classList.contains('lc-arriving')) {
+        // The theme-swap cover is still opaque; let its fade do the reveal.
+        veil.hidden = true;
+        finishThemeArrival();
+      } else {
+        requestAnimationFrame(() => {
+          veil.classList.add('is-hidden');
+          window.setTimeout(() => {
+            veil.hidden = true;
+          }, reduceMotion() ? 0 : 200);
+        });
+      }
+    } else {
+      finishThemeArrival();
     }
   });
 
@@ -876,5 +975,14 @@ window.addEventListener('hashchange', render);
   if (!location.hash) location.hash = '#/';
   const restoreY = takeScrollRestore();
   await render();
-  if (restoreY) requestAnimationFrame(() => window.scrollTo(0, restoreY));
+  if (restoreY) {
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    window.scrollTo(0, restoreY);
+  }
+  if (!document.getElementById('r-frame')) {
+    finishThemeArrival();
+  } else {
+    // Safety net: the reader normally clears the cover from its load handler.
+    window.setTimeout(finishThemeArrival, 3000);
+  }
 })();
