@@ -22,6 +22,9 @@ const esc = (s) =>
 
 const state = { courses: [], course: null, progress: {} };
 
+// Home category filter (null = 全部). Reset every time the home page is opened.
+let homeFilter = null;
+
 // Arrow-key handler for the reader; swapped on every render so it can't pile up.
 let readerKeys = null;
 
@@ -443,8 +446,10 @@ async function renderHome() {
       <span class="glass">⌕</span>
       <input id="q" placeholder="搜索课程、讲义、学习记录…" enterkeyhint="search" />
     </div>
+    <div class="chips" id="catbar" hidden></div>
     <div id="courselist"></div>
   `;
+  homeFilter = null;
 
   const q = document.getElementById('q');
   q.addEventListener('keydown', (e) => {
@@ -466,33 +471,54 @@ async function loadHome(refresh = false) {
   try {
     const courses = await listCourses();
     state.courses = courses;
-    list.innerHTML = courses.length ? courseCards(courses) : emptyState();
+    paintHome(courses);
   } catch (err) {
     list.innerHTML = `<div class="empty"><div class="big">⚠︎</div>${esc(err.message)}</div>`;
   }
 }
 
-function courseCards(courses) {
-  // Grouped home page. `group` comes from courses/categories.json (scanned into
-  // every course summary); courses keep that order, newest first within a group.
+// One flat, full-width grid plus a category chip row. Sections would cap each
+// group at its own course count and leave most of a wide screen empty, so the
+// group is a filter here instead — classification without losing density.
+function paintHome(courses) {
+  const list = document.getElementById('courselist');
+  if (!list) return;
   const groups = [];
-  const seen = new Map();
+  const counts = new Map();
   for (const c of courses) {
     const name = c.group || '更多主题';
-    let group = seen.get(name);
-    if (!group) {
-      group = { name, courses: [] };
-      seen.set(name, group);
-      groups.push(group);
-    }
-    group.courses.push(c);
+    if (!counts.has(name)) groups.push(name);
+    counts.set(name, (counts.get(name) || 0) + 1);
   }
-  return groups
-    .map(
-      (g) => `<div class="section-title">${esc(g.name)} · ${g.courses.length}</div>
-  <div class="cards">${g.courses.map(courseCard).join('')}</div>`,
-    )
-    .join('');
+  if (homeFilter && !groups.includes(homeFilter)) homeFilter = null;
+
+  const bar = document.getElementById('catbar');
+  if (bar) {
+    if (groups.length < 2) {
+      bar.hidden = true;
+      bar.innerHTML = '';
+    } else {
+      bar.hidden = false;
+      const chip = (value, label, n) =>
+        `<button class="chip ${(homeFilter || '') === value ? 'active' : ''}" data-cat="${esc(value)}">${esc(label)}<span>${n}</span></button>`;
+      bar.innerHTML =
+        chip('', '全部', courses.length) +
+        groups.map((g) => chip(g, g, counts.get(g) || 0)).join('');
+      bar.querySelectorAll('[data-cat]').forEach((btn) => {
+        btn.onclick = () => {
+          homeFilter = btn.dataset.cat || null;
+          paintHome(courses);
+        };
+      });
+    }
+  }
+
+  const shown = homeFilter
+    ? courses.filter((c) => (c.group || '更多主题') === homeFilter)
+    : courses;
+  list.innerHTML = shown.length
+    ? `<div class="cards">${shown.map(courseCard).join('')}</div>`
+    : emptyState();
 }
 
 function courseCard(c) {
