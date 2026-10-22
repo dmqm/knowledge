@@ -11,6 +11,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 import { renderMarkdown } from '../lib/md.mjs';
@@ -203,6 +204,17 @@ async function writeShell() {
     if (!html.includes(from)) throw new Error(`public/index.html 结构变了,找不到: ${from}`);
     html = html.replace(from, to);
   }
+
+  // GitHub Pages caches /assets/ for a while. Stamp the CSS/JS with a content
+  // hash so a fresh deploy is picked up on the next page load, not "in 10 min".
+  const stamp = createHash('sha1')
+    .update(await fs.readFile(path.join(publicRoot, 'styles.css')))
+    .update(await fs.readFile(path.join(publicRoot, 'app.js')))
+    .digest('hex')
+    .slice(0, 8);
+  html = html
+    .replace('assets/styles.css', `assets/styles.css?v=${stamp}`)
+    .replace('assets/app.js', `assets/app.js?v=${stamp}`);
   await fs.writeFile(path.join(outDir, 'index.html'), html);
 
   for (const name of [

@@ -409,19 +409,16 @@ function courseCards(courses) {
 
 function courseCard(c) {
   const pct = c.total ? Math.round((c.done / c.total) * 100) : 0;
-  const parts = [];
-  if (c.counts.lessons) parts.push(`${c.counts.lessons} 讲`);
-  if (c.counts.reference) parts.push(`${c.counts.reference} 参考`);
-  if (c.counts.records) parts.push(`${c.counts.records} 记录`);
   const complete = c.total > 0 && c.done === c.total;
+  const size = c.counts.lessons ? `${c.counts.lessons} 讲` : '尚无内容';
   return `
-    <a class="card" style="--hue:${courseHue(c.id)}" href="#/c/${encodeURIComponent(c.id)}">
+    <a class="card" style="--hue:${courseHue(c.id)}" title="${esc(c.title)}" href="#/c/${encodeURIComponent(c.id)}">
       <span class="tile">${esc(c.title.trim().charAt(0) || '?')}</span>
       <div class="tile-txt">
         <h3>${esc(c.title)}</h3>
         <div class="meta">
-          ${c.total ? `<span class="stat ${complete ? 'good' : ''}">${c.done}/${c.total} 已完成</span>` : ''}
-          <span>${esc(parts.join(' · ') || '尚无内容')}</span>
+          ${c.total ? `<span class="stat ${complete ? 'good' : ''}">${c.done}/${c.total}</span><span>·</span>` : ''}
+          <span>${size}</span>
         </div>
       </div>
       ${c.total ? `<span class="bar"><span style="width:${pct}%"></span></span>` : ''}

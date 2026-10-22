@@ -159,11 +159,11 @@ button.iconbtn { -moz-appearance: none; -webkit-appearance: none; }
 }
 
 .section-title {
-  font-size: 13px;
+  font-size: 12px;
   text-transform: none;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.3px;
   color: var(--muted);
-  margin: 18px 4px 8px;
+  margin: 14px 2px 6px;
   font-weight: 600;
 }
 
@@ -205,23 +205,23 @@ button.iconbtn { -moz-appearance: none; -webkit-appearance: none; }
 .search .glass { color: var(--faint); flex: 0 0 auto; }
 
 /* ------------------------------------------------------------------ cards */
-.cards { display: grid; gap: 7px; }
+/* Two compact tiles per row even on a phone: the home page is an index, not a
+   showcase. Three per row once there is room. */
+.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 
-@media (min-width: 640px) {
-  .cards { grid-template-columns: 1fr 1fr; }
+@media (min-width: 720px) {
+  .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
-/* Compact row-like card: the home page shows five topics plus their groups
-   above the fold on a phone, so this is deliberately denser than a tile grid. */
 .card {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 8px;
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 13px;
-  padding: 10px 13px 12px;
+  border-radius: 11px;
+  padding: 8px 9px 9px;
   cursor: pointer;
   transition: border-color 0.15s ease, transform 0.05s ease;
   color: var(--text);
@@ -232,12 +232,12 @@ button.iconbtn { -moz-appearance: none; -webkit-appearance: none; }
 
 .card .tile {
   flex: 0 0 auto;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   display: grid;
   place-items: center;
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 700;
   line-height: 1;
   color: #fff;
@@ -248,8 +248,8 @@ button.iconbtn { -moz-appearance: none; -webkit-appearance: none; }
 }
 
 .card .tile-txt { min-width: 0; flex: 1; }
-.card h3 { margin: 0; font-size: 15px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.card .meta { display: flex; flex-wrap: wrap; gap: 0 8px; color: var(--muted); font-size: 12px; margin-top: 2px; align-items: center; line-height: 1.5; }
+.card h3 { margin: 0; font-size: 13px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .meta { display: flex; gap: 3px; color: var(--muted); font-size: 11px; margin-top: 1px; align-items: center; line-height: 1.4; white-space: nowrap; }
 .card .stat { font-variant-numeric: tabular-nums; }
 .card .stat.good { color: var(--good); }
 
@@ -257,7 +257,7 @@ button.iconbtn { -moz-appearance: none; -webkit-appearance: none; }
 .bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--good)); border-radius: inherit; }
 
 /* Progress sits on the card's bottom edge instead of taking its own row. */
-.card > .bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; margin: 0; border-radius: 0; }
+.card > .bar { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; margin: 0; border-radius: 0; }
 
 .pill {
   display: inline-flex;
