@@ -1,39 +1,39 @@
 /* Learning Center — UI. Mobile-first: this portal is mostly read on a phone. */
 
 :root {
-  --bg: #0f1115;
-  --panel: #171a20;
-  --panel-2: #1d222b;
-  --border: #262b33;
-  --border-soft: #20252d;
-  --text: #e8eaed;
-  --muted: #9aa3b2;
-  --faint: #6b7280;
-  --accent: #3b82f6;
-  --accent-soft: rgba(59, 130, 246, 0.15);
-  --good: #22c55e;
-  --danger: #f87171;
+  --bg: #14130f;
+  --panel: #1c1a15;
+  --panel-2: #24211a;
+  --border: #332f26;
+  --border-soft: #2a271f;
+  --text: #e9e4d8;
+  --muted: #a79f90;
+  --faint: #7f776a;
+  --accent: #6f9fd8;
+  --accent-soft: rgba(111, 159, 216, 0.16);
+  --good: #77c294;
+  --danger: #e2907f;
   --radius: 16px;
-  --shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  --shadow: 0 6px 24px rgba(0, 0, 0, 0.42);
   color-scheme: dark;
 }
 
 @media (prefers-color-scheme: light) {
   /* Only when the reader hasn't explicitly picked the night theme. */
   :root:not([data-theme="dark"]) {
-    --bg: #f4f5f7;
-    --panel: #ffffff;
-    --panel-2: #f0f2f5;
-    --border: #e2e5ea;
-    --border-soft: #eceef2;
-    --text: #14171c;
-    --muted: #5b6472;
-    --faint: #8a93a2;
-    --accent: #2563eb;
-    --accent-soft: rgba(37, 99, 235, 0.1);
-    --good: #16a34a;
-    --danger: #dc2626;
-    --shadow: 0 6px 20px rgba(20, 30, 60, 0.08);
+    --bg: #f7f4ec;
+    --panel: #fffdf7;
+    --panel-2: #efeade;
+    --border: #e1dacb;
+    --border-soft: #ebe5d8;
+    --text: #201d16;
+    --muted: #635c4f;
+    --faint: #8c8475;
+    --accent: #2f63a3;
+    --accent-soft: rgba(47, 99, 163, 0.12);
+    --good: #2f7d54;
+    --danger: #a4442f;
+    --shadow: 0 6px 20px rgba(60, 50, 30, 0.09);
     color-scheme: light;
   }
 }
@@ -41,19 +41,19 @@
 /* Explicit choice from the day/night switch (wins over system settings).
    Keep these values in sync with the light block above. */
 :root[data-theme="light"] {
-  --bg: #f4f5f7;
-  --panel: #ffffff;
-  --panel-2: #f0f2f5;
-  --border: #e2e5ea;
-  --border-soft: #eceef2;
-  --text: #14171c;
-  --muted: #5b6472;
-  --faint: #8a93a2;
-  --accent: #2563eb;
-  --accent-soft: rgba(37, 99, 235, 0.1);
-  --good: #16a34a;
-  --danger: #dc2626;
-  --shadow: 0 6px 20px rgba(20, 30, 60, 0.08);
+  --bg: #f7f4ec;
+  --panel: #fffdf7;
+  --panel-2: #efeade;
+  --border: #e1dacb;
+  --border-soft: #ebe5d8;
+  --text: #201d16;
+  --muted: #635c4f;
+  --faint: #8c8475;
+  --accent: #2f63a3;
+  --accent-soft: rgba(47, 99, 163, 0.12);
+  --good: #2f7d54;
+  --danger: #a4442f;
+  --shadow: 0 6px 20px rgba(60, 50, 30, 0.09);
   color-scheme: light;
 }
 

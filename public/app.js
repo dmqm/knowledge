@@ -196,7 +196,7 @@ function go(hash) {
 // simply follow the system setting, including live changes.
 
 const THEME_KEY = 'lc:theme';
-const THEME_COLOR = { dark: '#0f1115', light: '#f4f5f7' };
+const THEME_COLOR = { dark: '#14130f', light: '#f7f4ec' };
 
 const SUN_ICON = `<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.1"/><path d="M12 2.7v2.1M12 19.2v2.1M4.4 4.4l1.5 1.5M18.1 18.1l1.5 1.5M2.7 12h2.1M19.2 12h2.1M4.4 19.6l1.5-1.5M18.1 5.9l1.5-1.5"/></svg>`;
 const MOON_ICON = `<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.4 14.2A8.6 8.6 0 0 1 9.8 3.6a8.6 8.6 0 1 0 10.6 10.6Z"/></svg>`;
@@ -263,6 +263,18 @@ function syncReaderTheme() {
   doc.documentElement.style.colorScheme = theme;
 }
 
+// Some mobile browsers only re-read these hints when the tag itself is
+// replaced, so swap the element instead of just editing `content`.
+function setMetaContent(name, content) {
+  const old = document.querySelector(`meta[name="${name}"]`);
+  if (old && old.getAttribute('content') === content) return;
+  const meta = document.createElement('meta');
+  meta.name = name;
+  meta.content = content;
+  if (old) old.replaceWith(meta);
+  else document.head.appendChild(meta);
+}
+
 function applyTheme(theme, persist = true) {
   document.documentElement.dataset.theme = theme;
   document.documentElement.style.colorScheme = theme;
@@ -273,7 +285,13 @@ function applyTheme(theme, persist = true) {
       // storage disabled — the switch still works for this visit
     }
   }
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[theme]);
+  // Phone status bar / browser chrome: tint it to the reading surface, and let
+  // the iOS status bar text invert too when the site runs as a home-screen app.
+  setMetaContent('theme-color', THEME_COLOR[theme]);
+  setMetaContent(
+    'apple-mobile-web-app-status-bar-style',
+    theme === 'dark' ? 'black-translucent' : 'default',
+  );
   syncThemeButtons();
   syncReaderTheme();
 }

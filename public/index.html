@@ -3,9 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0f1115" />
+  <meta name="theme-color" content="#14130f" />
+  <meta name="color-scheme" content="light dark" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="学习中心" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <title>学习中心</title>
   <script>
     // Paint in the reader's chosen theme before the stylesheet loads, so there
@@ -20,8 +22,11 @@
         }
         document.documentElement.dataset.theme = t;
         document.documentElement.style.colorScheme = t;
-        var meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.setAttribute('content', t === 'light' ? '#f4f5f7' : '#0f1115');
+        document
+          .querySelectorAll('meta[name="theme-color"]')
+          .forEach(function (m) { m.setAttribute('content', t === 'light' ? '#f7f4ec' : '#14130f'); });
+        var bar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+        if (bar) bar.setAttribute('content', t === 'light' ? 'default' : 'black-translucent');
       } catch (e) {}
     })();
   </script>
