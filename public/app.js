@@ -197,6 +197,9 @@ function go(hash) {
 
 const THEME_KEY = 'lc:theme';
 const THEME_COLOR = { dark: '#14130f', light: '#f7f4ec' };
+const READER_RESTORE_KEY = 'lc:reader-restore';
+const SCROLL_RESTORE_KEY = 'lc:scroll-restore';
+const RESTORE_TTL = 120000;
 
 const SUN_ICON = `<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.1"/><path d="M12 2.7v2.1M12 19.2v2.1M4.4 4.4l1.5 1.5M18.1 18.1l1.5 1.5M2.7 12h2.1M19.2 12h2.1M4.4 19.6l1.5-1.5M18.1 5.9l1.5-1.5"/></svg>`;
 const MOON_ICON = `<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.4 14.2A8.6 8.6 0 0 1 9.8 3.6a8.6 8.6 0 1 0 10.6 10.6Z"/></svg>`;
@@ -275,12 +278,88 @@ function setMetaContent(name, content) {
   else document.head.appendChild(meta);
 }
 
+// A home-screen web app on iOS fixes the system status bar style when the
+// document loads; editing the meta afterwards does not repaint it. Only that
+// specific case needs a reload — and only for a real user choice, never for the
+// system-following path on boot.
+function isIOSStandalone() {
+  const iOS =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  return (
+    iOS &&
+    (navigator.standalone === true ||
+      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches))
+  );
+}
+
+function saveReaderRestore() {
+  const frame = document.getElementById('r-frame');
+  if (!frame) return false;
+  try {
+    const win = frame.contentWindow;
+    const href = win.location.href;
+    if (new URL(href).origin !== location.origin) return false;
+    const doc = win.document;
+    const y = win.scrollY || doc.documentElement.scrollTop || doc.body.scrollTop || 0;
+    sessionStorage.setItem(READER_RESTORE_KEY, JSON.stringify({ href, y, at: Date.now() }));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function saveScrollRestore() {
+  try {
+    sessionStorage.setItem(
+      SCROLL_RESTORE_KEY,
+      JSON.stringify({ hash: location.hash || '#/', y: window.scrollY, at: Date.now() }),
+    );
+  } catch {
+    // storage disabled — the theme still persists for this visit
+  }
+}
+
+function takeReaderRestore(id, kind) {
+  try {
+    const raw = sessionStorage.getItem(READER_RESTORE_KEY);
+    if (!raw) return null;
+    sessionStorage.removeItem(READER_RESTORE_KEY);
+    const r = JSON.parse(raw);
+    if (!r || Date.now() - r.at > RESTORE_TTL) return null;
+    const u = new URL(r.href);
+    if (u.origin !== location.origin) return null;
+    // The iframe may have followed in-lesson links; accept only this course and
+    // this kind, so a stale entry can never pull in an unrelated page.
+    if (!u.pathname.includes(`/files/${encodeURIComponent(id)}/${kind}/`)) return null;
+    return { href: u.href, y: Number(r.y) || 0 };
+  } catch {
+    return null;
+  }
+}
+
+function takeScrollRestore() {
+  try {
+    const raw = sessionStorage.getItem(SCROLL_RESTORE_KEY);
+    if (!raw) return null;
+    sessionStorage.removeItem(SCROLL_RESTORE_KEY);
+    const r = JSON.parse(raw);
+    if (!r || Date.now() - r.at > RESTORE_TTL) return null;
+    if (r.hash !== (location.hash || '#/')) return null;
+    return Number(r.y) || 0;
+  } catch {
+    return null;
+  }
+}
+
 function applyTheme(theme, persist = true) {
   document.documentElement.dataset.theme = theme;
   document.documentElement.style.colorScheme = theme;
+  let stored = false;
   if (persist) {
     try {
       localStorage.setItem(THEME_KEY, theme);
+      stored = true;
     } catch {
       // storage disabled — the switch still works for this visit
     }
@@ -292,6 +371,15 @@ function applyTheme(theme, persist = true) {
     'apple-mobile-web-app-status-bar-style',
     theme === 'dark' ? 'black-translucent' : 'default',
   );
+
+  if (stored && isIOSStandalone()) {
+    // Park where the reader was, then reload so iOS re-reads the status bar
+    // style from the pre-paint script. The hash already restores the route.
+    if (!saveReaderRestore()) saveScrollRestore();
+    location.reload();
+    return;
+  }
+
   syncThemeButtons();
   syncReaderTheme();
 }
@@ -621,6 +709,8 @@ async function renderReader(id, kind, file) {
   const label = at >= 0 ? lessons[at].title : file.replace(/\.html?$/i, '');
 
   const src = fileUrl(id, kind, file);
+  const restore = takeReaderRestore(id, kind);
+  const frameSrc = restore ? restore.href : src;
   const done = (state.progress[file] || {}).status === 'done';
   app.innerHTML = `
     <div class="reader">
@@ -633,15 +723,26 @@ async function renderReader(id, kind, file) {
         <button class="iconbtn" id="r-done" title="标记完成" style="${done ? 'background:var(--good);border-color:var(--good);color:#fff' : ''}">✓</button>
         <a class="iconbtn open-tab" href="${esc(src)}" target="_blank" rel="noopener" title="新标签打开">⤢</a>
       </div>
-      <iframe id="r-frame" src="${esc(src)}" referrerpolicy="no-referrer"></iframe>
+      <iframe id="r-frame" src="${esc(frameSrc)}" referrerpolicy="no-referrer"></iframe>
     </div>
     <div class="reader-load" id="r-load"></div>`;
   document.body.classList.add('reader-open');
 
   // Cover the iframe until the lesson paints, so there's no white flash.
-  document.getElementById('r-frame').addEventListener('load', () => {
+  const frame = document.getElementById('r-frame');
+  let pendingScroll = restore ? restore.y : 0;
+  frame.addEventListener('load', () => {
     syncReaderTheme(); // in-page links re-load the iframe; re-apply the choice
     document.getElementById('r-load').hidden = true;
+    if (pendingScroll) {
+      const y = pendingScroll;
+      pendingScroll = 0;
+      try {
+        frame.contentWindow.scrollTo(0, y);
+      } catch {
+        // cross-origin — nothing to restore
+      }
+    }
   });
 
   document.getElementById('r-back').onclick = () => history.back();
@@ -747,5 +848,7 @@ window.addEventListener('hashchange', render);
     }
   }
   if (!location.hash) location.hash = '#/';
-  render();
+  const restoreY = takeScrollRestore();
+  await render();
+  if (restoreY) requestAnimationFrame(() => window.scrollTo(0, restoreY));
 })();
