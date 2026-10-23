@@ -296,6 +296,16 @@ function isIOSStandalone() {
   );
 }
 
+// iOS 26 (Safari 26) stopped honouring theme-color: the status bar now follows
+// the page background, so a theme change can repaint both at once. Older
+// versions still need the reload to re-read the status-bar hint on load.
+function iosNeedsStatusBarReload() {
+  if (!isIOSStandalone()) return false;
+  const match = (navigator.userAgent || '').match(/\bOS (\d+)[._]/);
+  const major = match ? Number(match[1]) : 0;
+  return major === 0 || major < 26;
+}
+
 function saveReaderRestore() {
   const frame = document.getElementById('r-frame');
   if (!frame) return false;
@@ -375,7 +385,7 @@ function applyTheme(theme, persist = true) {
     theme === 'dark' ? 'black-translucent' : 'default',
   );
 
-  if (stored && isIOSStandalone()) {
+  if (stored && iosNeedsStatusBarReload()) {
     // Park where the reader was, then reload so iOS re-reads the status bar
     // style from the pre-paint script. The hash already restores the route.
     if (!saveReaderRestore()) saveScrollRestore();
