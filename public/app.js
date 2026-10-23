@@ -788,7 +788,9 @@ async function renderReader(id, kind, file) {
     }
   });
 
-  document.getElementById('r-back').onclick = () => history.back();
+  // "Back" in the reader means the course index, not the previous lesson.
+  // history.back() would land on the last lesson read via the ‹ / › buttons.
+  document.getElementById('r-back').onclick = () => go(`#/c/${encodeURIComponent(id)}`);
 
   const gotoLesson = (l) => go(`#/read/${encodeURIComponent(id)}/lessons/${encodeURIComponent(l.file)}`);
   if (prev) document.getElementById('r-prev').onclick = () => gotoLesson(prev);
