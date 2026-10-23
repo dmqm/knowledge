@@ -618,13 +618,10 @@ async function renderCourse(id) {
       <h1>${esc(c.title)}</h1>
       <div class="meta">
         <span class="pill ${done === c.counts.lessons && c.counts.lessons ? 'good' : ''}">${done}/${c.counts.lessons} 已完成</span>
+        <button class="linkbtn" id="btn-toggle-mission">查看使命</button>
         <span class="dirpath">courses/${esc(c.id)}</span>
       </div>
       ${c.counts.lessons ? `<div class="bar"><span style="width:${c.counts.lessons ? Math.round((done / c.counts.lessons) * 100) : 0}%"></span></div>` : ''}
-      <div class="btnrow">
-        <button class="btn ghost small" id="btn-toggle-mission">查看使命</button>
-        <a class="btn ghost small" style="text-align:center" href="#/search?q=">搜索</a>
-      </div>
     </div>
     <div id="mission" class="prose" hidden style="margin-top:14px">${c.missionHtml || '<p class="faint">尚未填写 MISSION.md</p>'}</div>
     <div class="tabs" id="tabs">
@@ -670,17 +667,23 @@ function emptyPanel(text) {
   return `<p class="faint small" style="padding:20px 4px">${esc(text)}</p>`;
 }
 
+function lessonTitle(title) {
+  const text = String(title || '').trim();
+  // The row already shows 01/02/…, so "第 1 讲 · " is duplicate noise.
+  return text.replace(/^第\s*[0-9一二三四五六七八九十百]+\s*讲\s*[·:：.\-—]?\s*/, '') || text;
+}
+
 function lessonRows(lessons) {
   if (!lessons.length) return emptyPanel('还没有课程。让 teach 在这个目录里生成讲义吧。');
   return `<div class="rows">${lessons
     .map((l, i) => {
       const done = (state.progress[l.file] || {}).status === 'done';
       return `
-      <div class="row ${done ? 'done' : ''}" data-open="1" data-file="${esc(l.file)}">
+      <div class="row ${done ? 'done' : ''}" data-open="1" data-file="${esc(l.file)}" title="${esc(l.title)}">
         <span class="idx">${String(i + 1).padStart(2, '0')}</span>
         <div class="body">
-          <div class="t">${esc(l.title)}</div>
-          <div class="s">${l.words ? `${l.words} 词` : ''}<span class="dev">${l.words ? ' · ' : ''}${esc(l.file)}</span></div>
+          <div class="t">${esc(lessonTitle(l.title))}</div>
+          ${l.words ? `<div class="s">${l.words} 词</div>` : ''}
         </div>
         <button class="check ${done ? 'on' : ''}" data-toggle="${esc(l.file)}" title="标记完成">✓</button>
       </div>`;
