@@ -9,6 +9,11 @@
 
 const STATIC = typeof window !== 'undefined' && window.__LC_STATIC__ === true;
 const PROGRESS_KEY = 'lc:progress';
+// Last-read position per course, for the "继续阅读" strip (both modes).
+const LASTREAD_KEY = 'lc:last-read';
+// Reader font scale (zoom applied to the lesson document).
+const FONTSCALE_KEY = 'lc:font-scale';
+const FONT_STEPS = [1, 1.15, 1.3, 0.85];
 
 const app = document.getElementById('app');
 const topbar = document.getElementById('topbar');
@@ -80,6 +85,81 @@ function writeLocalLesson(courseId, file, status) {
     // storage full / disabled — progress simply won't persist
   }
   return course.lessons;
+}
+
+// --- last-read (feeds the 继续阅读 strip; browser-local in both modes) -------
+
+// The reader registers itself here so the final scroll position can be forced
+// to disk on the way out (hash change / pagehide) instead of being dropped by
+// the throttle.
+let activeReader = null;
+
+function flushActiveReaderY() {
+  if (!activeReader) return;
+  try {
+    const w = document.getElementById('r-frame').contentWindow;
+    const y = w.scrollY || 0;
+    saveLastRead({ ...activeReader, y, at: Date.now() });
+  } catch {
+    // frame gone cross-origin — nothing to save
+  }
+}
+
+function readLastRead() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(LASTREAD_KEY) || '{}');
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function lastReadRecord(courseId) {
+  const r = readLastRead()[courseId];
+  return r && r.kind === 'lessons' && r.file ? r : null;
+}
+
+function saveLastRead(rec) {
+  if (!rec || !rec.id || !rec.file) return;
+  const all = readLastRead();
+  all[rec.id] = { ...rec, kind: 'lessons' };
+  try {
+    localStorage.setItem(LASTREAD_KEY, JSON.stringify(all));
+  } catch {
+    // storage disabled — resume simply won't persist
+  }
+}
+
+// A course card (server summaries lack `lessons`, and the static home list
+// stores lesson file names as plain strings — accept either shape; only
+// validate the file against a real object entry when one is available).
+function resumeTarget(courses) {
+  const all = readLastRead();
+  let best = null;
+  for (const c of courses) {
+    const r = all[c.id];
+    if (!r || r.kind !== 'lessons' || !r.file) continue;
+    if (Array.isArray(c.lessons)) {
+      const hit = c.lessons.some((l) => (typeof l === 'string' ? l === r.file : l.file === r.file));
+      if (!hit) continue;
+    }
+    if (!best || (r.at || 0) > (best.r.at || 0)) best = { c, r };
+  }
+  return best;
+}
+
+// Route to the reader while stashing the exact scroll position, so the lesson
+// opens where it was left — same mechanism the theme reload uses.
+function stashRestoreAndGo(courseId, file, y) {
+  try {
+    sessionStorage.setItem(
+      READER_RESTORE_KEY,
+      JSON.stringify({ href: new URL(fileUrl(courseId, 'lessons', file), location.href).href, y: Number(y) || 0, at: Date.now() }),
+    );
+  } catch {
+    // stash is best-effort; the lesson still opens at the top
+  }
+  go(`#/read/${encodeURIComponent(courseId)}/lessons/${encodeURIComponent(file)}`);
 }
 
 // --- courses -----------------------------------------------------------------
@@ -157,6 +237,62 @@ async function searchCourses(q) {
   if (STATIC) return searchLocally(await searchIndex(), q);
   const { results } = await api(`/api/search?q=${encodeURIComponent(q)}`);
   return results;
+}
+
+// Live search: results render in-place below the input, so typing never loses
+// focus (the old flow navigated away mid-sentence). Enter still jumps to the
+// full search page for a deep-linkable URL.
+let searchSeq = 0;
+
+function resultRows(results, limit = results.length) {
+  const shown = results.slice(0, limit);
+  return `<div class="rows">${shown
+    .map((r) => {
+      const open =
+        r.kind === 'lesson'
+          ? `#/read/${encodeURIComponent(r.courseId)}/lessons/${encodeURIComponent(r.url.split('/').pop())}`
+          : `#/c/${encodeURIComponent(r.courseId)}`;
+      return `
+    <a class="row" href="${open}">
+      <span class="idx">${r.kind === 'lesson' ? '▤' : r.kind === 'record' ? '✎' : '◎'}</span>
+      <div class="body">
+        <div class="t">${esc(r.label)}</div>
+        <div class="s">${esc(r.courseTitle)} · ${esc(r.snippet)}</div>
+      </div>
+    </a>`;
+    })
+    .join('')}</div>`;
+}
+
+async function liveSearch(query, box) {
+  const token = ++searchSeq;
+  const needle = String(query || '').trim();
+  if (!needle) {
+    box.hidden = true;
+    box.innerHTML = '';
+    return;
+  }
+  box.hidden = false;
+  box.innerHTML = '<div class="spinner">搜索中…</div>';
+  try {
+    const results = await searchCourses(needle);
+    if (token !== searchSeq || !box.isConnected) return;
+    box.innerHTML = results.length
+      ? `<div class="section-title">「${esc(needle)}」· ${results.length} 条结果</div>${resultRows(results, 12)}`
+      : emptyPanel(`没有找到「${needle}」。`);
+  } catch (err) {
+    if (token === searchSeq && box.isConnected) {
+      box.innerHTML = `<div class="empty"><div class="big">⚠︎</div>${esc(err.message)}</div>`;
+    }
+  }
+}
+
+function wireLiveSearch(input, box, debounceMs = 280) {
+  input.addEventListener('input', () => {
+    const value = input.value;
+    clearTimeout(input._lcSearch);
+    input._lcSearch = setTimeout(() => liveSearch(value, box), debounceMs);
+  });
 }
 
 // --- file URLs ---------------------------------------------------------------
@@ -429,6 +565,7 @@ function parseHash() {
 }
 
 async function render() {
+  flushActiveReaderY(); // reader about to unmount — save the exact position
   document.body.classList.remove('reader-open');
   if (readerKeys) {
     document.removeEventListener('keydown', readerKeys);
@@ -463,8 +600,10 @@ async function renderHome() {
       <span class="glass">⌕</span>
       <input id="q" placeholder="搜索课程、讲义、学习记录…" enterkeyhint="search" />
     </div>
+    <div id="resume"></div>
     <div class="chips" id="catbar" hidden></div>
     <div id="courselist"></div>
+    <div id="liveres" hidden></div>
   `;
   homeFilter = null;
 
@@ -472,11 +611,7 @@ async function renderHome() {
   q.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && q.value.trim()) go(`#/search?q=${encodeURIComponent(q.value.trim())}`);
   });
-  q.addEventListener('input', () => {
-    if (!q.value.trim()) return;
-    clearTimeout(q._t);
-    q._t = setTimeout(() => go(`#/search?q=${encodeURIComponent(q.value.trim())}`), 500);
-  });
+  wireLiveSearch(q, document.getElementById('liveres'));
 
   await loadHome();
 }
@@ -489,9 +624,35 @@ async function loadHome(refresh = false) {
     const courses = await listCourses();
     state.courses = courses;
     paintHome(courses);
+    paintResume(courses);
   } catch (err) {
     list.innerHTML = `<div class="empty"><div class="big">⚠︎</div>${esc(err.message)}</div>`;
   }
+}
+
+// The first slot on home belongs to the highest-frequency action: picking up
+// the last lesson you were reading (exact scroll position included).
+function paintResume(courses) {
+  const box = document.getElementById('resume');
+  if (!box) return;
+  const found = resumeTarget(courses);
+  if (!found) {
+    box.innerHTML = '';
+    return;
+  }
+  const { c, r } = found;
+  const title = lessonTitle(r.title) || r.file;
+  box.innerHTML = `
+    <a class="resume" href="#/read/${encodeURIComponent(c.id)}/lessons/${encodeURIComponent(r.file)}"
+       title="${esc(title)}">
+      <span class="rtag">继续</span>
+      <div class="rt">${esc(c.title)} · <b>${esc(title)}</b></div>
+      <span class="rarrow">›</span>
+    </a>`;
+  box.querySelector('.resume').addEventListener('click', (e) => {
+    e.preventDefault();
+    stashRestoreAndGo(c.id, r.file, r.y);
+  });
 }
 
 // One flat, full-width grid plus a category chip row. Sections would cap each
@@ -605,6 +766,8 @@ async function renderCourse(id) {
   }
 
   const done = c.lessons.filter((l) => (state.progress[l.file] || {}).status === 'done').length;
+  const lr = lastReadRecord(c.id);
+  const resumeIdx = lr ? c.lessons.findIndex((l) => l.file === lr.file) : -1;
   const tabs = [
     ['lessons', `课程 ${c.counts.lessons}`],
     ['reference', `参考 ${c.counts.reference}`],
@@ -619,6 +782,7 @@ async function renderCourse(id) {
       <div class="meta">
         <span class="pill ${done === c.counts.lessons && c.counts.lessons ? 'good' : ''}">${done}/${c.counts.lessons} 已完成</span>
         <button class="linkbtn" id="btn-toggle-mission">查看使命</button>
+        ${resumeIdx >= 0 ? `<button class="linkbtn" id="btn-resume">上次读到 · ${esc(lessonTitle(lr.title) || `第 ${resumeIdx + 1} 讲`)}</button>` : ''}
         <span class="dirpath">courses/${esc(c.id)}</span>
       </div>
       ${c.counts.lessons ? `<div class="bar"><span style="width:${c.counts.lessons ? Math.round((done / c.counts.lessons) * 100) : 0}%"></span></div>` : ''}
@@ -634,6 +798,11 @@ async function renderCourse(id) {
     const m = document.getElementById('mission');
     m.hidden = !m.hidden;
   };
+
+  if (resumeIdx >= 0) {
+    const btn = document.getElementById('btn-resume');
+    btn.onclick = () => stashRestoreAndGo(c.id, lr.file, lr.y);
+  }
 
   const panel = document.getElementById('tabpanel');
   const renderTab = (key) => {
@@ -675,15 +844,19 @@ function lessonTitle(title) {
 
 function lessonRows(lessons) {
   if (!lessons.length) return emptyPanel('还没有课程。让 teach 在这个目录里生成讲义吧。');
+  // The first not-done lesson is where this course resumes.
+  const nextIdx = lessons.findIndex((l) => (state.progress[l.file] || {}).status !== 'done');
   return `<div class="rows">${lessons
     .map((l, i) => {
       const done = (state.progress[l.file] || {}).status === 'done';
+      const isNext = i === nextIdx;
+      const sub = isNext ? `继续读${l.words ? ` · ${l.words} 词` : ''}` : l.words ? `${l.words} 词` : '';
       return `
-      <div class="row ${done ? 'done' : ''}" data-open="1" data-file="${esc(l.file)}" title="${esc(l.title)}">
+      <div class="row ${done ? 'done' : ''} ${isNext ? 'next-up' : ''}" data-open="1" data-file="${esc(l.file)}" title="${esc(l.title)}">
         <span class="idx">${String(i + 1).padStart(2, '0')}</span>
         <div class="body">
           <div class="t">${esc(lessonTitle(l.title))}</div>
-          ${l.words ? `<div class="s">${l.words} 词</div>` : ''}
+          ${sub ? `<div class="s">${sub}</div>` : ''}
         </div>
         <button class="check ${done ? 'on' : ''}" data-toggle="${esc(l.file)}" title="标记完成">✓</button>
       </div>`;
@@ -731,6 +904,28 @@ function wireLessonRows(course) {
   });
 }
 
+// Reader font scale: zoom the lesson document (lessons are standalone HTML
+// with px-based styles, so zoom is the only lever that scales everything).
+function fontScale() {
+  try {
+    const v = Number(localStorage.getItem(FONTSCALE_KEY));
+    return FONT_STEPS.includes(v) ? v : 1;
+  } catch {
+    return 1;
+  }
+}
+
+function applyReaderFontScale(scale) {
+  const frame = document.getElementById('r-frame');
+  if (!frame) return;
+  try {
+    const doc = frame.contentDocument;
+    if (doc && doc.body) doc.body.style.zoom = scale === 1 ? '' : String(scale);
+  } catch {
+    // cross-origin document — nothing to scale
+  }
+}
+
 // ---------------------------------------------------------------- reader ----
 
 async function renderReader(id, kind, file) {
@@ -758,27 +953,45 @@ async function renderReader(id, kind, file) {
   const restore = takeReaderRestore(id, kind);
   const frameSrc = restore ? restore.href : src;
   const done = (state.progress[file] || {}).status === 'done';
+  const isLesson = kind === 'lessons';
   app.innerHTML = `
     <div class="reader">
       <div class="rbar">
         <button class="back" id="r-back">‹ 返回</button>
         <div class="rt" title="${esc(file)}">${esc(label)}</div>
-        <button class="iconbtn nav" id="r-prev" title="上一讲" ${prev ? '' : 'disabled'}>‹</button>
-        <button class="iconbtn nav" id="r-next" title="下一讲" ${next ? '' : 'disabled'}>›</button>
+        <button class="iconbtn" id="r-font" title="字号">Aa</button>
         ${themeButtonHTML()}
-        <button class="iconbtn" id="r-done" title="标记完成" style="${done ? 'background:var(--good);border-color:var(--good);color:#fff' : ''}">✓</button>
-        <a class="iconbtn open-tab" href="${esc(src)}" target="_blank" rel="noopener" title="新标签打开">⤢</a>
       </div>
+      <div class="rprog" id="r-prog"><span></span></div>
       <iframe id="r-frame" src="${esc(frameSrc)}" referrerpolicy="no-referrer"></iframe>
+      <div class="rfoot">
+        <button class="fbtn" id="r-prev" title="上一讲" ${prev ? '' : 'disabled'}>‹ 上一讲</button>
+        <button class="fbtn done ${done ? 'on' : ''}" id="r-done" title="标记完成">${done ? '已完成' : '✓ 完成'}</button>
+        <button class="fbtn" id="r-next" title="下一讲" ${next ? '' : 'disabled'}>下一讲 ›</button>
+      </div>
     </div>
     <div class="reader-load" id="r-load"></div>`;
   document.body.classList.add('reader-open');
+
+  // Lessons remember where you stopped reading — this is what the 继续阅读
+  // strip restores. Throttle the writes; scrolling fires far more often.
+  let lastYSave = 0;
+  const rememberY = (y, force = false) => {
+    if (!isLesson) return;
+    const now = Date.now();
+    if (!force && now - lastYSave < 1200) return;
+    lastYSave = now;
+    activeReader = { id, file, title: label };
+    saveLastRead({ id, file, title: label, y, at: now });
+  };
+  rememberY(restore ? restore.y : 0, true);
 
   // Cover the iframe until the lesson paints, so there's no white flash.
   const frame = document.getElementById('r-frame');
   let pendingScroll = restore ? restore.y : 0;
   frame.addEventListener('load', () => {
     syncReaderTheme(); // in-page links re-load the iframe; re-apply the choice
+    applyReaderFontScale(fontScale());
     document.getElementById('r-load').hidden = true;
     if (pendingScroll) {
       const y = pendingScroll;
@@ -789,6 +1002,32 @@ async function renderReader(id, kind, file) {
         // cross-origin — nothing to restore
       }
     }
+    // Track reading progress + position. Same-origin in both modes (the files
+    // are served alongside the app), so this normally attaches fine.
+    let win;
+    try {
+      win = frame.contentWindow;
+    } catch {
+      return;
+    }
+    if (!win || !win.document) return;
+    const prog = document.getElementById('r-prog');
+    const update = () => {
+      try {
+        const doc = win.document;
+        const root = doc.documentElement;
+        const max = (root.scrollHeight || doc.body.scrollHeight) - win.innerHeight;
+        if (prog) {
+          const pct = max > 0 ? Math.min(100, Math.round((win.scrollY / max) * 100)) : 0;
+          prog.firstElementChild.style.width = `${pct}%`;
+        }
+        rememberY(win.scrollY);
+      } catch {
+        // cross-origin navigated away — stop tracking
+      }
+    };
+    win.addEventListener('scroll', update, { passive: true });
+    update();
   });
 
   // "Back" in the reader means the course index, not the previous lesson.
@@ -807,11 +1046,23 @@ async function renderReader(id, kind, file) {
   };
   document.addEventListener('keydown', readerKeys);
 
+  document.getElementById('r-font').onclick = () => {
+    const nextScale = FONT_STEPS[(FONT_STEPS.indexOf(fontScale()) + 1) % FONT_STEPS.length];
+    try {
+      localStorage.setItem(FONTSCALE_KEY, String(nextScale));
+    } catch {
+      // still applies for this visit
+    }
+    applyReaderFontScale(nextScale);
+    toast(`字号 ${nextScale === 1 ? '默认' : `${Math.round(nextScale * 100)}%`}`);
+  };
+
   const btn = document.getElementById('r-done');
   btn.onclick = async () => {
     const nowDone = !(state.progress[file] || {}).status;
     state.progress[file] = nowDone ? { status: 'done' } : undefined;
-    btn.style.cssText = nowDone ? 'background:var(--good);border-color:var(--good);color:#fff' : '';
+    btn.classList.toggle('on', nowDone);
+    btn.textContent = nowDone ? '已完成' : '✓ 完成';
     toast(nowDone ? '已标记完成' : '已取消完成');
     try {
       await setProgress(id, file, nowDone ? 'done' : 'none');
@@ -839,42 +1090,16 @@ async function renderSearch(q) {
     <div id="results"></div>
   `;
   const input = document.getElementById('q');
+  const box = document.getElementById('results');
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') go(`#/search?q=${encodeURIComponent(input.value.trim())}`);
   });
+  wireLiveSearch(input, box);
   if (!q) {
-    document.getElementById('results').innerHTML = emptyPanel('输入关键词开始搜索。');
+    box.innerHTML = emptyPanel('输入关键词开始搜索。');
     return;
   }
-
-  const box = document.getElementById('results');
-  box.innerHTML = '<div class="spinner">搜索中…</div>';
-  try {
-    const results = await searchCourses(q);
-    if (!results.length) {
-      box.innerHTML = emptyPanel(`没有找到「${q}」。`);
-      return;
-    }
-    box.innerHTML = `<div class="section-title">${results.length} 条结果</div>
-      <div class="rows">${results
-        .map((r) => {
-          const open =
-            r.kind === 'lesson'
-              ? `#/read/${encodeURIComponent(r.courseId)}/lessons/${encodeURIComponent(r.url.split('/').pop())}`
-              : `#/c/${encodeURIComponent(r.courseId)}`;
-          return `
-        <a class="row" href="${open}">
-          <span class="idx">${r.kind === 'lesson' ? '▤' : r.kind === 'record' ? '✎' : '◎'}</span>
-          <div class="body">
-            <div class="t">${esc(r.label)}</div>
-            <div class="s">${esc(r.courseTitle)} · ${esc(r.snippet)}</div>
-          </div>
-        </a>`;
-        })
-        .join('')}</div>`;
-  } catch (err) {
-    box.innerHTML = `<div class="empty"><div class="big">⚠︎</div>${esc(err.message)}</div>`;
-  }
+  liveSearch(q, box);
 }
 
 // ----------------------------------------------------------------- sheet ----
@@ -884,6 +1109,7 @@ async function renderSearch(q) {
 // ------------------------------------------------------------------ boot ----
 
 window.addEventListener('hashchange', render);
+window.addEventListener('pagehide', flushActiveReaderY);
 
 (async function boot() {
   applyTheme(currentTheme(), false); // sync meta color + buttons with the pre-paint choice

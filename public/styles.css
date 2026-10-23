@@ -95,7 +95,8 @@ a { color: var(--accent); text-decoration: none; }
 
 /* Interactive things: kill the 300ms double-tap-zoom delay on older mobile
    browsers and the accidental text-select on long-press. */
-button, .row, .card, .tabs button, .tab, .rbar .back, .rbar .iconbtn, .rbar a {
+button, .row, .card, .resume, .tabs button, .tab,
+.rbar .back, .rbar .iconbtn, .rbar a, .rfoot .fbtn {
   touch-action: manipulation;
   user-select: none;
 }
@@ -206,13 +207,29 @@ button.iconbtn { -moz-appearance: none; -webkit-appearance: none; }
 .small { font-size: 13px; }
 .dirpath { font-size: 12px; color: var(--faint); }
 
+/* ------------------------------------------------------------------ rows */
+/* Row typography lives here (away from the .row base rule further down) so
+   both lesson rows and search-result rows share it. */
+.row .body .t { font-size: 15px; line-height: 1.45; overflow-wrap: anywhere; }
+.row .body .s {
+  font-size: 12px;
+  color: var(--faint);
+  margin-top: 1px;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row.done .body .t { color: var(--muted); }
+/* First not-done lesson: the "pick up here" row gets a quiet accent. */
+.row.next-up { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
+.row.next-up .s { color: var(--accent); }
+
 @media (max-width: 600px) {
   .dirpath { display: none; } /* dev trivia; not useful on a phone */
-  /* Same rule for the lesson filename under each row: keep the word count
-     (that's a real hint about reading length), drop the internal file name. */
+  /* Keep the word count (a real hint about reading length), drop the
+     internal file name. */
   .row .s .dev { display: none; }
-  /* The phone already has 返回 / 上一讲 / 下一讲 / 完成 in the reading bar. */
-  .reader .rbar .open-tab { display: none; }
 }
 
 /* ------------------------------------------------------------------ search */
@@ -237,6 +254,45 @@ button.iconbtn { -moz-appearance: none; -webkit-appearance: none; }
   outline: none;
 }
 .search .glass { color: var(--faint); flex: 0 0 auto; }
+
+/* ------------------------------------------------------- continue reading */
+/* One quiet strip under the search box: the highest-frequency action on this
+   portal is "pick up where I left off", so it gets the first slot on home. */
+.resume {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  background:
+    linear-gradient(135deg, var(--accent-soft), transparent 65%),
+    var(--panel);
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--border));
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--text);
+}
+.resume:active { transform: scale(0.99); }
+.resume .rtag {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 3px 8px;
+}
+.resume .rt {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.resume .rt b { font-weight: 600; }
+.resume .rarrow { flex: 0 0 auto; color: var(--faint); }
 
 /* ------------------------------------------------------------- categories */
 .chips {
@@ -396,11 +452,11 @@ button.iconbtn { -moz-appearance: none; -webkit-appearance: none; }
 .row {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 7px 10px;
+  padding: 9px 10px;
   cursor: pointer;
   color: var(--text);
 }
@@ -567,6 +623,69 @@ a.row:active { transform: none; opacity: 0.75; }
 .reader .rbar .iconbtn { width: 38px; height: 38px; }
 .reader .rbar .iconbtn.nav { font-size: 18px; line-height: 1; }
 .reader iframe { flex: 1; width: 100%; border: 0; background: var(--bg); }
+
+/* Thin per-lesson scroll indicator, right under the reading bar. */
+.rprog {
+  height: 2px;
+  background: var(--panel-2);
+  position: relative;
+  z-index: 1;
+}
+.rprog span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+}
+
+/* Reading actions live at the bottom: after finishing a 3000-word lesson the
+   thumb is already down there, and it never has to travel back to the top. */
+.rfoot {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  padding: 8px 12px calc(env(safe-area-inset-bottom) + 8px);
+}
+.rfoot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: color-mix(in srgb, var(--bg) 90%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid var(--border-soft);
+}
+.rfoot .fbtn {
+  appearance: none;
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+  font-family: inherit;
+}
+.rfoot .fbtn:disabled { opacity: 0.35; cursor: default; }
+.rfoot .fbtn:not(:disabled):active { transform: scale(0.97); }
+/* The done toggle stays narrow so 上一讲 / 下一讲 keep most of the width. */
+.rfoot .fbtn.done {
+  flex: 0 0 76px;
+  color: var(--muted);
+}
+.rfoot .fbtn.done.on {
+  background: var(--good);
+  border-color: var(--good);
+  color: #fff;
+}
 .reader-load { position: fixed; inset: 0; z-index: 41; display: grid; place-items: center; background: var(--bg); transition: opacity 0.2s ease; }
 .reader-load::after {
   content: "";
@@ -598,6 +717,10 @@ a.row:active { transform: none; opacity: 0.75; }
   text-align: center;
 }
 .toast[hidden] { display: none; }
+/* In the reader the bottom bar owns the bottom edge; lift the toast above it. */
+body.reader-open .toast {
+  bottom: calc(env(safe-area-inset-bottom) + 80px);
+}
 
 .spinner { text-align: center; color: var(--faint); padding: 48px 0; }
 
