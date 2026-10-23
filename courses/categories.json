@@ -9,6 +9,10 @@
       "courses": ["thinking-fast-and-slow", "product-for-engineers"]
     },
     {
+      "name": "身体与健康",
+      "courses": ["glucose-revolution", "fasting-power"]
+    },
+    {
       "name": "摄影与审美",
       "courses": ["photography"]
     }

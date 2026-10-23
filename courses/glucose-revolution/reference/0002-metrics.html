@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>指标与术语速查</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+  <nav aria-label="讲义导航">
+    <a class="tag" href="../lessons/0004-ten-hacks-evidence.html">← 第 4 讲 · 十个方法</a>
+    <a class="tag" href="../lessons/0005-meal-order.html">第 5 讲 · 吃序</a>
+    <a class="tag" href="../lessons/0006-vinegar-walking-dessert.html">第 6 讲 · 醋与走路</a>
+    <a class="tag" href="../lessons/0007-a-day-on-the-curve.html">第 7 讲 · 一整天</a>
+    <a class="tag" href="0001-ten-hacks.html">十个方法速查</a>
+  </nav>
+
+  <p class="kicker">控糖革命 · 速查</p>
+  <h1>指标与术语速查</h1>
+  <p class="lede">一句话目标：看到一个血糖数字时，能立刻说出它测的是什么、单位怎么换、以及最容易被谁误读。</p>
+
+  <h2>一张表</h2>
+
+  <p>下面这些词，是你在书里、体检报告里和 CGM 应用里最常撞见的。第二列是「它到底是什么」，第三列是「别人常在哪里读错」。</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>术语</th>
+        <th>是什么 / 范围</th>
+        <th>容易误读的地方</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>单位换算</td>
+        <td>mg/dL ÷ 18 = mmol/L</td>
+        <td>中国用 mmol/L，美国用 mg/dL；两个数不能直接比大小</td>
+      </tr>
+      <tr>
+        <td>空腹血糖</td>
+        <td>至少 8 小时未进食时测</td>
+        <td>健康参考约 3.9–6.1 mmol/L；单次偏高不等于糖尿病</td>
+      </tr>
+      <tr>
+        <td>餐后 2 小时</td>
+        <td>从吃第一口开始计时</td>
+        <td>健康人通常低于 7.8；不是「吃完才开始算」</td>
+      </tr>
+      <tr>
+        <td>HbA1c</td>
+        <td>近两三个月的平均血糖</td>
+        <td>5.7% 以下算正常；但它是平均数，抹平了峰值</td>
+      </tr>
+      <tr>
+        <td>CGM</td>
+        <td>测皮下组织液的葡萄糖，几分钟一个点</td>
+        <td>比指尖血滞后，不能用来确诊糖尿病</td>
+      </tr>
+      <tr>
+        <td>TIR</td>
+        <td>目标范围内时间，常取 3.9–7.8</td>
+        <td>这是糖尿病管理指标；健康人没有公认目标</td>
+      </tr>
+      <tr>
+        <td>iAUC</td>
+        <td>曲线下面积，通常只算基线以上</td>
+        <td>「降低 40%」说的是面积，不是峰值，更不是 HbA1c</td>
+      </tr>
+      <tr>
+        <td>峰值</td>
+        <td>一餐后的最高点</td>
+        <td>高不高要看起点；同样到 10，对不同人意义不同</td>
+      </tr>
+      <tr>
+        <td>GI</td>
+        <td>碳水升糖速度的相对值</td>
+        <td>只描述速度，不描述你吃了多少</td>
+      </tr>
+      <tr>
+        <td>GL</td>
+        <td>GI × 碳水量 ÷ 100</td>
+        <td>西瓜 GI 高但一份的 GL 低；GL 才是「负荷」</td>
+      </tr>
+      <tr>
+        <td>AGEs</td>
+        <td>糖化终产物，糖与蛋白结合的产物</td>
+        <td>血里的 AGEs 和食物里的 AGEs 不是一回事</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <figure class="figure">
+    <svg viewBox="0 0 460 210" role="img">
+      <title>一条餐后曲线上的四个读数：峰值、两小时点、曲线下面积与目标范围</title>
+
+      <rect class="f-wash" x="42" y="80" width="388" height="90" />
+      <line class="s-rule" x1="42" y1="80" x2="430" y2="80" stroke-width="1" stroke-dasharray="4 5" />
+      <line class="s-rule" x1="42" y1="170" x2="430" y2="170" stroke-width="1" stroke-dasharray="4 5" />
+      <text class="t-faint" x="44" y="76" font-size="10">7.8</text>
+      <text class="t-faint" x="44" y="184" font-size="10">3.9</text>
+      <text class="t-faint" x="392" y="76" font-size="10">目标范围</text>
+
+      <path class="f-accent" d="M42,158 C80,156 110,120 150,90 C178,68 196,58 216,62 C244,68 270,102 300,130 C330,152 380,158 430,160 L430,170 L42,170 Z" opacity=".18" />
+      <path class="s-accent" d="M42,158 C80,156 110,120 150,90 C178,68 196,58 216,62 C244,68 270,102 300,130 C330,152 380,158 430,160" fill="none" stroke-width="2" />
+
+      <line class="s-faint" x1="330" y1="62" x2="330" y2="170" stroke-width="1" stroke-dasharray="3 4" />
+      <text class="t-muted" x="330" y="196" text-anchor="middle" font-size="10">餐后 2 小时</text>
+
+      <circle class="f-accent" cx="214" cy="59" r="3" />
+      <text class="t-accent" x="224" y="56" font-size="10.5">峰值</text>
+
+      <text class="t-muted" x="92" y="132" font-size="10.5">iAUC：这块面积</text>
+
+      <text class="t-muted" x="430" y="204" text-anchor="end" font-size="10">时间 →</text>
+      <text class="t-faint" x="42" y="204" font-size="10">示意图，非实测数据</text>
+    </svg>
+    <figcaption>读法：同一条曲线可以读出四种东西——最高点（峰值）、两小时那个点、基线以上的面积（iAUC）、以及落在目标范围内的比例（TIR）。它们回答的是不同问题，不能互相代换。说「降低了 40%」时，先问清降的是哪一个。</figcaption>
+  </figure>
+
+  <h2>三个最容易混的地方</h2>
+
+  <p><strong>第一，面积不是峰值。</strong>iAUC 是曲线下面的总量，峰值只是最高那一点。一顿饭可以先冲得很高再迅速回落，也可以只是缓慢地抬高、迟迟不退——两者的峰值可能一样，面积差很多。研究中常见的「降低 40%」多数指面积，不是峰值，更不是长期指标。</p>
+
+  <p><strong>第二，平均不是形状。</strong>HbA1c 是两三个月的平均，它能预测并发症风险，但看不见每天的起伏。两个人糖化一样，一个平稳、一个反复冲高，血管经历的东西不同。这也是 CGM 的价值所在：它给的是形状，不是分数。</p>
+
+  <p><strong>第三，速度不是负荷。</strong>GI 只描述某种碳水升糖的快慢，不考虑你吃了多少；GL 把分量算进去，才接近「这一口对我有多大压力」。所以「西瓜 GI 高不能吃」和「西瓜随便吃」都不对，要看你吃的是几块。</p>
+
+  <h2>最后一句</h2>
+
+  <p>糖尿病患者的 TIR、空腹和餐后目标，各大指南都有明确数字；但<strong>健康人没有公认的 CGM 目标</strong>。你在应用里看到的「达标 95%」多半是厂商或社群自定的阈值，不是临床标准。健康人的曲线本来就会起伏，把它当成需要打分的考试，只会制造一种新的焦虑——而焦虑本身，也会抬高血糖。</p>
+
+  <p class="ask">哪里没说清？<strong>回头直接问你的老师</strong>（那个正在运行本工作区的 agent）。你可以把体检单上的几个数字发过去，让它逐个说明「这个数测的是什么、要不要紧」。</p>
+
+  <p class="foot">
+    <strong>推荐一手资料：</strong>
+    <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7296129/" target="_blank" rel="noopener">Shah et al. 2019, JCEM：健康人的 CGM 正常值</a>
+    —— 153 名健康非肥胖成人，96% 的时间在 3.9–7.8 mmol/L 之间。<br />
+    返回：<a href="../lessons/0004-ten-hacks-evidence.html">第 4 讲</a> ·
+    <a href="../lessons/0005-meal-order.html">第 5 讲</a> ·
+    <a href="../lessons/0006-vinegar-walking-dessert.html">第 6 讲</a> ·
+    <a href="../lessons/0007-a-day-on-the-curve.html">第 7 讲</a> ·
+    <a href="0001-ten-hacks.html">十个方法速查</a>
+  </p>
+
+</body>
+</html>

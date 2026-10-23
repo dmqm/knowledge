@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 8 讲 · 谁该监测，谁不必：CGM 与 n=1 实验</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+  <nav aria-label="讲义导航">
+    <a class="tag" href="0007-a-day-on-the-curve.html">← 上一讲 · 把一天排成曲线</a>
+    <a class="tag" href="../reference/0001-ten-hacks.html">十个方法速查</a>
+    <a class="tag" href="../reference/0002-metrics.html">指标与术语</a>
+  </nav>
+
+  <p class="kicker">控糖革命 · 第 8 讲</p>
+  <h1>谁该监测，谁不必：CGM 与 n=1 实验</h1>
+  <p class="lede">一句话目标：读完这一讲，你能判断自己属于「戴了有用」「戴了有害」还是「根本不必戴」，并且能设计一个不被单次读数骗到的自我实验。</p>
+
+  <h2>引子：一条半夜的「低血糖」警报</h2>
+
+  <p>很多人第一次戴 CGM，是被半夜的警报吵醒的：血糖 3.6 mmol/L，设备标红，App 提示「立即补充 15 g 糖」。他慌慌张张吃了两块饼干，第二天一看，血糖曲线在凌晨三点出现一个尖峰。</p>
+
+  <p>问题可能出在传感器，不在他。CGM 测的是<strong>组织间液</strong>的葡萄糖，不是血管里的血糖，两者之间有 5–15 分钟的延迟。更常见的是「压迫性低值」：睡觉时压住传感器那一侧手臂，局部血流减少，读数会假性下坠。翻个身，十分钟后它自己就回来了。</p>
+
+  <p>这个场景说明了 CGM 的全部优点和全部陷阱：它把原本看不见的东西变得可见，但<strong>可见不等于可解释</strong>。一条线本身没有意义，意义来自你怎么读它、拿它和什么比、以及你打算因此改变什么。</p>
+
+  <p>所以这一讲不推荐某个品牌，也不教你导出数据。它只回答三个问题：CGM 在什么人身上有证据，在什么人身上是生意；一个普通人怎么做靠谱的自我实验；以及什么时候该放下传感器，去看医生。</p>
+
+  <h2>先把「有用」定义清楚</h2>
+
+  <p>「有用」可以指三件完全不同的事：</p>
+
+  <ol>
+    <li><strong>诊断有用</strong>：能更早发现糖尿病或糖尿病前期。</li>
+    <li><strong>行为有用</strong>：让你更愿意改变饮食、更少喝含糖饮料。</li>
+    <li><strong>结局有用</strong>：最终减少失明、透析、心梗、死亡。</li>
+  </ol>
+
+  <p>这三层的证据强度依次递减。在 1 型糖尿病和需要胰岛素治疗的 2 型糖尿病里，CGM 改善 HbA1c、减少低血糖的证据很扎实，属于第三层。在糖尿病前期，2026 年一项纳入 23 项研究、1074 名非糖尿病者的系统综述发现，CGM 对平均血糖有改善，但主要体现在糖尿病前期人群；对<strong>血糖完全正常的健康人，没有可察觉的血糖收益</strong>。</p>
+
+  <p>而「行为有用」是另一回事。看到自己饭后飙到 9，确实会让人少吃两口。但行为改变能不能持续、会不会变成对食物的恐惧，是另一项研究问题，目前没有好答案。</p>
+
+  <p>换句话说：<strong>CGM 是一个反馈工具，不是治疗手段。</strong>它改变的是你看见什么，不直接改变你的血管。</p>
+
+  <h2>健康人的「正常」到底是什么样</h2>
+
+  <p>书里容易给人一种印象：健康人的血糖应该是一条平线，超过 7.8 就是异常。真实数据不是这样。</p>
+
+  <p>2019 年 Shah 等人的研究纳入了 153 名健康、非肥胖成人，连续监测后发现：平均血糖 5.4–5.5 mmol/L，96% 的时间落在 3.9–7.8 之间，但仍有中位数约 2.1% 的时间超过 7.8。换成一天，大约是半小时。吃饱、吃快、吃甜、睡不好、感冒、开会紧张，都可能让这半小时变长。</p>
+
+  <p>目前<strong>没有针对健康人的、被验证的 CGM 目标范围</strong>。商业 App 里的「绿色区间」大多是从糖尿病管理里借来的，不是为健康人校准的。把正常生理标成红色警告，是产品设计问题，不是你的身体问题。</p>
+
+  <p>更隐蔽的风险是行为替代：为了让曲线好看，把橙子换成香肠，把米饭换成奶油，把水果全部戒掉。曲线确实平了，但饮食质量可能更差。<strong>血糖是中间指标，不是健康的全部。</strong>任何让曲线变好、却让整体饮食变差的改变，都不值得。</p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 460 300" role="img">
+      <title>是否需要使用连续血糖监测的判断路径</title>
+
+      <rect class="f-surface s-rule" x="130" y="18" width="200" height="40" rx="8" />
+      <text x="230" y="43" text-anchor="middle" font-size="11.5">你属于哪一类？</text>
+
+      <line class="s-rule" x1="230" y1="58" x2="230" y2="80" />
+      <line class="s-rule" x1="90" y1="80" x2="370" y2="80" />
+      <line class="s-rule" x1="90" y1="80" x2="90" y2="100" />
+      <line class="s-rule" x1="230" y1="80" x2="230" y2="100" />
+      <line class="s-rule" x1="370" y1="80" x2="370" y2="100" />
+
+      <rect class="f-wash s-accent" x="26" y="100" width="128" height="54" rx="8" />
+      <text class="t-accent" x="90" y="122" text-anchor="middle" font-size="10.5">糖尿病 / 用胰岛素</text>
+      <text class="t-muted" x="90" y="139" text-anchor="middle" font-size="9.5">证据最强</text>
+
+      <rect class="f-surface s-muted" x="166" y="100" width="128" height="54" rx="8" />
+      <text x="230" y="122" text-anchor="middle" font-size="10.5">糖尿病前期</text>
+      <text class="t-muted" x="230" y="139" text-anchor="middle" font-size="9.5">配合结构化干预</text>
+
+      <rect class="f-bg s-rule" x="306" y="100" width="128" height="54" rx="8" />
+      <text class="t-muted" x="370" y="122" text-anchor="middle" font-size="10.5">血糖正常的健康人</text>
+      <text class="t-muted" x="370" y="139" text-anchor="middle" font-size="9.5">无额外血糖收益</text>
+
+      <line class="s-rule" x1="90" y1="154" x2="90" y2="180" />
+      <line class="s-rule" x1="230" y1="154" x2="230" y2="180" />
+      <line class="s-rule" x1="370" y1="154" x2="370" y2="180" />
+
+      <rect class="f-surface s-accent" x="26" y="180" width="128" height="72" rx="8" />
+      <text x="90" y="202" text-anchor="middle" font-size="10">按医嘱使用</text>
+      <text class="t-muted" x="90" y="219" text-anchor="middle" font-size="9.5">看 TIR 与低血糖</text>
+      <text class="t-muted" x="90" y="235" text-anchor="middle" font-size="9.5">不自行调药</text>
+
+      <rect class="f-surface s-muted" x="166" y="180" width="128" height="72" rx="8" />
+      <text x="230" y="202" text-anchor="middle" font-size="10">可短期借用</text>
+      <text class="t-muted" x="230" y="219" text-anchor="middle" font-size="9.5">2–4 周，配合计划</text>
+      <text class="t-muted" x="230" y="235" text-anchor="middle" font-size="9.5">看趋势，不看单点</text>
+
+      <rect class="f-surface s-rule" x="306" y="180" width="128" height="72" rx="8" />
+      <text class="t-muted" x="370" y="202" text-anchor="middle" font-size="10">通常不必</text>
+      <text class="t-muted" x="370" y="219" text-anchor="middle" font-size="9.5">先改顺序与活动</text>
+      <text class="t-muted" x="370" y="235" text-anchor="middle" font-size="9.5">一年查一次 HbA1c</text>
+
+      <line class="s-faint" x1="90" y1="252" x2="90" y2="272" stroke-dasharray="3 3" />
+      <line class="s-faint" x1="370" y1="252" x2="370" y2="272" stroke-dasharray="3 3" />
+      <text class="t-faint" x="230" y="278" text-anchor="middle" font-size="9.5">共同前提：有明确问题、明确期限、明确停用标准</text>
+    </svg>
+    <figcaption>读法：先定位人群，再决定工具。最左一列是证据最硬、也最需要医生参与的一列；中间一列可以短期借用 CGM 做行为反馈，但要提前定好「看什么、看多久」；最右一列不是「绝对不能用」，而是「没有证据表明用了会更好」，把钱和时间花在睡眠、运动、饮食结构上，回报更确定。</figcaption>
+  </figure>
+
+  <h2>一个靠谱的 n=1 实验长什么样</h2>
+
+  <p>如果你决定试，别把它做成「每天盯着数字情绪起伏」。把它做成一个小型实验，遵守四条规则。</p>
+
+  <h3>规则一：一次只改一个变量</h3>
+
+  <p>这周只改「先吃菜」，别同时开始 16:8、戒咖啡、每天跑五公里。变量一多，你无法知道是哪一个起了作用。对照可以很简单：同样的早餐，周一三五按原顺序吃，周二四六先吃菜，周日休息。</p>
+
+  <h3>规则二：同一顿饭，重复三次</h3>
+
+  <p>单次读数会被睡眠、压力、步行、传感器位置影响。一个方法有没有用，看的是<strong>三次以上的方向是否一致</strong>，不是某一天特别漂亮的那条线。</p>
+
+  <h3>规则三：看三个数，不追求「零峰值」</h3>
+
+  <p>每次饭后记录：峰值（最高点）、达峰时间（多久到顶）、两小时回落（有没有回到接近起点）。你要比较的是同一顿饭的两种吃法，不是和别人的曲线比，也不是和一条想象中的平线比。</p>
+
+  <h3>规则四：提前写下停用标准</h3>
+
+  <p>比如：「如果开始因为一顿饭焦虑超过十分钟，或者出现逃避社交聚餐，就停戴两周。」「如果两周内没有改变任何一个行为，说明这个工具对我无效，停。」把停用标准写在开始之前，比事后靠意志力可靠。</p>
+
+  <p>没有 CGM 也能做简化版：用「饭后一小时困倦度（0–10）」「两小时后饥饿度」「下午是否想吃甜」三个主观评分，连续记录一周。它不精确，但足以告诉你哪一餐最值得改。</p>
+
+  <h2>什么时候该放下传感器，去看医生</h2>
+
+  <p>CGM 不能诊断，也不能替代化验。出现下面任何一种情况，直接去正规医疗机构，不要先在 App 里找解释：</p>
+
+  <ul>
+    <li>空腹血糖两次 ≥ 7.0 mmol/L，或随机血糖 ≥ 11.1 mmol/L 并伴有多饮、多尿、体重下降；</li>
+    <li>HbA1c ≥ 6.5%（需要标准化实验室检测）；</li>
+    <li>反复出现心慌、手抖、出冷汗，尤其是用药后；</li>
+    <li>妊娠期或备孕；</li>
+    <li>已经确诊糖尿病，准备改变饮食或运动方案——先和医生对一遍用药，避免低血糖。</li>
+  </ul>
+
+  <p>还要提醒一件常被忽略的事：<strong>单次 CGM 异常不构成诊断。</strong>确诊靠静脉血、口服葡萄糖耐量试验和 HbA1c，不是手臂上那个小圆片。反过来，CGM 也可能漏掉低血糖，尤其是在夜间和体型偏瘦的人身上。它真正的用途是帮你发现模式、验证一个具体改法，不是给自己下诊断。</p>
+
+  <p>最后一句可能最重要：<strong>这本书的所有方法，都是「辅助」，不是「治疗」。</strong>它们能帮你把曲线变得平缓一点，但不能替代诊断、药物和随访。把工具放回工具的位置，你才不会既被数字绑架，又错过真正该处理的问题。</p>
+
+  <div class="card">
+    <span class="card-title">小练习：写一份 14 天实验计划</span>
+    <p>只选一个变量（例如「午餐先吃菜」），写清五件事：假设（我预计峰值会降低多少）、对照（哪几天按原样吃）、测量（峰值/达峰时间/两小时回落，或三个主观评分）、重复次数（至少三次）、停用标准。</p>
+    <p>14 天后只回答一个问题：<strong>这个改变值得我长期保留吗？</strong>判断标准不是曲线好不好看，而是它有没有同时改善你的饱腹感、精力或睡眠。如果只有曲线变好，其他都没变，那它可能只是一个昂贵的数字游戏。</p>
+  </div>
+
+  <h2>回顾：三个问题</h2>
+
+  <div class="quiz" aria-label="回顾练习">
+    <span class="card-title">点选项，立刻看解析</span>
+
+    <div class="q">
+      <p class="stem">1. 对血糖正常的健康人，CGM 的主要问题是什么？</p>
+      <div class="options">
+        <button type="button">会让血糖本身变得更高</button>
+        <button type="button">设备价格过于低廉</button>
+        <button type="button" data-correct="true">有反馈但缺可验证的收益</button>
+        <button type="button">只能测组织间液不准确</button>
+      </div>
+      <p class="fb" hidden data-explain="2026 年的系统综述发现，CGM 对糖尿病前期有帮助，对血糖正常的健康人没有可察觉的血糖收益。它能提供反馈、促进行为改变，但没有证据表明这种监测能改善健康结局，还可能带来焦虑与过度限制。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">2. 半夜 CGM 报警低血糖，最先应该考虑什么？</p>
+      <div class="options">
+        <button type="button">立刻吃糖并增加晚餐</button>
+        <button type="button" data-correct="true">可能是压迫传感器造成的假低值</button>
+        <button type="button">说明已经患上糖尿病</button>
+        <button type="button">马上停用所有降糖药物</button>
+      </div>
+      <p class="fb" hidden data-explain="CGM 测组织间液，存在 5–15 分钟延迟；睡眠压住传感器一侧手臂会造成局部血流下降，读数假性偏低。正确做法是换个姿势、十分钟后复测，必要时用指尖血确认，而不是直接按警报处理。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">3. 一个合格的 n=1 实验，最关键的是哪一条？</p>
+      <div class="options">
+        <button type="button">尽可能同时改变多个习惯</button>
+        <button type="button">只记录最好看的那几天</button>
+        <button type="button">用别人的曲线作为对照</button>
+        <button type="button" data-correct="true">一次只改一个变量并重复</button>
+      </div>
+      <p class="fb" hidden data-explain="单次读数受睡眠、压力、活动、传感器位置影响。一次只改一个变量、同一条件重复至少三次、看方向是否一致，才能把信号从噪声里分出来。同时改多项，即使有效也不知道是哪一项的功劳。"></p>
+    </div>
+  </div>
+
+  <p class="ask">哪里没说清？<strong>回头直接问你的老师</strong>（那个正在运行本工作区的 agent）。你可以让它按你的年龄、体重、用药和作息，判断你属于图里的哪一类；也可以让它帮你把一份 14 天实验计划写成可打印的表格。</p>
+
+  <p class="foot">
+    <strong>推荐一手资料：</strong>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/41588451/" target="_blank" rel="noopener">Liao et al. 2026：非糖尿病人群使用 CGM 的系统综述</a>
+    —— 23 项研究、1074 人。结论很清楚：糖尿病前期可能受益，血糖正常的健康人没有可察觉的血糖收益。这一讲的分层判断就建立在这篇之上。<br />
+    相关：<a href="0007-a-day-on-the-curve.html">第 7 讲 · 把一天排成曲线</a> ·
+    <a href="../reference/0002-metrics.html">指标与术语速查</a> ·
+    <a href="../RESOURCES.md">全部资料</a> ·
+    <a href="../MISSION.md">使命</a>
+  </p>
+
+<script>
+(function () {
+  var questions = document.querySelectorAll('.quiz .q');
+  for (var i = 0; i < questions.length; i++) {
+    (function (q) {
+      var opts = q.querySelectorAll('.opt, button');
+      var fb = q.querySelector('.fb');
+      for (var j = 0; j < opts.length; j++) {
+        (function (opt) {
+          opt.addEventListener('click', function () {
+            if (q.dataset.answered === '1') return;
+            q.dataset.answered = '1';
+            for (var k = 0; k < opts.length; k++) {
+              opts[k].disabled = true;
+              if (opts[k].dataset.correct === 'true') opts[k].classList.add('correct');
+            }
+            var ok = opt.dataset.correct === 'true';
+            if (!ok) opt.classList.add('wrong');
+            fb.innerHTML = (ok ? '<b>✓ 对。 </b>' : '<b>✗ 再想一下。 </b>') + fb.dataset.explain;
+            fb.hidden = false;
+          });
+        })(opts[j]);
+      }
+    })(questions[i]);
+  }
+})();
+</script>
+</body>
+</html>
