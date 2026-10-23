@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 17 讲 · 备份与素材整理</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="kicker">日常摄影实践 · 第 17 讲</p>
+<h1>备份与素材整理：拍完才是开始</h1>
+<p class="lede">照片在按下快门那一刻并不安全——它只是一段还在设备里的数据。这一讲把「拍完之后怎么办」变成一套你在这台 Windows 11 机器上真的能执行的流程。</p>
+
+<p class="toc" style="margin:.1rem 0 1.6rem;font-family:var(--sans);font-size:.82rem;color:var(--muted);">
+  <a href="0016-city-and-nature.html">← 上一讲 · 第 16 讲 · 城市与自然</a>
+  &nbsp;·&nbsp; <a href="0018-a-photographic-project.html">下一讲 · 第 18 讲 · 一个主题的拍摄项目 →</a>
+  &nbsp;·&nbsp; <a href="../reference/0001-exposure-cheatsheet.html">曝光速查表</a>
+  &nbsp;·&nbsp; <a href="../reference/0003-glossary.html">词汇表</a>
+</p>
+
+<p>前十六讲讲的都是「怎么拍得更好」。这一讲讲一件听起来不酷、却决定了你能留下多少的事：
+<strong>拍下来的东西，怎么从设备里安全地变成你的东西</strong>。</p>
+
+<p>先说一句实话。你这台机器上只有两台拍摄设备——<strong>iPhone Air</strong> 和
+<strong>DJI Osmo Pocket 4</strong>。问题在于，它们都是<strong>会坏、会丢、会被格式化的东西</strong>。
+设备摔一次、卡坏一块、「腾空间」时顺手清空了卡——照片就没了。而且这类事不发生在按下快门的当天，
+往往发生在三个月后你终于想起来整理素材的那天。</p>
+
+<h2>一、拍完才是开始：一张照片在哪儿才算存在</h2>
+
+<p>一张照片从「存在」到「安全」，中间有一段路要走完。我们把它拆成四段，每段都有一个明确的失败点：</p>
+
+<ol>
+  <li><strong>在设备里。</strong>风险是设备损坏或误删。</li>
+  <li><strong>在设备外第一份。</strong>已导入电脑，挡住「设备丢了」。</li>
+  <li><strong>在第二份。</strong>另一块盘、另一个地方，挡住「电脑的盘坏了」。</li>
+  <li><strong>在作品里。</strong>你选出、命名、调过、导出成最终版本的那一张——只有它进入相册、头像、打印件。</li>
+</ol>
+
+<p>关键判断只有一句：<strong>一份照片在「同一个地方」存在两次，它就只算一份。</strong>
+拷到同一个硬盘的两个文件夹里不算备份——一次故障会同时带走两份。
+而 iPhone Air 与 Pocket 4 的存储都<strong>本来就是会定期被清空的地方</strong>：
+手机会提示你清理，Pocket 4 的内置 107 GB 也会在「该清了」时被格式化。
+所以这两台机上的文件，默认状态就是<strong>临时的</strong>。</p>
+
+<figure class="figure">
+  <svg viewBox="0 0 420 300" role="img" aria-labelledby="fig-import-t">
+    <title id="fig-import-t">iPhone Air 与 Osmo Pocket 4 的导入路径，最终汇入电脑上的同一个归档目录</title>
+    <defs>
+      <marker id="imp-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" markerUnits="userSpaceOnUse" orient="auto">
+        <path d="M0 0 L10 5 L0 10 Z" class="f-muted" />
+      </marker>
+    </defs>
+
+    <rect x="8" y="8" width="190" height="204" rx="10" class="f-surface s-rule" />
+    <text x="22" y="32" font-size="13" font-weight="600" class="t-accent">iPhone Air</text>
+    <text x="22" y="58" font-size="11">照片 App → 分享 → 存储到文件</text>
+    <text x="22" y="80" font-size="11">USB 线连电脑 → DCIM</text>
+    <text x="22" y="102" font-size="11">iCloud 照片（Windows 版）</text>
+    <text x="22" y="124" font-size="11">AirDrop：Windows 上不可用</text>
+    <text x="22" y="176" font-size="11">HEIF（.heic）/ JPEG</text>
+    <text x="22" y="196" font-size="10.5" class="t-muted">没有 ProRAW</text>
+
+    <rect x="222" y="8" width="190" height="204" rx="10" class="f-surface s-rule" />
+    <text x="236" y="32" font-size="13" font-weight="600" class="t-accent">Osmo Pocket 4</text>
+    <text x="236" y="58" font-size="11">USB 3.1 直连电脑 → DCIM</text>
+    <text x="236" y="80" font-size="11">microSD + 读卡器</text>
+    <text x="236" y="102" font-size="11">DJI Mimo 导出到手机</text>
+    <text x="236" y="124" font-size="11">素材在 MISC/DCIM 目录里</text>
+    <text x="236" y="176" font-size="11">JPEG / DNG / JPEG+DNG</text>
+    <text x="236" y="196" font-size="10.5" class="t-muted">可存原始文件</text>
+
+    <line x1="103" y1="214" x2="103" y2="240" class="s-muted" stroke-width="1.4" marker-end="url(#imp-arrow)" />
+    <line x1="317" y1="214" x2="317" y2="240" class="s-muted" stroke-width="1.4" marker-end="url(#imp-arrow)" />
+
+    <rect x="8" y="244" width="404" height="48" rx="10" class="f-wash s-accent" />
+    <text x="210" y="266" text-anchor="middle" font-size="12.5" font-weight="600" class="t-accent">电脑上一个归档目录</text>
+    <text x="210" y="284" text-anchor="middle" font-size="11">D:\Photos\2026\10\2026-10-24_城市街拍\</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>左边和右边是<strong>两台设备各自的三条来路</strong>，箭头指的是它们最后的共同归宿——
+    电脑上那个归档目录。注意最后一行：所有原始文件都落到<strong>同一个地方</strong>，
+    这样整理的时候你只需要面对一套命名规则，而不是两套。
+    右边第三行的 DJI Mimo 是<strong>手机端的导出通道</strong>，适合不方便开电脑的时候；
+    它不是备份，只是搬运。
+  </figcaption>
+</figure>
+
+<h2>二、导入：两台机各走各的路</h2>
+
+<p><strong>iPhone Air。</strong>最省事的是「照片」App 里直接导出：打开照片 → 全选 → 分享 →
+<strong>存储到文件</strong>。优势是<strong>你可以只挑要的那几张</strong>，适合已经筛过一轮的情况。</p>
+
+<p>要一次全量搬，用线更省事：<strong>USB 线连上 Windows 11</strong>，手机会作为便携设备出现，
+里面是 <code>DCIM</code> 目录；更省操作的写法是手机上打开<strong>设置 → 照片 → 传输到 Mac 或 PC</strong>，
+插上线后电脑的 DCIM 里就能看到当天的文件夹。需要提醒的是，
+<strong>AirDrop 是 Apple 生态的功能，Windows 上没有</strong>——别的教程里写「用 AirDrop 传过去」，
+那是写给 Mac 用户的，别照抄。</p>
+
+<p>还有第三条：<strong>iCloud 照片</strong>。Windows 上装 iCloud 客户端并登录后，iPhone 上的照片会同步到本地文件夹。
+它适合「懒得手动搬」的日常，但同步是<strong>后台的、有延迟</strong>的，
+重要的一批照片不能只靠它——你需要在电脑上确认它们真的到了。</p>
+
+<p><strong>Osmo Pocket 4。</strong>三条路各有用处：</p>
+
+<ul>
+  <li><strong>USB 3.1 直连电脑</strong>：官方规格页写着 USB 3.1 有线传输最高 800 MB/s，
+  一批 DNG 用线搬是最快的。插上线后机器被识别为便携设备，照片在 <code>DCIM</code> 里。</li>
+  <li><strong>microSD + 读卡器</strong>：卡插进读卡器插电脑，和普通 U 盘一样。卡被格式化后，
+  机器会重新建目录，照片落在 <code>MISC/DCIM</code> 一类的路径下（换卡时目录会变，
+  所以<strong>导入后第一件事是「全选 → 复制」，不要一张张拖</strong>）。</li>
+  <li><strong>DJI Mimo</strong>：官方 App，手机连上机器后把素材导出到手机相册或直接分享。
+  它的定位是<strong>快速分享</strong>，不是备份。</li>
+</ul>
+
+<div class="card">
+  <p><strong>导入时的三条纪律：</strong></p>
+<ol>
+  <li><strong>先复制，后整理。</strong>导入完成后<strong>不要在原卡或设备里改名、删除、排序</strong>——
+  那是唯一的那一份，任何误操作都不可逆。整理应该在电脑的副本上做。</li>
+  <li><strong>复制不是移动。</strong>把文件「剪切」到电脑，等于把设备上的那份删了。
+  正确做法是复制，<strong>确认电脑里能打开</strong>之后，再回去考虑要不要清设备。</li>
+  <li><strong>先看格式，再决定处理方式。</strong>HEIF/JPEG 和 DNG 的后续动作完全不同，见本讲第五节。</li>
+</ol>
+</div>
+
+<h2>三、命名与目录：让三个月后的你找得到</h2>
+
+<p>整理的核心目标只有一个：<strong>半年后你想找「去年秋天在那个公园拍的那张」时，
+不用翻三个小时</strong>。这件事靠两样东西做到：<strong>文件夹负责粗分类，文件名负责细区分</strong>。</p>
+
+<p>目录按<strong>年 → 月 → 单次拍摄</strong>三层：</p>
+
+<pre><code>D:\Photos\2026\10\2026-10-24_城市街拍\
+D:\Photos\2026\10\2026-10-24_城市街拍\raw\      ← 原始文件（.heic / .jpg / .dng），只读不动
+D:\Photos\2026\10\2026-10-24_城市街拍\export\   ← 你导出的成品
+D:\Photos\2026\10\2026-10-24_城市街拍\select\   ← 选中的那几张
+D:\Photos\2026\10\2026-10-24_城市街拍\edit\     ← 后期工程文件与旁车文件</code></pre>
+
+<p>把<strong>原始文件和成品分开放</strong>是这一节最重要的规矩。原始文件是<strong>不可再生</strong>的：
+你改坏的成品可以重做，你删掉的原片回不来。而两类文件混在一起时，你迟早会手滑覆盖掉原片。</p>
+
+<p>文件名用一套固定规则，让文件管理器<strong>按名字排序就等于按时间排序</strong>：</p>
+
+<pre><code>20261024_城市街拍_001.jpg
+20261024_城市街拍_002.dng
+20261024_城市街拍_003.dng
+20261025_公园散步_001.heic</code></pre>
+
+<p>三段分别是<strong>日期（8 位）→ 主题 → 序号（3 位）</strong>。日期放最前面是刻意的：
+排序时 <code>20261024_</code> 排在 <code>20261103_</code> 前面，
+而 <code>1024_</code> 和 <code>1103_</code> 谁在前全看心情。序号固定位数，
+是为了让 <code>_010</code> 排在 <code>_09</code> 前面而不是反过来。</p>
+
+<p>主题词不要写太长，也不要追求「精确」。写 <code>城市街拍</code>、<code>公园散步</code>、
+<code>家人</code> 这种<strong>一眼能认出来的词</strong>就够了；
+真正想不通的问题（哪个公园、谁拍的）写在旁边的说明文件里——
+文件名太长，在各种软件里都会出问题。</p>
+
+<h2>四、两份副本：以及 Pocket 4 的存储怎么选</h2>
+
+<p>「两份副本」落地成三件事：<strong>设备上留着的那一份</strong>（临时，不是备份）、
+<strong>电脑本地硬盘上的那一份</strong>（工作副本，命名、选片、后期都在这里做）、
+<strong>另一个地方的那一份</strong>（移动硬盘、第二块内盘或云端，挡住「电脑坏了」「被偷了」「误格式化」）。</p>
+
+<p>做这件事有个省心的技巧：<strong>用同步代替复制</strong>。
+把工作副本的整个 <code>Photos</code> 文件夹做成一个同步目标（第二块内盘、移动硬盘，
+或 Windows 自带的 OneDrive 同步文件夹），每周只需插上盘、让它跑一次，就完成了一次异地副本。
+这比「每周手动复制几百个文件」可靠得多——人靠不住，脚本和客户端靠得住。</p>
+
+<h3>Pocket 4 的内置 107 GB 与 microSD，怎么取舍</h3>
+
+<p>官方规格页写得很清楚：内置 <strong>107 GB</strong>，另可插 <strong>microSD（最大 1 TB）</strong>。
+两种用法性质不同：</p>
+
+<table>
+  <thead>
+    <tr><th>做法</th><th>好处</th><th>代价 / 风险</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>只用内置 107 GB</strong></td>
+      <td>容量大、连续写同一块盘；<strong>不占卡位</strong>，出门只带机身也能拍很久</td>
+      <td>素材在<strong>同一块存储</strong>上：坏了、丢了、格式化了，全都没</td>
+    </tr>
+    <tr>
+      <td><strong>只用 microSD</strong></td>
+      <td>卡可以<strong>一卡一卡换</strong>，容量想加就加；卡格式化后电脑上直接读</td>
+      <td>容量受卡限制（1 TB 是官方规格的可用最大值，还要看卡的写入速度）；
+      机器要先插卡才能存</td>
+    </tr>
+    <tr>
+      <td><strong>两张卡同时写</strong></td>
+      <td>看起来「双保险」</td>
+      <td><strong>不推荐。</strong>同时写多了一条写入链路，一旦中途出问题两边都可能受影响，
+      也会拖慢写入、耗电更多。官方规格页只把内置存储与 microSD 列为两个存储位置，
+      没有把双写当成一项功能来介绍</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>那么<strong>只有一张卡的时候</strong>该怎么拍？有一个不会出错的顺序，值得背下来，
+因为「插了卡但机器没在往卡上写」是极常见的坑：</p>
+
+<ol>
+  <li><strong>先把 microSD 插上，再开机。</strong>插卡时机很关键：
+  Pocket 4 在关机状态下插卡才能被识别到，开机后再插可能认不到。</li>
+  <li><strong>开机后确认它认到了。</strong>看屏幕上的<strong>剩余容量</strong>：
+  如果显示的是内置 107 GB 的剩余空间，而不是你那张卡的容量，说明它还在写内置。</li>
+  <li><strong>在设置里把存储位置切到 microSD</strong>（菜单文字以机器固件为准），
+  确认剩余容量变成卡上的数字。</li>
+  <li><strong>拍一张，立刻回放。</strong>这一张是最便宜的验证：回放能看到，说明它真的写在卡上了。
+  再用读卡器插上电脑，确认文件真的在。</li>
+  <li><strong>以后每次开机前都确认一次容量。</strong>把这变成习惯，它比任何备份软件都便宜。</li>
+</ol>
+
+<figure class="figure">
+  <svg viewBox="0 0 420 260" role="img" aria-labelledby="fig-card-t">
+    <title id="fig-card-t">Pocket 4 存储选择：内置 107 GB 与 microSD 的取舍，以及开机前的确认步骤</title>
+    <defs>
+      <marker id="card-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" markerUnits="userSpaceOnUse" orient="auto">
+        <path d="M0 0 L10 5 L0 10 Z" class="f-muted" />
+      </marker>
+    </defs>
+
+    <rect x="8" y="8" width="196" height="112" rx="10" class="f-surface s-rule" />
+    <text x="22" y="32" font-size="12.5" font-weight="600" class="t-accent">内置 107 GB</text>
+    <text x="22" y="56" font-size="11">· 容量大，出门不用带卡</text>
+    <text x="22" y="78" font-size="11">· 单一存储：坏了全没</text>
+    <text x="22" y="100" font-size="11">· 必须固定导入电脑</text>
+
+    <rect x="216" y="8" width="196" height="112" rx="10" class="f-surface s-rule" />
+    <text x="230" y="32" font-size="12.5" font-weight="600" class="t-accent">microSD（最大 1 TB）</text>
+    <text x="230" y="56" font-size="11">· 一卡一换，容量可加</text>
+    <text x="230" y="78" font-size="11">· 电脑上直接读</text>
+    <text x="230" y="100" font-size="11">· 关机插卡才认得到</text>
+
+    <rect x="8" y="132" width="404" height="40" rx="10" class="f-wash s-rule" />
+    <text x="22" y="157" font-size="11.5" class="t-bad">不建议：两张卡同时写（多一条写入链，出问题两边都受影响）</text>
+
+    <text x="8" y="196" font-size="12" font-weight="600">每次开机前的四步确认</text>
+    <line x1="20" y1="208" x2="20" y2="242" class="s-accent" stroke-width="1.6" marker-end="url(#card-arrow)" />
+
+    <rect x="34" y="212" width="86" height="26" rx="7" class="f-wash s-accent" />
+    <text x="77" y="229" text-anchor="middle" font-size="11" class="t-accent">1 插卡</text>
+    <rect x="128" y="212" width="86" height="26" rx="7" class="f-wash s-accent" />
+    <text x="171" y="229" text-anchor="middle" font-size="11" class="t-accent">2 开机</text>
+    <rect x="222" y="212" width="86" height="26" rx="7" class="f-wash s-accent" />
+    <text x="265" y="229" text-anchor="middle" font-size="11" class="t-accent">3 看容量</text>
+    <rect x="316" y="212" width="96" height="26" rx="7" class="f-wash s-accent" />
+    <text x="364" y="229" text-anchor="middle" font-size="11" class="t-accent">4 拍一张回放</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>上面是两条路各自的代价，下面一排是<strong>只有一张卡时的执行顺序</strong>。
+    关键在第 3 步：<strong>看剩余容量</strong>。如果开机后显示的剩余空间还是内置 107 GB 那一栏的数值，
+    机器就<strong>还在往内置写</strong>——你以为插了卡当备份，其实没有。
+    第 4 步「拍一张回放」是唯一能百分之百确认的办法。
+  </figcaption>
+</figure>
+
+<h2>五、HEIF / JPEG 与 DNG：格式不同，整理方式不同</h2>
+
+<p>你的两台机产出的是<strong>两种性质完全不同的文件</strong>，混在一起整理会出乱子。</p>
+
+<table>
+  <thead>
+    <tr><th>文件</th><th>来自</th><th>后缀</th><th>里面是什么</th><th>怎么整理</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>HEIF</strong></td>
+      <td>iPhone Air</td>
+      <td><code>.heic</code></td>
+      <td>已经算好的成片</td>
+      <td>可当最终素材；若要跨设备、跨软件，导出一份 sRGB 的 JPEG 当「通用版」</td>
+    </tr>
+    <tr>
+      <td><strong>JPEG</strong></td>
+      <td>两台机都能出</td>
+      <td><code>.jpg</code></td>
+      <td>已经算好的成片，通用性最好</td>
+      <td>最省事的一种，存、传、打印、发出去都行</td>
+    </tr>
+    <tr>
+      <td><strong>DNG</strong></td>
+      <td>Osmo Pocket 4</td>
+      <td><code>.dng</code></td>
+      <td><strong>传感器原始数据</strong>，没有锁死白平衡、没有被压缩</td>
+      <td>当成<strong>负片</strong>：不裁不调不导出，单独收好</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>三条实操上的提醒：</p>
+
+<ul>
+  <li><strong>不要靠改后缀来转换格式。</strong>把 <code>IMG_1234.HEIC</code> 改名成
+  <code>IMG_1234.jpg</code>，文件并不会因此变成 JPEG，只是名字变了——很多软件仍然打不开。
+  真要转换，用系统自带的图片应用或专门的转换工具重新导出。</li>
+  <li><strong>Pocket 4 存「JPEG + DNG」时，文件是成对的。</strong>导入时别只挑了 JPEG
+  就把 DNG 落在卡上——DNG 才是以后想重新调色时唯一的余地。</li>
+  <li><strong>DNG 是开放格式。</strong>它不绑定某一个品牌的后期软件，换电脑、换软件、
+  甚至过几年再打开，都还能用。</li>
+</ul>
+
+<p>还有一个容易出错的细节：<strong>后期软件会在原始文件旁边写「旁车文件」</strong>
+（sidecar，扩展名常常是 <code>.xmp</code>），记录你做的裁剪、曝光调整。
+旁车文件和原始文件<strong>必须一起搬</strong>，否则调整记录会丢——
+所以第三层目录 <code>edit\</code> 存在的意义，就是把「工程和它的负片」放在一起同步。</p>
+
+<h2>六、定期清理与「3-2-1」：一套真的能跑的方案</h2>
+
+<p>摄影圈里有个通行做法，叫<strong>「3-2-1」备份原则</strong>：</p>
+
+<ul>
+  <li><strong>3</strong> 份素材副本；</li>
+  <li><strong>2</strong> 种不同的存储介质（比如一块硬盘 + 一张卡 + 一个云端，不能是同一块盘上的三个文件夹）；</li>
+  <li><strong>1</strong> 份<strong>不在同一个物理地点</strong>（家里那份不算数，要有一份在你拿不到的地方）。</li>
+</ul>
+
+<figure class="figure">
+  <svg viewBox="0 0 420 290" role="img" aria-labelledby="fig-321-t">
+    <title id="fig-321-t">3-2-1 备份原则：设备上的原卡、电脑本地硬盘、以及另一处的副本</title>
+    <defs>
+      <marker id="b-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" markerUnits="userSpaceOnUse" orient="auto">
+        <path d="M0 0 L10 5 L0 10 Z" class="f-muted" />
+      </marker>
+    </defs>
+
+    <rect x="8" y="8" width="404" height="66" rx="10" class="f-surface s-rule" />
+    <text x="24" y="32" font-size="12.5" font-weight="600">① 设备上的原卡 / 手机里</text>
+    <text x="24" y="54" font-size="11" class="t-muted">介质：microSD 或手机内置 · 临时，不是备份</text>
+    <text x="300" y="32" font-size="12.5" font-weight="600" class="t-accent">3</text>
+    <text x="300" y="54" font-size="11" class="t-muted">份中的一份</text>
+
+    <line x1="210" y1="76" x2="210" y2="98" class="s-muted" stroke-width="1.4" marker-end="url(#b-arrow)" />
+    <text x="220" y="92" font-size="10.5" class="t-muted">导入（复制）</text>
+
+    <rect x="8" y="102" width="404" height="66" rx="10" class="f-surface s-rule" />
+    <text x="24" y="126" font-size="12.5" font-weight="600">② 电脑本地硬盘 D:\Photos</text>
+    <text x="24" y="148" font-size="11" class="t-muted">介质：内置盘或第二块内盘 · 工作副本与整理现场</text>
+    <text x="300" y="126" font-size="12.5" font-weight="600" class="t-accent">2</text>
+    <text x="300" y="148" font-size="11" class="t-muted">种介质之一</text>
+
+    <line x1="210" y1="170" x2="210" y2="192" class="s-muted" stroke-width="1.4" marker-end="url(#b-arrow)" />
+    <text x="220" y="186" font-size="10.5" class="t-muted">同步 / 每周一次</text>
+
+    <rect x="8" y="196" width="404" height="66" rx="10" class="f-wash s-accent" />
+    <text x="24" y="220" font-size="12.5" font-weight="600" class="t-accent">③ 另一个地方：移动硬盘 / 第二块内盘 / 云端</text>
+    <text x="24" y="242" font-size="11" class="t-muted">介质与地点都不同 · 你拿不到的地方，才算数</text>
+    <text x="300" y="220" font-size="12.5" font-weight="600" class="t-accent">1</text>
+    <text x="300" y="242" font-size="11" class="t-muted">份不在原地</text>
+
+    <text x="8" y="280" font-size="10.5" class="t-muted">注意：同一块硬盘上的三个文件夹，只算 1 份。</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>从上往下读三份副本，箭头是它们之间发生过的动作——
+    往下是「复制」，最下面那格是<strong>同步</strong>（每周一次就够）。
+    右边三个数字就是 3-2-1 的三句话：<strong>3 份、2 种介质、1 份不在原地</strong>。
+    最下面那行小字是这一节唯一的重点：<strong>把三份放在同一块盘上，等于只有一份</strong>。
+  </figcaption>
+</figure>
+
+<h3>在这台 Windows 11 机器上，直接照抄这一套</h3>
+
+<p>不装任何第三方软件，只用 Windows 自带的东西：</p>
+
+<ol>
+  <li><strong>建工作区。</strong>在 D 盘建一个 <code>D:\Photos</code>，
+  里面按 <code>年\月\日期_主题</code> 建文件夹。这是你唯一会天天打开的目录。</li>
+  <li><strong>第一份：设备 → 电脑。</strong>iPhone Air 用 USB 线或「照片」App 导出；
+  Pocket 4 用 USB 3.1 直连或读卡器。全部<strong>复制</strong>进 <code>D:\Photos</code>，
+  原片放 <code>raw\</code>，然后按本讲第三节改名。</li>
+  <li><strong>第二份：电脑 → 另一个地方。</strong>最省事的是开一个 OneDrive 同步文件夹
+  （Windows 自带客户端，把 <code>D:\Photos</code> 放进去），它同时给你「另一个介质」和
+  「另一个地点」；或者每周插上移动硬盘，用一条命令把增量文件复制过去：</li>
+</ol>
+
+<pre><code>robocopy "D:\Photos" "E:\Photos-Backup" /E /MIR /R:2 /W:5 /LOG:"E:\backup.log"</code></pre>
+
+<p>关键词：<code>/E</code> 连空子目录一起复制、<code>/MIR</code> 镜像（让两边一致）、
+<code>/R:2 /W:5</code> 失败重试两次、<code>/LOG</code> 把结果写进日志——
+<strong>有了日志，你才知道上次到底同步了多少个文件</strong>。第一次跑完，打开日志看最后一行，
+记下来，下周对比这个数字，对不上就说明中间出了问题。</p>
+
+<ol start="4">
+  <li><strong>第三份（可选）：云端。</strong>OneDrive 已经覆盖了「不在原地」这一条；
+  想再多一份，就挂个网盘客户端做纯上传，<strong>不要用「同步」模式</strong>——
+  同步模式会把本机的改动双向传播，万一本机文件坏了会同步到云端。</li>
+  <li><strong>校验。</strong>备份完<strong>随机挑三张打开看看</strong>。这是唯一能证明
+  「备份是好的」的动作——静默失败的备份比没有备份更危险，因为它让你以为自己已经安全了。
+  更严格的做法是用<strong>校验和（checksum）</strong>比对两边的哈希值，
+  Windows 自带的 <code>certutil -hashfile 文件名 SHA256</code> 就够。</li>
+</ol>
+
+<h3>清理流程：每月十分钟</h3>
+
+<p>备份做好之后，才敢清理。顺序是固定的：</p>
+
+<ol>
+  <li><strong>先确认已导入。</strong>打开电脑上的那份，随机翻几张，确认文件在、能打开。</li>
+  <li><strong>再确认已备份。</strong>确认那份已经在第二处（同步的看日志，复制的手动翻一遍）。</li>
+  <li><strong>然后才清设备。</strong>用设备自带的<strong>格式化存储</strong>功能（不是文件管理器里的「删除」——
+  删除只是让空间显示成空，实际数据还在，占着空间直到被新数据覆盖）清掉卡或机身存储。
+  Pocket 4 有独立的存储管理菜单，iPhone 则是「设置 → 通用 → iPhone 储存空间」。</li>
+  <li><strong>原始文件永远不删。</strong>真正可以删的是<strong>导出件</strong>，
+  因为它们随时能从原片重新生成。</li>
+</ol>
+
+<div class="card">
+  <p><strong>练习（二十五分钟）：</strong>今天就搭好你的备份骨架，之后每张新照片都自动落位。</p>
+  <ol>
+    <li><strong>五分钟：</strong>建好 <code>D:\Photos\2026\10\2026-10-24_练习\</code>，
+    里面分出 <code>raw</code> / <code>export</code> / <code>select</code> / <code>edit</code> 四个文件夹。</li>
+    <li><strong>五分钟：</strong>从 iPhone Air 导出今天拍的一组（不超过 20 张），复制进 <code>raw\</code>，
+    按 <code>日期_主题_序号</code> 改名。<strong>先复制，不要从手机里删。</strong></li>
+    <li><strong>五分钟：</strong>用 Pocket 4 拍 3 张 DNG（或 JPEG+DNG），导入同一目录，同样改名。
+    <strong>注意 DNG 和它的 JPEG 都要在。</strong></li>
+    <li><strong>五分钟：</strong>把 <code>D:\Photos</code> 放进 OneDrive 同步文件夹（或复制到移动硬盘），
+    然后<strong>随机打开三张文件</strong>，确认两份都能打开。</li>
+    <li><strong>最后五分钟：</strong>打开 Pocket 4 的存储管理，看一眼剩余容量，
+    确认它现在写的是内置 107 GB 还是你插的 microSD。把这个数字记在手机备忘录里。</li>
+  </ol>
+  <p>做完这二十五分钟，你就拥有了本课程前十六讲的所有前提——
+  <strong>拍下来的东西，不会因为你换了手机、丢了卡、或者某天想腾空间而消失</strong>。
+  摄影里有一半的失败，其实不是拍砸了，是弄丢了。</p>
+</div>
+
+<h2>回顾：三个自测</h2>
+<div class="quiz">
+  <h3>先合上讲义，自己回答，再看核对</h3>
+
+  <p class="prompt">1. 你把照片从手机拷到 D 盘，又在 D 盘的另一个文件夹里复制了一遍。这算几份备份？</p>
+  <details><summary>看答案</summary>
+    <p>算<strong>一份</strong>。「3 份」要求的是<strong>3 个能各自独立存在的地方</strong>，不是 3 个文件夹。
+    D 盘一旦损坏或格式化，这两份会一起消失。「3」里真正有意义的差别是<strong>介质和地点的差别</strong>：
+    一块盘 + 一张卡 + 一个云端，哪怕装的是同一批文件，也比三份挤在一块盘上安全得多。</p>
+  </details>
+
+  <p class="prompt">2. Pocket 4 里插了 microSD，怎么确认它真的在往卡上写，而不是还在往内置 107 GB 写？</p>
+  <details><summary>看答案</summary>
+    <p>四步：<strong>关机状态插卡 → 开机 → 看剩余容量是不是变成卡上的数字 → 拍一张并立刻回放</strong>。
+    只看「插了卡」不够——剩余容量若还是内置存储那一栏的数值，就说明它没在往卡上写。
+    最后那一步是唯一能百分之百确认的办法，因为它验证的是结果而不是设置。
+    「以为备份了其实没有」比「没备份」更危险：前者会让人停止警惕。</p>
+  </details>
+
+  <p class="prompt">3. 一张 DNG 和它对应的 JPEG，导入时你会怎么处理？为什么不能只留 JPEG？</p>
+  <details><summary>看答案</summary>
+    <p>两个文件<strong>一起留</strong>，放进 <code>raw\</code>，尽量不要改动。
+    JPEG 是算好的成片；DNG 是传感器原始数据，没有锁死白平衡、没有压缩，
+    是你以后想重新调色、重新构图时<strong>唯一的余地</strong>。只留 JPEG 等于把「重新处理的可能」永久交了出去。
+    另外后期软件会在原片旁写旁车文件（如 <code>.xmp</code>），搬移时要和原片一起搬。</p>
+  </details>
+</div>
+
+<p class="ask">这一讲哪里没说清？回到 OpenCode 里直接问你的老师（那个正在运行 <code>teach</code>
+的 agent）——它比你更懂你的目标，可以为你重新举例、加练，或跳到你想深入的部分。
+它的笔记里已经记着你的两台机器（<strong>iPhone Air</strong> 与 <strong>Osmo Pocket 4</strong>，
+以及内置 107 GB 和 microSD 这条存储线），随时可以让它把任何一讲改写成你设备上的具体操作。
+如果你手上还有<strong>外接硬盘或 NAS</strong>，也告诉它，它会把「3-2-1」那一段改成你自己的方案。</p>
+
+<p class="foot">
+  <strong>推荐一手资料：</strong>
+  <a href="https://search.douban.com/book/subject_search?search_text=%E7%BE%8E%E5%9B%BD%E7%BA%BD%E7%BA%A6%E6%91%84%E5%BD%B1%E5%AD%A6%E9%99%A2%E6%91%84%E5%BD%B1%E6%95%99%E6%9D%90" target="_blank" rel="noopener">《美国纽约摄影学院摄影教材》</a>
+  的「暗房与修图」部分 —— 本课程的骨干教材，本讲「原始文件不要动」的习惯就来自那里。
+  想看能照着做的中文导入与备份步骤，读 <a href="https://sspai.com/search/post/%E6%91%84%E5%BD%B1" target="_blank" rel="noopener">少数派 · 摄影</a>。
+  器材与存储参数（内置 107 GB、microSD 上限、USB 3.1 传输速度、格式选项）以官方页为准：
+  DJI <a href="https://www.dji.com/cn/osmo-pocket-4/specs" target="_blank" rel="noopener">Osmo Pocket 4 规格页</a>、
+  Apple <a href="https://support.apple.com/zh-cn/125092" target="_blank" rel="noopener">iPhone Air 技术规格</a>；
+  机器功能拿不准时先查 <a href="https://www.dji.com/cn/support/product/osmo-pocket-4" target="_blank" rel="noopener">DJI 官方支持</a>。
+  <br />图片来源与授权：<a href="../assets/CREDITS.md">图片版权说明</a>。
+  <br />上一讲：<a href="0016-city-and-nature.html">第 16 讲 · 城市与自然</a> ·
+  下一讲：<a href="0018-a-photographic-project.html">第 18 讲 · 一个主题的拍摄项目</a> ·
+  速查：<a href="../reference/0001-exposure-cheatsheet.html">曝光速查表</a> ·
+  <a href="../reference/0003-glossary.html">词汇表</a>
+</p>
+
+<p class="refs">本讲新引入的术语：3-2-1 备份原则 · 校验和（checksum） · 旁车文件（sidecar） ·
+ 原始文件 / 负片（raw file）· 归档目录 · DCIM · 镜像复制（robocopy /MIR） · 存储位置（机身存储 / microSD）</p>
+
+</body>
+</html>

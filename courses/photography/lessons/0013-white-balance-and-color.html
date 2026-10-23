@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 13 讲 · 白平衡与色温</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="kicker">日常摄影实践 · 第 13 讲</p>
+<h1>白平衡与色温：把颜色拍对</h1>
+<p class="lede">构图、亮度都还行，可颜色就是<strong>不对</strong>——人脸发橙、窗外发蓝、整张像蒙了一层滤镜。这一讲解决的就是这件小事：<strong>颜色为什么总不对，以及你要拧哪个旋钮把它拧回来</strong>。</p>
+
+<p class="toc" style="margin:.1rem 0 1.6rem;font-family:var(--sans);font-size:.82rem;color:var(--muted);">
+  <a href="0012-post-processing-dng.html">← 上一讲 · 第 12 讲 · 后期入门</a>
+  &nbsp;·&nbsp; <a href="0014-histogram-and-metering.html">下一讲 · 直方图与测光 →</a>
+  &nbsp;·&nbsp; <a href="../reference/0001-exposure-cheatsheet.html">曝光速查表</a>
+  &nbsp;·&nbsp; <a href="../reference/0003-glossary.html">词汇表</a>
+</p>
+
+<p>第 8 讲和第 12 讲都提过同一句话：<strong>先白平衡，再谈冷暖</strong>。这一讲把它讲透，
+并补上一件前面没细说的事：<strong>你的两台机在颜色这件事上，一个能锁、一个不能锁</strong>。
+用错了方法，你会一直和错误的颜色较劲。</p>
+
+<h2>相机到底在猜什么</h2>
+
+<p>相机没有「颜色」概念，它看到的只有红、绿、蓝三个通道的强弱。
+问题在于，同样一组三通道数值，在不同照明下代表的世界并不相同。</p>
+
+<dl>
+  <dt>白平衡 <span class="pill">拍得白的东西是白的</span></dt>
+  <dd>一种换算规则：告诉相机，画面里<strong>应该是白的东西（白墙、白纸、白衬衫）</strong>，
+  你希望它被还原成真正的白。规则错了，<strong>整张画面所有颜色会一起偏</strong>——
+  偏黄、偏蓝、偏绿，没有哪一种颜色是单独的。</dd>
+
+  <dt>色温 <span class="pill">光的颜色，用开尔文说</span></dt>
+  <dd>衡量光源颜色的一把尺，单位是<strong>开尔文（K）</strong>。
+  数字越低越偏<strong>暖</strong>（黄橙），越高越偏<strong>冷</strong>（蓝）。
+  家里白炽灯大约 2700–3000 K，阴天天光 6000 K 以上，正午直射日光大致 5000–5500 K 附近。
+  这些是常用参照区间，不是硬规定。</dd>
+
+  <dt>自动白平衡（AWB） <span class="pill">让相机自己猜</span></dt>
+  <dd>相机自己判断画面里的光是什么颜色，再据此换算。猜对了颜色就准，猜错了整张图就偏。
+  <strong>AWB 不是「更好的白平衡」，只是「更省事的白平衡」</strong>，
+  而且它的猜测对象是<strong>整张画面的平均色</strong>，不是你以为的那个人。</dd>
+</dl>
+
+<p>这条请记牢：<strong>AWB 是按整个画面在猜，不是按你的主体在猜。</strong></p>
+
+<figure class="figure">
+  <svg viewBox="0 0 420 250" role="img" aria-labelledby="fig-kelvin-t">
+    <title id="fig-kelvin-t">色温轴：从暖黄到冷蓝，以及设定错时的两种偏色</title>
+
+    <text x="10" y="18" font-size="12" font-weight="600">光源的色温轴</text>
+
+    <rect x="24" y="30" width="86" height="26" rx="5" class="f-bad s-bad" />
+    <rect x="114" y="30" width="86" height="26" rx="5" class="f-wash s-accent" />
+    <rect x="204" y="30" width="86" height="26" rx="5" class="f-wash s-accent" />
+    <rect x="294" y="30" width="104" height="26" rx="5" class="f-accent s-accent" />
+    <text x="67" y="47" text-anchor="middle" font-size="11" class="t-bad">暖 · 黄橙</text>
+    <text x="157" y="47" text-anchor="middle" font-size="11">室内灯</text>
+    <text x="247" y="47" text-anchor="middle" font-size="11">日光</text>
+    <text x="346" y="47" text-anchor="middle" font-size="11" class="t-accent">冷 · 蓝</text>
+
+    <line x1="24" y1="78" x2="398" y2="78" class="s-rule" />
+    <line x1="24" y1="74" x2="24" y2="82" class="s-muted" />
+    <line x1="114" y1="74" x2="114" y2="82" class="s-muted" />
+    <line x1="204" y1="74" x2="204" y2="82" class="s-muted" />
+    <line x1="294" y1="74" x2="294" y2="82" class="s-muted" />
+    <line x1="398" y1="74" x2="398" y2="82" class="s-muted" />
+    <text x="24" y="96" text-anchor="middle" font-size="10" class="t-muted">2700K</text>
+    <text x="114" y="96" text-anchor="middle" font-size="10" class="t-muted">4000K</text>
+    <text x="204" y="96" text-anchor="middle" font-size="10" class="t-muted">5500K</text>
+    <text x="294" y="96" text-anchor="middle" font-size="10" class="t-muted">6500K</text>
+    <text x="398" y="96" text-anchor="middle" font-size="10" class="t-muted">8000K+</text>
+
+    <text x="10" y="130" font-size="12" font-weight="600">如果你把白平衡一律设成 5500K</text>
+
+    <rect x="24" y="142" width="180" height="60" rx="8" class="f-surface s-rule" />
+    <text x="114" y="166" text-anchor="middle" font-size="11.5" font-weight="600" class="t-bad">拍到暖光时</text>
+    <text x="114" y="185" text-anchor="middle" font-size="11">画面偏黄、偏橙</text>
+    <text x="24" y="216" font-size="10" class="t-muted">灯光的 2700K 被当成 5500K 记录</text>
+
+    <rect x="218" y="142" width="180" height="60" rx="8" class="f-surface s-rule" />
+    <text x="308" y="166" text-anchor="middle" font-size="11.5" font-weight="600" class="t-accent">拍到天光时</text>
+    <text x="308" y="185" text-anchor="middle" font-size="11">画面偏蓝、偏青</text>
+    <text x="218" y="216" font-size="10" class="t-muted">天光的 6500K 被当成 5500K 记录</text>
+
+    <text x="10" y="240" font-size="10.5" class="t-muted">方向别记反：设得越高（越冷），画面越蓝；设得越低（越暖），画面越黄。</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>上面一条是从暖到冷的光源轴，标的是常见参照色温区间（不是硬标准）。
+    下面两块是<strong>把白平衡固定设在 5500K</strong> 时的两种结果：拍暖光就偏黄，拍冷天光就偏蓝。
+    <b>关键一句：色温调高，画面变蓝；调低，画面变黄。</b>
+    想「去掉那层黄」就往冷调，想「去掉那层蓝」就往暖调。原理图见
+    <a href="https://www.cambridgeincolour.com/tutorials/white-balance.htm" target="_blank" rel="noopener">Cambridge in Colour：白平衡</a>。
+  </figcaption></figure>
+
+<h2>自动白平衡什么时候会猜错</h2>
+
+<p>AWB 的工作方式：取画面的平均颜色，当作「这是白的东西」，据此反推光源应该是什么颜色，
+再把整张画面换算成中性。<strong>只要画面里大面积物体的颜色和光源颜色接近，它就猜对；
+一旦最显眼的那一大片颜色带着强烈色偏，它就会把那个色偏当成「正常」保留下来。</strong></p>
+
+<ul>
+  <li><strong>大片蓝天的户外逆光。</strong>天空占了大半，AWB 以为「世界本来就是蓝的」，
+  于是把暖色的人脸推成橙褐色——户外拍人最常见的偏色。</li>
+  <li><strong>一屋子暖黄灯。</strong>明明能修正，它却常只修一点点就收手，人脸仍然是黄的。</li>
+  <li><strong>绿植占了大半个画面。</strong>相机把绿色当成中性的白，整张往绿里偏。</li>
+</ul>
+
+<p>规律一句话：<strong>AWB 在「颜色单一而一致」的场景里最准，在「颜色杂、互相矛盾」的场景里最容易瞎猜。</strong>
+麻烦的来源不是光本身，而是光和被摄物的颜色打架。</p>
+
+<h2>手动锁定白平衡：两台机各有一招</h2>
+
+<p>手动锁定白平衡的意思是：<strong>你不让相机去猜，而是由你指定一个固定色温</strong>，
+这一整段拍摄都用同一套换算规则。好处是同一场景里所有照片颜色一致——
+在拍人、拍产品、拍一组要拼在一起的画面时，这是刚需。</p>
+
+<h3>iPhone Air：拍照时锁不住，但可以换一种拍法、事后修回来</h3>
+
+<p>iPhone Air 的相机 App 拍照时<strong>不给你手选色温的滑杆</strong>，
+白平衡基本由机器自动决定，也没有像 Pocket 4 那样的「白平衡锁定」开关。但路径不同，不代表它没法用颜色：</p>
+
+<ul>
+  <li><strong>靠「摄影风格」定基调。</strong>iPhone Air 带新一代摄影风格，拍摄前就能换掉机器默认的成像口味
+  （Apple 官方介绍见 <a href="https://www.apple.com.cn/iphone-air/" target="_blank" rel="noopener">Apple 中国 iPhone Air 页面</a>）。
+  想要一张偏冷一点、干净一点的底子，先把风格定好，后面调色会省很多事。
+  这不是锁白平衡，但它是<strong>在机内先把调子定下来</strong>。</li>
+  <li><strong>拍完在「编辑」里修。</strong>相册编辑里有<strong>色温</strong>与<strong>色调</strong>两个滑杆，
+  拖色温就是拖白平衡：往冷拖变蓝，往暖拖变黄。这是最灵活的一招，因为你看得到画面，可以边拖边判断。
+  HEIF 保留的信息足够做整体偏色的修正（第 12 讲讲过，JPEG/HEIF 里还能动的就是这类整体动作）。</li>
+  <li><strong>用「人像」功能管皮肤。</strong>新一代人像功能可调整焦点与景深，也有相应的色调调整项——
+  但它优先级有限：<strong>整张一开始就偏黄，靠人像功能是救不回来的</strong>，底子得先正。</li>
+</ul>
+
+<h3>Osmo Pocket 4：能真正锁住，这是它在这一讲里的优势</h3>
+
+<p>Pocket 4 的拍照设置里<strong>有白平衡这一项</strong>：可以交给自动，
+也可以自己指定一个固定色温档位（具体可选值以机内菜单为准）。
+一旦固定，<strong>同一段拍摄里的所有照片都用同一套换算</strong>，这在三个场合是决定性的：</p>
+
+<ul>
+  <li><strong>一组要拼在一起的画面</strong>（拼图、对比图、同一件东西的多角度）。</li>
+  <li><strong>延时摄影</strong>——天色每分钟都在变，自动白平衡会让每帧底色都在跳，拼起来忽冷忽暖；
+  固定色温能让整段颜色一致。</li>
+  <li><strong>视频</strong>——视频对色彩跳变比照片敏感得多，一点点变化观众就看得出来。</li>
+</ul>
+
+<p>还有一个实用配件：Pocket 4 的<strong>磁吸补光灯</strong>有三档亮度与色温，
+它能在室内制造一个更统一的色调环境——<strong>用光去迁就白平衡，往往比用白平衡去迁就光更省事</strong>。
+另外 Pocket 4 能存 <strong>DNG</strong>，为什么这个格式让「拍不准颜色」变得可容忍，最后一节会说。</p>
+
+<figure class="figure">
+  <svg viewBox="0 0 420 260" role="img" aria-labelledby="fig-lock-t">
+    <title id="fig-lock-t">两台机在白平衡这件事上的不同路径与共同终点</title>
+
+    <rect x="8" y="8" width="200" height="150" rx="10" class="f-surface s-rule" />
+    <text x="24" y="32" font-size="12.5" font-weight="600" class="t-accent">iPhone Air</text>
+    <text x="24" y="54" font-size="11">① 摄影风格：拍摄前定基调</text>
+    <text x="24" y="76" font-size="11">② 拍摄时：交给机器</text>
+    <text x="24" y="98" font-size="11">③ 拍后：编辑里拖色温/色调</text>
+    <line x1="24" y1="112" x2="192" y2="112" class="s-rule" />
+    <text x="24" y="132" font-size="10.5" class="t-muted">锁不住，但可修</text>
+    <text x="24" y="150" font-size="10.5" class="t-muted">适合：随手拍、拍完就发</text>
+
+    <rect x="212" y="8" width="200" height="150" rx="10" class="f-surface s-rule" />
+    <text x="228" y="32" font-size="12.5" font-weight="600" class="t-accent">Osmo Pocket 4</text>
+    <text x="228" y="54" font-size="11">① 拍照设置：固定白平衡档</text>
+    <text x="228" y="76" font-size="11">② 补光灯：改造现场光</text>
+    <text x="228" y="98" font-size="11">③ 存 DNG：颜色从头再来</text>
+    <line x1="228" y1="112" x2="396" y2="112" class="s-rule" />
+    <text x="228" y="132" font-size="10.5" class="t-muted">能锁住，也能修</text>
+    <text x="228" y="150" font-size="10.5" class="t-muted">适合：认真拍、一组画面</text>
+
+    <rect x="8" y="168" width="404" height="76" rx="10" class="f-wash s-accent" />
+    <text x="24" y="192" font-size="12" font-weight="600">两条路径的共同点</text>
+    <text x="24" y="214" font-size="11">目标一样：让画面里「应该是白的东西」真的是白的。</text>
+    <text x="24" y="234" font-size="11">核对标准也一样——不要靠「感觉」，靠白色物体去核对。</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>左右是两条不同的路线，但终点相同。<b>iPhone Air</b> 是在机内定基调、事后修回来；
+    <b>Pocket 4</b> 可以在拍摄时就固定规则，还有补光灯和 DNG 两条后手。
+    <b>下面那块蓝底才是要点</b>：不管走哪条路，核对标准永远是同一件事——<b>画面里的白色物体，是不是白的</b>。
+    这比「感觉整体偏黄」可靠得多，因为人会整体适应，而你不会。
+  </figcaption>
+</figure>
+
+<h2>混合光源：室内黄光 + 窗外蓝光，怎么取舍</h2>
+
+<p>这是现实里最常见的难题：<strong>人坐在暖黄灯光下，背景是窗外傍晚偏蓝的天光</strong>。
+一张照片不可能既让灯下的皮肤对，又让窗外的天对——除非你放弃其中一边。
+所以先做判断，不是先做调整：<strong>问自己，这张照片里谁才是主体？</strong></p>
+
+<figure class="figure">
+  <svg viewBox="0 0 420 280" role="img" aria-labelledby="fig-mix-t">
+    <title id="fig-mix-t">混合光源下按主体决定取舍的三条路</title>
+
+    <rect x="130" y="6" width="160" height="30" rx="8" class="f-surface s-rule" />
+    <text x="210" y="26" text-anchor="middle" font-size="11.5" font-weight="600">主体是谁？</text>
+    <line x1="170" y1="36" x2="80" y2="60" class="s-muted" stroke-width="1.4" />
+    <line x1="210" y1="36" x2="210" y2="60" class="s-muted" stroke-width="1.4" />
+    <line x1="250" y1="36" x2="340" y2="60" class="s-muted" stroke-width="1.4" />
+
+    <rect x="8" y="60" width="140" height="150" rx="10" class="f-surface s-rule" />
+    <text x="20" y="84" font-size="12" font-weight="600" class="t-accent">人是主体</text>
+    <text x="20" y="108" font-size="11">跟灯走</text>
+    <text x="20" y="128" font-size="10.5" class="t-muted">皮肤自然最重要</text>
+    <text x="20" y="150" font-size="11">窗外偏蓝就让它偏蓝</text>
+    <text x="20" y="170" font-size="10.5" class="t-muted">蓝背景反而像「冷调」</text>
+    <text x="20" y="192" font-size="10.5" class="t-bad">代价：窗边白墙发蓝</text>
+
+    <rect x="152" y="60" width="116" height="150" rx="10" class="f-surface s-rule" />
+    <text x="164" y="84" font-size="12" font-weight="600" class="t-accent">两者都不让</text>
+    <text x="164" y="108" font-size="11">折中取值</text>
+    <text x="164" y="128" font-size="10.5" class="t-muted">皮肤偏黄一点</text>
+    <text x="164" y="150" font-size="11">天空偏蓝一点</text>
+    <text x="164" y="170" font-size="10.5" class="t-muted">两边都不纯净</text>
+    <text x="164" y="192" font-size="10.5" class="t-bad">代价：两边都不对</text>
+
+    <rect x="272" y="60" width="140" height="150" rx="10" class="f-surface s-rule" />
+    <text x="284" y="84" font-size="12" font-weight="600" class="t-accent">环境是主体</text>
+    <text x="284" y="108" font-size="11">跟窗外走</text>
+    <text x="284" y="128" font-size="10.5" class="t-muted">天色正确最重要</text>
+    <text x="284" y="150" font-size="11">人被暖光染成橙</text>
+    <text x="284" y="170" font-size="10.5" class="t-muted">有时反而好看</text>
+    <text x="284" y="192" font-size="10.5" class="t-bad">代价：人脸发橙</text>
+
+    <rect x="8" y="222" width="404" height="48" rx="10" class="f-wash s-accent" />
+    <text x="24" y="244" font-size="11" font-weight="600">还有第三条路：改变现场</text>
+    <text x="24" y="262" font-size="10.5">拉上窗帘、关掉一盏灯、开补光灯——环境变了，就不必做取舍。</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>先问「主体是谁」，再走对应的一条路。
+    <b>中间那一格（折中）通常是最差的选择</b>——两边都不纯净，
+    观感上人只会觉得「这照片颜色有点怪」，却说不出怪在哪。
+    <b>下面那块才是真正的解法</b>：与其在两种光之间和颜色搏斗，不如先改变现场本身。
+  </figcaption>
+</figure>
+
+<p>一条实用经验：<strong>人眼对皮肤的容忍度远低于对环境的容忍度。</strong>
+把皮肤拍黄了，观感立刻是「照片脏」；把蓝天拍得偏暖一点，多数人只觉得「有氛围」。
+所以<strong>默认跟灯走，除非你明确要拍环境</strong>。</p>
+
+<p>还有一个更省事的方向：<strong>别在混合光里拍人，改构图</strong>。
+把人物挪到窗边同一侧的光里，或退到只用一盏光的位置——
+这一步花的时间往往比调色还少，效果却好得多。</p>
+
+<h2>DNG 为什么对颜色更宽容</h2>
+
+<p>DNG 的宽容<strong>不是因为它「色彩更好」，而是因为它把「颜色是怎么算出来的」这一步留给了后期。</strong>
+JPEG / HEIF 在机内就把颜色<strong>算完并压进文件</strong>了，后期能做的只是整体偏色，
+像拿一支笔在整张纸上统一加一笔色：方向对了就行，错了就是全片一起错。
+DNG 记录的是<strong>原始的三通道数据</strong>，白平衡的换算留到后期做——
+你可以<strong>先把白平衡重新定一遍</strong>，再决定要不要偏暖偏冷。这两件事在 JPEG 里被压成了一次，
+在 DNG 里是分开的两步。</p>
+
+<p>所以在混合光场景里，DNG 给你的余地是：<strong>可以先按「跟灯走」出片（皮肤对），
+也可以在后期改成「跟窗走」（天空对），或取折中，而不用重拍。</strong>
+这就是「宽容」的意思：<strong>不是照片更好看，是错了还有得改。</strong></p>
+
+<p>代价还是第 12 讲那句：DNG 要你自己修，色彩管理和降噪都得亲手做。
+<strong>所以它只对「打算认真处理的那几张」有意义</strong>，随手拍的还是 JPEG 划算。</p>
+
+<h2>什么时候该放弃校色</h2>
+
+<p>最后这节可能最重要：<strong>不是所有照片都值得校色</strong>。下面五种情况，建议直接放下。</p>
+
+<ol>
+  <li><strong>混合光本身是内容。</strong>霓虹灯下、暖黄餐厅里、夕阳里的橙红——
+  偏色就是那个场景本身，校正反而把气氛洗掉了。</li>
+  <li><strong>你拍的是剪影或低调画面。</strong>画面里没有「白的东西」当参照，
+  你连该往哪边调都没有依据。</li>
+  <li><strong>时间比照片更值钱。</strong>随手记录、要发朋友圈、三十秒内要发出去——
+  手机编辑里拖两下滑杆就够了，别开 DNG 修图流水线。</li>
+  <li><strong>光线差异大到没法统一。</strong>同一张里既有正午阳光又有室内灯泡，
+  又要照顾人又要照顾背景——硬调只会让中间更糟，<strong>不如放弃其中一边</strong>。</li>
+  <li><strong>你一调就不对。</strong>这条最实用：<strong>如果拖了三遍都没法让它既自然又好看，
+  说明这个场景本来就没有「正确答案」</strong>——要么换构图，要么换光线。</li>
+</ol>
+
+<div class="card">
+  <p><strong>一句话记住取舍的顺序：</strong>
+  先问「画面里该是白的东西，是白的吗」→ 是，就别乱调；不是，先修；
+  修不了，就问「主体是谁」，替主体做决定，另一边放弃。
+  <strong>校色是为了让画面更真，不是为了让画面更准。</strong>
+  很多好照片本来就不是「真」的。</p>
+</div>
+
+<h2>今天就能用：同一场景四种颜色</h2>
+
+<div class="card">
+  <p><strong>练习（十五分钟）：</strong>找一个<strong>只有一种光</strong>的地方——靠窗的桌子、白墙前，
+  或只有一盏灯的房间。同一画面，拍四张。</p>
+  <ol>
+    <li>第 1 张：iPhone Air 默认自动白平衡，不做调整。</li>
+    <li>第 2 张：iPhone Air 拍完进<strong>编辑</strong>，把<strong>色温滑杆</strong>往冷拖到明显偏蓝，再拖回中间。
+    你要亲手确认一次：<strong>往冷拖，画面确实变蓝</strong>。</li>
+    <li>第 3 张：<strong>Osmo Pocket 4</strong>，在拍照设置里把白平衡<strong>固定</strong>到一个档位，
+    连拍两张不同角度——检查两张颜色是否一致。</li>
+    <li>第 4 张：<strong>Osmo Pocket 4</strong> 改存 <strong>DNG</strong>，拍同样的画面。</li>
+  </ol>
+  <p>然后做三件事：<strong>（一）</strong>在第 1 张里找到画面里的白色物体（白墙、白纸、白衬衫），
+  放大看它偏不偏；<strong>（二）</strong>在第 4 张的后期里<strong>重新定一次白平衡</strong>，
+  体会 DNG 的「可以从头再来」；<strong>（三）</strong>把四张放在一起，
+  写下你到底想要哪一种颜色——<strong>这一条才是这一讲真正的作业</strong>。</p>
+</div>
+<h2>回顾：三个自测</h2>
+<div class="quiz">
+  <h3>先合上讲义，自己回答，再看核对</h3>
+
+  <p class="prompt">1. 自动白平衡是怎么猜的？它在什么场景里最容易猜错？</p>
+  <details><summary>看答案</summary>
+    <p>AWB 取画面的平均颜色，当作「白的东西」，反推光源的颜色，再把整张画面换算成中性。
+    所以它错在<strong>把大面积的偏色当成了正常</strong>：户外逆光时天空占了大半，
+    相机以为世界本来就是蓝的，于是把暖色人脸推成橙褐；一屋子暖黄灯时它常只修一点点就收手。
+    规律是：<strong>颜色单一一致时它最准，颜色杂、互相矛盾时最容易瞎猜</strong>——
+    麻烦的来源不是光本身，而是光和被摄物的颜色打架。</p>
+  </details>
+
+  <p class="prompt">2. 色温调高和调低，画面分别往哪个方向偏？室内黄光 + 窗外蓝光时怎么取舍？</p>
+  <details><summary>看答案</summary>
+    <p>色温调高（往冷调）画面变蓝，调低（往暖调）画面变黄。
+    混合光的取舍不能两头都要：<strong>先问主体是谁</strong>。人是主体就跟灯走，让皮肤自然，
+    窗外的蓝就让它蓝（人眼对皮肤的容忍度远低于对环境的容忍度）；环境是主体就跟窗外走。
+    <strong>「折中」通常最差</strong>，两边都不纯净。
+    还有第三条、也是更好的路：<strong>改变现场</strong>——拉窗帘、关掉一盏灯、开补光灯，
+    环境统一了就不必取舍。</p>
+  </details>
+
+  <p class="prompt">3. iPhone Air 和 Osmo Pocket 4 在白平衡上分别怎么处理？DNG 到底宽容在哪？</p>
+  <details><summary>看答案</summary>
+    <p>iPhone Air 拍照时不给你手选色温的滑杆，路径是<strong>拍摄前用「摄影风格」定基调</strong>，
+    <strong>拍后在相册编辑里拖色温与色调滑杆</strong>修回来（往冷拖变蓝、往暖拖变黄）；
+    人像功能的色调调整也在这条链路上，但整张底子偏了它是救不回来的。
+    Osmo Pocket 4 的<strong>拍照设置里能固定白平衡档位</strong>，同一段拍摄颜色一致——
+    这对拼图、延时和视频特别重要；它还有磁吸补光灯可以改造现场光，以及 <strong>DNG</strong> 这条后手。
+    DNG 的宽容<strong>不是照片更好看，而是错了还有得改</strong>：它记录原始三通道数据，
+    白平衡换算留到后期，所以你可以先「跟灯走」出片，后期再改成「跟窗走」，而不用重拍。</p>
+  </details>
+</div>
+
+<p class="ask">这一讲哪里没说清？回到 OpenCode 里直接问你的老师（那个正在运行 <code>teach</code> 的 agent）。
+它记得你手上是 <strong>iPhone Air</strong> 与 <strong>Osmo Pocket 4</strong>，
+两台机的光圈都不可调，颜色问题也各有各的路子——
+比如让它把「混合光下怎么摆位子」写成一份可以照着走的清单，
+或者把 DNG 的白平衡重定拆成手机相册里的具体几步。
+下一讲 <a href="0014-histogram-and-metering.html">第 14 讲 · 直方图与测光</a>接着讲「亮度怎么判断」，
+两讲合起来，就是画面最基础的两件事。</p>
+
+<p class="foot">
+  <strong>推荐一手资料：</strong>
+  <a href="https://search.douban.com/book/subject_search?search_text=%E7%BE%8E%E5%9B%BD%E7%BA%BD%E7%BA%A6%E6%91%84%E5%BD%B1%E5%AD%A6%E9%99%A2%E6%91%84%E5%BD%B1%E6%95%99%E6%9D%90" target="_blank" rel="noopener">《美国纽约摄影学院摄影教材》</a>
+  的「光线与色彩」部分 —— 本课程的骨干教材，白平衡与色温的原理就在其中。
+  图解原理读 <a href="https://www.cambridgeincolour.com/tutorials/white-balance.htm" target="_blank" rel="noopener">Cambridge in Colour：白平衡</a> 与
+  <a href="https://www.cambridgeincolour.com/tutorials/color-management1.htm" target="_blank" rel="noopener">色彩管理</a>；
+  机器的具体功能读 <a href="https://support.apple.com/zh-cn/125092" target="_blank" rel="noopener">Apple iPhone Air 技术规格</a>、
+  <a href="https://www.apple.com.cn/iphone-air/" target="_blank" rel="noopener">Apple 中国 iPhone Air 页面</a> 与
+  <a href="https://www.dji.com/cn/osmo-pocket-4/specs" target="_blank" rel="noopener">DJI Osmo Pocket 4 规格页</a>。
+  <br />图片来源与授权：<a href="../assets/CREDITS.md">图片版权说明</a>（本讲的图全部为手绘内联 SVG，不含照片）。
+  <br />上一讲：<a href="0012-post-processing-dng.html">第 12 讲 · 后期入门</a> ·
+  下一讲：<a href="0014-histogram-and-metering.html">第 14 讲 · 直方图与测光</a> ·
+  速查：<a href="../reference/0001-exposure-cheatsheet.html">曝光速查表</a> ·
+  <a href="../reference/0003-glossary.html">词汇表</a>
+</p>
+
+</body>
+</html>

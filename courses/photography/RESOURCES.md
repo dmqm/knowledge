@@ -1,4 +1,4 @@
-# 我的摄影实践 Resources
+# 日常摄影实践 Resources
 
 > **联网说明（2026-10-16 实测）**：这台机器**打不开 `wikipedia.org` 和 `reddit.com`**（连接被阻断），
 > `petapixel.com` 也不通。所以下面只收录**实测能打开**（HTTP 200）的来源。
@@ -19,11 +19,32 @@
 - **[《理解曝光》Understanding Exposure（豆瓣搜索）](https://search.douban.com/book/subject_search?search_text=%E7%90%86%E8%A7%A3%E6%9B%9D%E5%85%89)**
   —— 专治「曝光三角」没感觉。第 1 讲讲完再读，收获最大。
 - **[《摄影师的视界》The Photographer's Eye（豆瓣搜索）](https://search.douban.com/book/subject_search?search_text=The%20Photographer's%20Eye)**
-  —— 讲构图为什么成立。第 5 讲（取景）的延伸。
+  —— 讲构图为什么成立。第 5 讲（取景）、第 15 讲（构图进阶）的延伸。
 - **[《论底片》The Negative（豆瓣搜索）](https://search.douban.com/book/subject_search?search_text=%E8%AE%BA%E5%BA%95%E7%89%87)**
   —— 亚当斯的影调体系，黑白摄影的「圣经」。第 8 讲（影调）的延伸，偏硬核。
 - **[Light: Science and Magic（豆瓣搜索）](https://search.douban.com/book/subject_search?search_text=Light%20Science%20and%20Magic)**
   —— 用光教材里的标准答案，讲光为什么会这样反射。第 6 讲的延伸。
+
+### 第 13–18 讲的补充资料
+
+- **白平衡与色温（第 13 讲）**：[Cambridge in Colour：白平衡](https://www.cambridgeincolour.com/tutorials/white-balance.htm) ·
+  [色彩管理](https://www.cambridgeincolour.com/tutorials/color-management1.htm)
+  —— 讲义里没有展开的色温换算与「为什么调高变蓝」的完整推导在这里。
+- **直方图与测光（第 14 讲）**：[Cambridge in Colour：直方图](https://www.cambridgeincolour.com/tutorials/histograms1.htm) ·
+  [测光](https://www.cambridgeincolour.com/tutorials/camera-metering.htm)
+  —— 直方图读法与测光模式的标准讲法。
+- **构图进阶（第 15 讲）**：[Cambridge in Colour：三分法](https://www.cambridgeincolour.com/tutorials/rule-of-thirds.htm)
+- **备份与整理（第 17 讲）**：[Cambridge in Colour：如何做归档级照片备份](https://www.cambridgeincolour.com/tutorials/archival-photo-backup.htm) ·
+  [如何保护在线照片](https://www.cambridgeincolour.com/tutorials/protect-online-photos.htm) ·
+  [少数派 — 摄影](https://sspai.com/search/post/摄影) ·
+  [数字尾巴](https://www.dgtle.com/) —— 中文里讲「工作流」最实用的两个站，导入、备份、调色都有可照着做的步骤。
+- **视频与后期（第 10、12 讲）**：[DaVinci Resolve](https://www.blackmagicdesign.com/products/davinciresolve/)（免费版够用）·
+  [DJI Osmo Pocket 4 官方支持](https://www.dji.com/cn/support/product/osmo-pocket-4)（说明书、固件、常见问题）
+- **机器规格（一手来源）**：[Apple iPhone Air 技术规格](https://support.apple.com/zh-cn/125092) ·
+  [DJI Osmo Pocket 4 规格页](https://www.dji.com/cn/osmo-pocket-4/specs)
+  —— 第 13–18 讲里涉及器材的断言都挂在这两个页面上。**注意：规格页只列硬指标（传感器、镜头、ISO、快门、格式），
+  不逐项列机内菜单**；凡涉及菜单项的表述，一律以你机器上的实际菜单为准。
+
 
 ### 在线教程（能打开、成体系、免费）
 

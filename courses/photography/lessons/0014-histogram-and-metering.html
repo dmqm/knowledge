@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 14 讲 · 直方图与测光</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="kicker">日常摄影实践 · 第 14 讲</p>
+<h1>直方图与测光：你以为的亮，其实是相机猜的</h1>
+<p class="lede">这一讲解决两件天天发生却说不清的事：<strong>为什么拍出来的比看到的暗</strong>，以及<strong>怎么一眼看出这张废了</strong>。工具是直方图和测光，目标是让你在按下快门之前就知道结果。</p>
+
+<p class="toc" style="margin:.1rem 0 1.6rem;font-family:var(--sans);font-size:.82rem;color:var(--muted);">
+  <a href="0013-white-balance-and-color.html">← 上一讲 · 第 13 讲 · 白平衡与色温</a>
+  &nbsp;·&nbsp; <a href="0015-composition-advanced.html">下一讲 · 第 15 讲 · 构图进阶 →</a>
+  &nbsp;·&nbsp; <a href="../reference/0001-exposure-cheatsheet.html">曝光速查表</a>
+  &nbsp;·&nbsp; <a href="../reference/0003-glossary.html">词汇表</a>
+</p>
+
+<p>第 1 讲说过，画面亮度最终由光圈、快门、ISO 三样决定；这一讲处理的是这三样之外的那一层：
+<strong>谁来决定「应该多亮」</strong>。答案是测光——机器替你猜。而猜错的时候，
+直方图是唯一能让你看清猜得对不对的工具。</p>
+
+<h2>直方图是一张地图，不是评分表</h2>
+
+<p>先把名词钉死：<strong>直方图</strong>是把整张画面按亮度分成若干档，画出每一档里有多少像素。
+横轴从左到右是<strong>从最暗到最亮</strong>，纵轴是<strong>这个亮度上堆了多少像素</strong>。
+原理图解见
+<a href="https://www.cambridgeincolour.com/tutorials/histograms1.htm" target="_blank" rel="noopener">Cambridge in Colour：直方图</a>。</p>
+
+<dl>
+  <dt>直方图 <span class="pill">亮度的分布图</span></dt>
+  <dd>把画面所有像素按亮度归到一条从黑到白的轴上，统计每一段有多少像素。
+  它<strong>不评价好坏，只报告事实</strong>：有没有大片区域黑到没细节，有没有大片区域白到没细节。</dd>
+
+  <dt>剪切（clipping） <span class="pill">细节被切掉</span></dt>
+  <dd>像素已经到达最黑或最白，<strong>再多的信息也存不进去了</strong>。
+  暗部被切是「死黑」，亮部被切是「死白」。这两种地方后期拉不回来——不是调得难看，是数据本身没了。</dd>
+
+  <dt>中间调 <span class="pill">灰的那一坨</span></dt>
+  <dd>直方图中间偏左、灰度不高不低的那一坨像素。大多数日常照片的「肉」都在这里，
+  它的位置决定了你这张照片整体是「厚重」还是「轻淡」。</dd>
+</dl><figure class="figure">
+  <svg viewBox="0 0 420 250" role="img" aria-labelledby="fig-hist3-t">
+    <title id="fig-hist3-t">欠曝、正常、过曝三种曝光下的直方图形态</title>
+
+    <text x="10" y="18" font-size="10.5" class="t-bad">左边被切</text>
+    <text x="176" y="18" font-size="10.5" class="t-ok">落在中间</text>
+    <text x="336" y="18" font-size="10.5" class="t-bad">右边被切</text>
+
+    <line x1="8" y1="150" x2="414" y2="150" class="s-rule" />
+
+    <rect x="10" y="54" width="8" height="96" class="f-bad" />
+    <rect x="20" y="60" width="8" height="90" class="f-bad" />
+    <rect x="30" y="70" width="8" height="80" class="f-bad" />
+    <rect x="40" y="84" width="8" height="66" class="f-bad" />
+    <rect x="50" y="100" width="8" height="50" class="f-bad" />
+    <rect x="60" y="114" width="8" height="36" class="f-bad" />
+    <rect x="70" y="126" width="8" height="24" class="f-bad" />
+    <rect x="80" y="136" width="8" height="14" class="f-bad" />
+    <rect x="90" y="142" width="8" height="8" class="f-bad" />
+    <rect x="100" y="146" width="8" height="4" class="f-bad" />
+    <rect x="110" y="148" width="8" height="2" class="f-bad" />
+
+    <rect x="148" y="148" width="8" height="2" class="f-accent" />
+    <rect x="158" y="146" width="8" height="4" class="f-accent" />
+    <rect x="168" y="141" width="8" height="9" class="f-accent" />
+    <rect x="178" y="132" width="8" height="18" class="f-accent" />
+    <rect x="188" y="118" width="8" height="32" class="f-accent" />
+    <rect x="198" y="100" width="8" height="50" class="f-accent" />
+    <rect x="208" y="86" width="8" height="64" class="f-accent" />
+    <rect x="218" y="100" width="8" height="50" class="f-accent" />
+    <rect x="228" y="118" width="8" height="32" class="f-accent" />
+    <rect x="238" y="132" width="8" height="18" class="f-accent" />
+    <rect x="248" y="141" width="8" height="9" class="f-accent" />
+    <rect x="258" y="146" width="8" height="4" class="f-accent" />
+    <rect x="268" y="148" width="8" height="2" class="f-accent" />
+
+    <rect x="286" y="149" width="8" height="1" class="f-bad" />
+    <rect x="296" y="148" width="8" height="2" class="f-bad" />
+    <rect x="306" y="145" width="8" height="5" class="f-bad" />
+    <rect x="316" y="140" width="8" height="10" class="f-bad" />
+    <rect x="326" y="130" width="8" height="20" class="f-bad" />
+    <rect x="336" y="114" width="8" height="36" class="f-bad" />
+    <rect x="346" y="92" width="8" height="58" class="f-bad" />
+    <rect x="356" y="70" width="8" height="80" class="f-bad" />
+    <rect x="366" y="58" width="8" height="92" class="f-bad" />
+    <rect x="376" y="54" width="8" height="96" class="f-bad" />
+    <rect x="386" y="54" width="8" height="96" class="f-bad" />
+    <rect x="396" y="54" width="8" height="96" class="f-bad" />
+
+    <text x="62" y="170" text-anchor="middle" font-size="12.5" font-weight="600">欠曝</text>
+    <text x="210" y="170" text-anchor="middle" font-size="12.5" font-weight="600">正常</text>
+    <text x="352" y="170" text-anchor="middle" font-size="12.5" font-weight="600">过曝</text>
+
+    <text x="62" y="186" text-anchor="middle" font-size="10.5" class="t-muted">全挤在左边</text>
+    <text x="210" y="186" text-anchor="middle" font-size="10.5" class="t-muted">散在中间</text>
+    <text x="352" y="186" text-anchor="middle" font-size="10.5" class="t-muted">全挤在右边</text>
+
+    <line x1="8" y1="214" x2="414" y2="214" class="s-rule" />
+    <line x1="8" y1="210" x2="8" y2="218" class="s-muted" />
+    <line x1="414" y1="210" x2="414" y2="218" class="s-muted" />
+    <text x="8" y="234" font-size="11" class="t-muted">阴影</text>
+    <text x="414" y="234" text-anchor="end" font-size="11" class="t-muted">高光</text>
+    <text x="210" y="234" text-anchor="middle" font-size="11" class="t-muted">中间调</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>三张图共用一条「阴影 → 高光」的轴（左暗右亮），柱越高说明那个亮度的像素越多。
+    <b>欠曝</b>那一栏所有像素都挤在最左端，意味着一大片区域挤在纯黑里，阴影细节已经没了；
+    <b>过曝</b>那一栏右边几根柱子顶到齐平，意味着一大片变成了纯白，亮部细节被剪切；
+    <b>正常</b>那一栏呈驼峰状散在中间，两头都不堆。
+    但请记住：<b>这是仪表盘，不是评分表</b>——拍夜景本来就该偏左，拍雪本来就该偏右。
+  </figcaption>
+</figure>
+
+<p>看直方图只问两个问题：<strong>最左边有没有一大片贴地</strong>（暗部死黑），
+<strong>最右边有没有一大片顶天</strong>（亮部死白）。其余形状都不重要。
+把「右边那一端有没有贴顶」练成条件反射即可——亮部一旦剪切就救不回来，
+暗部剪切还能在后期抬一抬（存了 DNG 的话尤其如此）。</p>
+
+<p>还要留一个警惕：直方图的形状会骗人，<strong>它不告诉你画面里有什么</strong>。
+永远要<strong>图和直方图一起看</strong>。</p>
+
+<h2>为什么阳光下的手机屏幕会骗你</h2>
+
+<p>屏幕在户外会骗你，原因是两条事实：<strong>屏幕本身亮度有限</strong>，
+直射阳光打在屏幕上的反射光可能比屏幕发出的光还强；<strong>你的眼睛会跟着环境适应</strong>，
+在刺眼的阳光下，屏幕显得比实际更暗。于是你看着取景画面觉得「好暗，该加点曝光」，
+实际上画面可能正好，甚至已经过曝。</p>
+
+<p>这会造成一个很典型的误操作：<strong>你在户外越拍越加曝光</strong>，
+因为屏幕让你以为不够亮。结果每一张都比该有的更亮，天空一片死白，
+回头看直方图才发现右边早就顶天了。反方向的错也存在：室内暗光下屏幕显得「还挺亮」，
+你就不去补偿，按默认拍，回来是一张灰扑扑、噪点炸开的废片。
+<strong>屏幕不是亮度计，它是一块被环境光污染的显示器。</strong></p>
+
+<p>顺便说清一件常被误会的事：<strong>iPhone Air 的相机取景界面不显示直方图</strong>，
+你在 Air 上没有实时读数的手段，只能靠「点按测光 + 眼睛判断」；
+要读直方图，只能拍完之后在支持直方图显示的工具里看。
+<strong>Osmo Pocket 4</strong> 的取景屏是 2 英寸、1000 尼特的 OLED，户外可见度远高于手机，
+但它同样不能替代直方图。参数见 DJI 的
+<a href="https://www.dji.com/cn/osmo-pocket-4/specs" target="_blank" rel="noopener">Osmo Pocket 4 规格页</a>。</p>
+
+<h2>点测光：把亮度的决定权交给一小块</h2>
+
+<p>相机测光默认会「把整个画面平均成中等亮度」（大约 18% 灰），这是第 1 讲讲过的假设。
+这个假设在雪地、逆光、黑色背景上必然出错。解法是<strong>换一种测光方式</strong>——让相机只听一小块地方的。</p>
+
+<dl>
+  <dt>点测光（spot metering） <span class="pill">只看一小点</span></dt>
+  <dd>把一个很小的圈对准画面里的某个位置，<strong>只用那一小块决定整张照片的亮度</strong>。
+  典型用法：对着一块白墙测光让整张照片变暗；或对着一个人的脸测光，让亮度锚定在脸上。
+  原理见 <a href="https://www.cambridgeincolour.com/tutorials/camera-metering.htm" target="_blank" rel="noopener">Cambridge in Colour：测光</a>。</dd>
+
+  <dt>中央重点测光 <span class="pill">看画面中央</span></dt>
+  <dd>折中方案：主要看画面中央一块，兼顾其余部分。多数情况下它比「全画面平均」更接近你要的。</dd>
+
+  <dt>AE/AF 锁定 <span class="pill">亮度定住别再算</span></dt>
+  <dd>把当前的自动曝光与自动对焦<strong>冻结</strong>，之后重新构图、人物走位、镜头转动，
+  亮度都不会再变。逆光拍人、拍雪、拍夜景时几乎必用。</dd>
+</dl>
+
+<figure class="figure">
+  <svg viewBox="0 0 420 230" role="img" aria-labelledby="fig-meter-t">
+    <title id="fig-meter-t">三种测光方式读画面的范围不同</title>
+
+    <rect x="8" y="20" width="128" height="96" rx="6" class="f-bg s-rule" />
+    <rect x="8" y="20" width="128" height="34" class="f-muted" />
+    <rect x="8" y="54" width="128" height="62" class="f-ink" />
+    <rect x="20" y="66" width="30" height="20" class="f-wash" />
+    <rect x="16" y="24" width="112" height="88" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="4 4" />
+    <text x="72" y="134" text-anchor="middle" font-size="12.5" font-weight="600">平均测光</text>
+    <text x="72" y="150" text-anchor="middle" font-size="10.5" class="t-muted">整个画面一起算</text>
+
+    <rect x="146" y="20" width="128" height="96" rx="6" class="f-bg s-rule" />
+    <rect x="146" y="20" width="128" height="34" class="f-muted" />
+    <rect x="146" y="54" width="128" height="62" class="f-ink" />
+    <rect x="158" y="66" width="30" height="20" class="f-wash" />
+    <rect x="176" y="42" width="68" height="58" fill="none" class="s-rule" stroke-width="2" />
+    <text x="210" y="134" text-anchor="middle" font-size="12.5" font-weight="600">中央重点</text>
+    <text x="210" y="150" text-anchor="middle" font-size="10.5" class="t-muted">主要听中间的</text>
+
+    <rect x="284" y="20" width="128" height="96" rx="6" class="f-bg s-rule" />
+    <rect x="284" y="20" width="128" height="34" class="f-muted" />
+    <rect x="284" y="54" width="128" height="62" class="f-ink" />
+    <rect x="296" y="66" width="30" height="20" class="f-wash" />
+    <rect x="302" y="68" width="18" height="16" fill="none" class="s-accent" stroke-width="2" />
+    <line x1="311" y1="60" x2="311" y2="68" class="s-accent" stroke-width="2" />
+    <text x="348" y="134" text-anchor="middle" font-size="12.5" font-weight="600">点测光</text>
+    <text x="348" y="150" text-anchor="middle" font-size="10.5" class="t-muted">只听一小点</text>
+
+    <line x1="8" y1="172" x2="412" y2="172" class="s-rule" />
+    <text x="8" y="194" font-size="11.5" class="t-muted">浅色块 = 画面里被太阳照亮的那块地。</text>
+    <text x="8" y="212" font-size="11.5" class="t-muted">点测光圈住的正是它：照片亮度按这块地来定，别处的天空与阴影各按各的走。</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>三个框是同一个场景（上方亮天空、下方暗地面，中间有一块被太阳照亮的浅色地面）。
+    <b>平均测光</b>把整个画面一起算，于是那块浅地只占很小面积、被忽略，全局被压暗；
+    <b>中央重点</b>主要听中间，结果介于两者之间；
+    <b>点测光</b>只听你圈住的那一小点——把亮度锚定在浅色地面上，
+    天空与阴影就各自按各的亮度保留细节，代价是别处可能欠曝或过曝。
+  </figcaption>
+</figure>
+
+<p><strong>点测光能解决什么，不能解决什么。</strong>它解决的是「相机的平均值和我的意图不一致」：
+拍雪、拍白墙、拍黑背景、逆光里想保住一张亮的脸。
+它不能解决的是「这张照片本来就不该拍」——比如逆光人像，无论怎么测，
+你只能在「保脸」和「保背景」之间选，选完要接受另一边变糟。</p>
+
+<p>还有一个必须知道的副作用：<strong>点测光会让画面其余部分跟着走</strong>。
+你把亮度锚定在一块很亮的地方，整张照片就都暗下来；锚定在一块很暗的地方，整张都亮起来。
+所以点测光之后<strong>一定要看直方图</strong>，确认右端没有顶天、左端没有贴地。</p>
+
+<h2>亮部警告：死白与闪烁</h2>
+
+<p>很多相机和修图软件会在画面里标出<strong>已经剪切到纯白</strong>的像素，
+最常见的做法是让那一块<strong>闪烁</strong>（blinking）——你盯着看几秒，就知道哪块地方「彻底白了」。
+这不是显示 bug，是给你一个不会看漏的提醒。</p>
+
+<p>为什么专门盯亮部？因为<strong>亮部剪切不可逆，暗部剪切相对可逆</strong>。
+死黑的地方后期还能提一提（尤其 DNG 保留了更多信息），
+而死白的那部分像素存的已经是最高值，没有额外信息可挖。</p>
+
+<p>还有一个和直方图配合使用的判断：<strong>直方图右端不是「贴地」，而是「一坨高柱正好顶到边」</strong>，
+说明不是整片过曝，而是有一小块极亮的东西（太阳、反光的水面、金属）把画面亮度锚住了，
+导致其余部分被压暗。这种情况恰恰是<strong>点测光或曝光补偿的用武之地</strong>。</p>
+
+<h2>曝光补偿：什么时候该用，什么时候不该用</h2>
+
+<p>第 1 讲说过老摄影师的口诀：<strong>白加黑减</strong>。这一讲把它说细。</p>
+
+<table>
+  <thead>
+    <tr><th>场景</th><th>相机会怎么猜</th><th>你该做什么</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>大片雪、白墙</td><td>以为太亮，往下压，雪变脏灰</td><td>加曝光（<code>+0.7EV</code> 起步）或点测光</td></tr>
+    <tr><td>夜景、黑背景</td><td>以为太暗，往上提，画面发灰</td><td>减曝光（<code>−0.7EV</code> 起步）</td></tr>
+    <tr><td>逆光拍人</td><td>被亮背景拉走，脸变黑</td><td>点测光测脸，或长按锁定在脸上</td></tr>
+    <tr><td>想让天空保留颜色</td><td>整体拉亮，天空一片白</td><td>减曝光，让直方图右端退回来</td></tr>
+    <tr><td>想让暗部有细节</td><td>把画面拉亮，暗处一片噪点</td><td>减曝光 + 降 ISO（只在能手动时）</td></tr>
+  </tbody>
+</table>
+
+<p><strong>不该用曝光补偿的情况</strong>，同样要说清楚：</p>
+
+<ul>
+  <li><strong>你还没搞清楚该补偿多少的时候。</strong>补偿是「修正相机的猜测」，
+  不是「把画面调亮一点试试」。乱拖一气往往越拖越乱。先用点测光或 AE/AF 锁定把锚点定对，再谈补偿。</li>
+  <li><strong>主体亮度你并不确定的时候。</strong>你以为「人应该拍白一点」，结果人脸本来就偏亮，
+  一加就死白。这时候该信直方图，不是信想象。</li>
+  <li><strong>你在连拍一组要保持一致的时候。</strong>同一场景里每张都拖一次小太阳，
+  组照的亮度就不统一了。要么整组统一锁定一次，要么整组都不动。</li>
+</ul>
+
+<div class="card">
+  <p><strong>一条好用的顺序：</strong><strong>先定测光锚点（点测光 / 长按锁定）→ 再看直方图 → 最后才用曝光补偿微调</strong>。
+  顺序反过来（先拖小太阳再想测光）会让你分不清到底是谁在决定亮度。
+  而且注意：两台机的光圈都不可调（Air 固定 <code>f/1.6</code>，Pocket 4 固定 <code>f/2.0</code>），
+  你能动的只有「时间」和「ISO」这两条闸门。</p>
+</div>
+
+<h2>两台机分别怎么调</h2>
+
+<h3>iPhone Air：一个小太阳，和一个不能看的屏幕</h3>
+
+<p>因为 Air 的相机 App 不让你手选光圈、快门、ISO（三样全由它分配），你能拧的只有<strong>曝光补偿</strong>：
+轻点主体后出现的那个小太阳，往上拖更亮、往下拖更暗。长按主体则锁定 AE/AF，之后重新构图亮度不变。</p>
+
+<p>因为它没有实时直方图，Air 上的判断顺序只能是：<strong>先点按测光定锚点 → 用曝光补偿把画面调到你觉得对 →
+拍下来 → 回看时检查高光是不是变成了没有纹理的白块</strong>。在户外阳光下，
+尽量<strong>不要靠屏幕观感加曝光</strong>——屏幕在那种环境里最不可靠。
+回到室内或阴凉处回看，或者直接看高光区域的细节还在不在。</p>
+
+<p>还有一个 iPhone 特有的坑：<strong>智能 HDR 会主动把暗部提亮</strong>，
+让画面「看起来」比实际记录的更通透。这在逆光人像上是好事，
+但也意味着你更容易被屏幕上的效果骗过去——亮部该剪的照样剪了。
+Air 只有 HEIF 和 JPEG，<strong>没有 ProRAW</strong>，亮部一旦剪切，后期基本没有余量可用。
+参数见 Apple 官方
+<a href="https://support.apple.com/zh-cn/125092" target="_blank" rel="noopener">iPhone Air 技术规格</a>。</p>
+
+<h3>Osmo Pocket 4：把亮度钉死，而不是漂着</h3>
+
+<p>Pocket 4 的强项在这里体现得最直接：<strong>快门可手选（<code>1/8000 s</code> 到 <code>4 s</code>）、
+ISO 可手选（<code>50–12800</code>）、还能存 DNG</strong>。光圈仍是固定的 <code>f/2.0</code>，不可调。
+于是有两条 Air 上做不到的路：</p>
+
+<ol>
+  <li><strong>手动锁定亮度</strong>：把 ISO 定在 50（最干净），手动调快门直到直方图落在你想要的位置，
+  然后这组照片亮度就完全由你说了算，不会因为构图变化而漂。</li>
+  <li><strong>用 DNG 保住亮部</strong>：直方图右端顶天时，先减一档曝光把剪切救回来。
+  存成 DNG 的话这份多出来的亮部信息后期还捞得回来；存成 JPEG 就没了。</li>
+</ol>
+
+<p>它的取景屏是 2 英寸、1000 尼特 OLED，户外比手机清楚得多，
+所以<strong>户外判断亮度时优先掏 Pocket 4</strong>，别用手机屏幕给自己下结论。
+它还有智能跟随，能在移动中保持主体，但<strong>不会替你解决曝光</strong>。</p>
+
+<h2>那么，信直方图还是信屏幕</h2>
+
+<p>两条都给，但它们回答的不是同一个问题：</p>
+
+<ul>
+  <li><strong>屏幕回答「我想要什么」</strong>——构图、情绪、明暗关系、主体是否突出。它是审美判断。</li>
+  <li><strong>直方图回答「技术上发生了什么」</strong>——有没有细节已经死了。它是事实判断。</li>
+</ul>
+
+<p>所以规则是：<strong>审美看屏幕，技术看直方图</strong>。
+反过来就会出事：只看屏幕，你会在户外一路加曝光；
+只看直方图，你会得到一堆技术上无懈可击、但灰暗沉闷的照片——
+比如把夜景拍成直方图正好居中的「标准灰」，那就白拍了。</p>
+
+<p>真正的流程是：<strong>用屏幕选构图和氛围 → 用点测光或长按锁定把亮度锚在主体上 →
+看直方图确认两端没有剪切 → 用曝光补偿做最后一档微调 → 拍。</strong>
+反过来——先在屏幕上把画面调到「好看」，再点一下测光把亮度锁住——也是成立的，
+这正是<strong>AE/AF 锁定最实用的场景</strong>。</p>
+
+<div class="card">
+  <p><strong>练习（二十分钟）：</strong>找一个光比大的地方——窗边的桌子、傍晚的阳台，
+  或站在室内拍窗外。目标是亲眼看见「屏幕」和「直方图」说不同的话。</p>
+  <ol>
+    <li>用 <strong>iPhone Air</strong> 拍一张：轻点主体，不动小太阳。记住你此刻在屏幕上看到的亮度。</li>
+    <li>再拍一张同一场景，这次先拖小太阳加两三格，<strong>让画面比刚才明显亮</strong>。</li>
+    <li>把两张都用能看直方图的工具打开，<strong>比较两张的高光端</strong>：
+    加曝光那张的右端有没有顶到边？顶到边的地方在画面里是什么（大概率是窗外天空或白墙）？</li>
+    <li>换 <strong>Osmo Pocket 4</strong> 拍同一画面：手动把 ISO 设到最低，
+    快门一档一档地调，<strong>盯住直方图右端</strong>，让它刚好不顶天。再拍一张。</li>
+    <li>最后回到阳光下试一次：拍完<strong>不看屏幕亮度</strong>，
+    只看高光区域有没有纹理。做完这五步你就知道答案了：<strong>户外不要相信屏幕。</strong></li>
+  </ol>
+  <p>如果第 3 步你发现两张的高光<em>都</em>顶天了，说明你的测光锚点一开始就选错了——
+    这时候就该试试点测光了。</p>
+</div>
+
+<h2>回顾：三个自测</h2>
+<div class="quiz">
+  <h3>先合上讲义，自己回答，再看核对</h3>
+
+  <p class="prompt">1. 为什么在阳光下拍人，你越看屏幕越觉得暗，加了两次曝光反而更糟？</p>
+  <details><summary>看答案</summary>
+    <p>因为阳光下的手机屏幕被环境光压过了——屏幕发出的光打不过反射进来的日光，所以你看到的画面比实际记录的暗得多，你以为需要加曝光，实际上可能已经过曝，天空已经一片死白。正确做法是先定测光锚点（点测光或长按锁定），再回到阴凉处回看高光有没有纹理，而不是在户外靠拖小太阳试。</p>
+  </details>
+
+  <p class="prompt">2. 直方图的右端顶到边了，说明什么？你能补救吗？</p>
+  <details><summary>看答案</summary>
+    <p>说明有一部分像素已经到达纯白，细节被剪掉了——那块地方在成片里就是一片没有纹理的白。补救要看情况：先减一两档曝光把亮部救回来是必须的；如果是 iPhone Air（只有 HEIF/JPEG，没有 ProRAW），救不回来的部分基本就固定了；如果是 Osmo Pocket 4 存了 DNG，多出来的亮部信息后期还捞得回来。所以右端顶天这件事，最好在按快门之前就发现。</p>
+  </details>
+
+  <p class="prompt">3. 拍雪景时你用点测光对准了雪，又加了一点曝光补偿。这两件事重复了吗？</p>
+  <details><summary>看答案</summary>
+    <p>不重复，是两件事解决两个不同的问题。点测光解决的是「相机按全画面平均去猜，猜错了」，把亮度锚定在雪上；曝光补偿解决的是「锚定得对了，但我还想要更亮或更暗一点」。顺序是先定锚点（点测光或 AE/AF 锁定）、再看直方图、最后才用补偿微调。而且点测光有副作用：锚点一变，整张照片的亮度都会跟着走，所以改完锚点一定要重新看直方图，确认左端没贴地、右端没顶天。</p>
+  </details>
+</div>
+
+<p class="ask">这一讲哪里没说清？回到 OpenCode 里直接问你的老师（那个正在运行 <code>teach</code>
+的 agent）。它的笔记里已经记着你的两台机器——<strong>iPhone Air</strong>（单摄，26mm f/1.6，无 ProRAW）
+和 <strong>Osmo Pocket 4</strong>（1 英寸，20mm f/2.0，快门 1/8000–4s，ISO 50–12800，可存 DNG），
+<strong>两台机的光圈都不可调</strong>，所以让它把这一讲改写成「你的机器上具体怎么按」都可以。
+如果你还有一台电脑或旧手机（比如能装直方图显示工具的设备），告诉它，它可以针对你的实际组合再讲一遍。</p>
+
+<p class="foot">
+  <strong>推荐一手资料：</strong>
+  <a href="https://search.douban.com/book/subject_search?search_text=%E7%BE%8E%E5%9B%BD%E7%BA%BD%E7%BA%A6%E6%91%84%E5%BD%B1%E5%AD%A6%E9%99%A2%E6%91%84%E5%BD%B1%E6%95%99%E6%9D%90" target="_blank" rel="noopener">《美国纽约摄影学院摄影教材》</a>
+  的「曝光」部分 —— 本课程的骨干教材，测光与曝光补偿那几节和这一讲是同一件事的两种讲法。
+  想看图解版，读 <a href="https://www.cambridgeincolour.com/tutorials/histograms1.htm" target="_blank" rel="noopener">Cambridge in Colour：直方图</a>
+  与 <a href="https://www.cambridgeincolour.com/tutorials/camera-metering.htm" target="_blank" rel="noopener">测光</a>。
+  想核对你手上这两台机器的确切参数，读 Apple 官方 <a href="https://support.apple.com/zh-cn/125092" target="_blank" rel="noopener">iPhone Air 技术规格</a>
+  与 DJI 官方 <a href="https://www.dji.com/cn/osmo-pocket-4/specs" target="_blank" rel="noopener">Osmo Pocket 4 规格</a>。
+  <br />图片来源与授权：<a href="../assets/CREDITS.md">图片版权说明</a>。
+  <br />上一讲：<a href="0013-white-balance-and-color.html">第 13 讲 · 白平衡与色温</a> ·
+  下一讲：<a href="0015-composition-advanced.html">第 15 讲 · 构图进阶</a> ·
+  速查：<a href="../reference/0001-exposure-cheatsheet.html">曝光速查表</a> ·
+  <a href="../reference/0003-glossary.html">词汇表</a>
+</p>
+
+</body>
+</html>
