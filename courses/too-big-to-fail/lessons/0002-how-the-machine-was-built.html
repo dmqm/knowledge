@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 2 讲 · 这台机器是怎么造出来的</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="kicker">大而不倒 · 第 2 讲</p>
+<h1>这台机器是怎么造出来的</h1>
+<p class="lede">2008 年 9 月的每一个"不能救"，都不是那三天里长出来的。它长在三年前装好的一条流水线上：一笔房贷如何变成一张 AAA 债券，又如何在某个星期四的早上突然没人接盘。</p>
+
+<p class="toc" style="margin:.1rem 0 1.6rem;font-family:var(--sans);font-size:.82rem;color:var(--muted);">
+  上一讲：<a href="0001-september-12-2008.html">← 第 1 讲 · 9 月 12 日</a>
+  &nbsp;·&nbsp; <a href="0003-bear-stearns.html">下一讲 · 贝尔斯登 →</a>
+  &nbsp;·&nbsp; <a href="../reference/0001-glossary.html">金融术语表</a>
+</p>
+
+<h2>2007 年 8 月 9 日，巴黎</h2>
+
+<p>那天早上，法国巴黎银行（BNP Paribas）发了一份不到一页的公告：暂停三只基金的赎回，因为"美国证券化市场某些板块的流动性已经完全蒸发"。一家管理着几千亿欧元资产的银行，用"蒸发"这个词告诉全世界：有些资产，今天没有价格了。</p>
+
+<p>同一天，欧洲央行向市场注入约 950 亿欧元。美联储随后跟进。这是危机中第一次大规模流动性操作，比雷曼倒下早了十三个月。</p>
+
+<p>这份公告之所以重要，不是因为它的规模，而是因为它说出了一个此前只在交易台之间流传的判断：<strong>这些债券的问题不是"值多少钱"，而是"根本卖不掉"</strong>。会计上有价格，市场上没有买家。这个区别，就是后面所有故事的起点。</p>
+
+<p>要理解一份巴黎的公告为什么能冻住半个世界，得把镜头再往前推三年，看一台机器是怎么装起来的。</p>
+
+<h2>第一步：把"放贷"和"持有"分开</h2>
+
+<p>传统的银行很简单：吸收存款，放出贷款，自己持有到到期。贷款违约，银行亏钱，所以银行有动力审慎。这个模式的问题是，银行的钱有限，能放的贷款也有限。</p>
+
+<p>从 1980 年代开始，美国逐渐换了一套做法，叫<strong>发起—分销</strong>（originate to distribute）：放贷的人不打算持有贷款，他打算把它卖掉。卖掉之后，违约的风险就不在他身上了，他赚的是手续费。</p>
+
+<p>这一步看起来只是分工，实际上改变了激励。一个不收手续费的审核员，和一个按笔收手续费的经纪人，面对同一个借款人的态度是不一样的。书里没有花很多篇幅写街边的贷款经纪人，但整台机器的输入端在那里：2006 年前后，美国的次级贷款年发放量达到约 6000 亿美元，其中四分之三以上被打包卖了出去。</p>
+
+<p>所谓"次级"（subprime），指的是借款人信用记录较差、收入证明不全、或者选择了"前两年低息、之后重定价"的浮动利率结构。这类贷款在 2003 年只占新增房贷的一小部分，到 2005—2006 年已经接近五分之一。它不是因为穷人突然变多，而是因为<strong>这条流水线需要更多的原料</strong>。</p>
+
+<h2>第二步：三层打包，和一个不该做的假设</h2>
+
+<p>贷款被卖掉之后，进入一个信托或特殊目的实体（SPV），变成<strong>抵押贷款支持证券</strong>（mortgage-backed securities，MBS）。投资人买的不是某一笔贷款，而是一个池子里几千笔贷款的现金流。</p>
+
+<p>接下来是最关键的一步：<strong>分层</strong>（tranching）。同一个池子，切成优先档、中间档、股权档。池子收到的每一块钱利息和本金，先付给优先档；只有当损失超过一定比例，才轮到中间档；股权档最先承受损失，也因此拿到最高的票息。</p>
+
+<p>这个设计本身没有错。它把一笔贷款的风险拆成不同口味，卖给风险偏好不同的投资者。问题出在下一步：中间档不好卖，于是投行把许多 CDO 的中间档再收进一个池子，再切一次层，叫<strong>债务担保证券</strong>（collateralized debt obligation，CDO）；再切一次，就是 CDO 平方。经过两三层重组，原本 B 级的资产里，居然又长出了一批 AAA。</p>
+
+<p>这一切建立在一个假设上：<strong>池子里的贷款不会同时违约</strong>。只要违约是分散的，优先档就安全，因为不可能所有贷款一起坏掉。这个假设在单个池子里大致成立，在全国范围内不成立——因为房价下跌时，加州、佛州、内华达的借款人会同时出问题。相关性从 0.2 跳到 0.9，分层的数学就失效了。</p>
+
+<div class="card">
+  <p><strong>AAA 到底意味着什么？</strong>它意味着"在给定的模型里，违约概率极低"，不意味着"价格不会跌"。这两件事在 2007 年被混为一谈：养老金、市政基金、外国央行买 AAA，是因为监管规则允许它们只买高评级；它们以为自己买的是"安全"，其实买的是"一个在房价永不上涨的假设下才成立的安全"。</p>
+</div>
+
+<p>评级机构在这条链条里扮演的角色，比"判断错了"更复杂。它们由<strong>发行人付费</strong>——谁打包，谁付钱。这不是秘密，监管也知道。真正的结构问题是：评级已经不只是"意见"，它被写进了无数投资规则里，变成了准入门槛。当一份意见变成许可证，给出意见的人就有了不该有的权力。</p>
+
+<h2>第三步：风险没有消失，只是搬了家</h2>
+
+<p>如果故事只到 MBS 和 CDO，损失会落在买了这些债券的投资者身上，规模有限。让事情变成系统性问题的，是另外两件工具：<strong>信用违约互换</strong>（credit default swap，CDS）和<strong>回购</strong>（repurchase agreement，repo）。</p>
+
+<p>CDS 本质是一份保险：买方定期付保费，卖方在债券违约时赔付。它把风险从"持有债券的人"转移给"卖保险的人"。听起来是好事——风险被分散了。但它有两个副作用。</p>
+
+<p>第一，卖保险的人不需要准备赔付金。美国国际集团（AIG）旗下的金融产品部门（AIG FP）卖出了数千亿美元名义本金的保护，它的逻辑是"这些 AAA 的优先档从来不会违约，保费是白拿的"。它没有为"同时赔付"留出资本。</p>
+
+<p>第二，CDS 让"谁真正承担损失"变得不可见。一家银行账上持有 100 亿债券，它可能已经通过 CDS 把风险卖掉了；反过来，一家看上去没买债券的机构，可能通过 CDS 承担了同样的风险。当危机来临时，没有人知道风险到底堆在谁的账上——这种<strong>不确定</strong>本身，就足以让市场停止互相借钱。</p>
+
+<p>回购则是另一头。投行没有存款，它买资产的钱是借来的：把债券押给对手方，借来现金，约定明天或一周后买回。这就是<a href="../reference/0001-glossary.html">回购</a>，本质上是一笔以证券为抵押的短期贷款。2008 年前后，美国的三方回购市场高峰时约有 2.8 万亿美元规模，是影子银行体系的心脏。</p>
+
+<p>回购的关键参数叫<strong>折价率</strong>（haircut）。押 100 元的债券，对手方只借给你 98 元，那 2 元就是折价。折价率不是固定的：市场越紧张，对手方越要求多押。从 2% 升到 5%，意味着同样 100 元的资产，你少借到 3 元——如果你的资产是 300 亿，你就得在一天之内补上 9 亿现金。补不上，就得卖资产；卖资产压价，价格再跌，折价率再升。这就是<b>以抵押品为基础的挤兑</b>，它不需要储户排队，只需要几个电话。</p>
+
+<figure class="figure">
+  <svg viewBox="0 0 460 424" role="img" aria-labelledby="fig-chain-t">
+    <title id="fig-chain-t">一笔次贷的旅程：从借款人到全球投资者，以及两条融资与保险的旁路</title>
+
+    <defs>
+      <marker id="f2-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" markerUnits="userSpaceOnUse" orient="auto">
+        <path d="M0 0 L10 5 L0 10 Z" fill="currentColor" />
+      </marker>
+    </defs>
+
+    <rect x="150" y="6" width="160" height="34" rx="8" class="f-wash s-accent" />
+    <text x="230" y="28" text-anchor="middle" font-size="12" font-weight="600" class="t-accent">评级机构</text>
+    <line x1="200" y1="40" x2="215" y2="66" class="s-accent" stroke-dasharray="3 3" />
+    <line x1="260" y1="40" x2="245" y2="66" class="s-accent" stroke-dasharray="3 3" />
+
+    <rect x="10" y="66" width="80" height="56" rx="8" class="f-bg s-rule" />
+    <text x="50" y="89" text-anchor="middle" font-size="12">借款人</text>
+    <text x="50" y="106" text-anchor="middle" font-size="9" class="t-muted">浮动利率</text>
+
+    <rect x="100" y="66" width="80" height="56" rx="8" class="f-bg s-rule" />
+    <text x="140" y="89" text-anchor="middle" font-size="12">放款机构</text>
+    <text x="140" y="106" text-anchor="middle" font-size="9" class="t-muted">发起即卖</text>
+
+    <rect x="190" y="66" width="80" height="56" rx="8" class="f-bg s-rule" />
+    <text x="230" y="89" text-anchor="middle" font-size="12">投行打包</text>
+    <text x="230" y="106" text-anchor="middle" font-size="9" class="t-muted">分层加杠杆</text>
+
+    <rect x="280" y="66" width="80" height="56" rx="8" class="f-bg s-rule" />
+    <text x="320" y="89" text-anchor="middle" font-size="12">MBS·CDO</text>
+    <text x="320" y="106" text-anchor="middle" font-size="9" class="t-muted">AAA 优先档</text>
+
+    <rect x="370" y="66" width="80" height="56" rx="8" class="f-bg s-rule" />
+    <text x="410" y="89" text-anchor="middle" font-size="12">全球投资者</text>
+    <text x="410" y="106" text-anchor="middle" font-size="9" class="t-muted">银行、基金</text>
+
+    <line x1="90" y1="94" x2="98" y2="94" class="s-ink" stroke-width="1.5" marker-end="url(#f2-arrow)" />
+    <line x1="180" y1="94" x2="188" y2="94" class="s-ink" stroke-width="1.5" marker-end="url(#f2-arrow)" />
+    <line x1="270" y1="94" x2="278" y2="94" class="s-ink" stroke-width="1.5" marker-end="url(#f2-arrow)" />
+    <line x1="360" y1="94" x2="368" y2="94" class="s-ink" stroke-width="1.5" marker-end="url(#f2-arrow)" />
+
+    <text x="10" y="146" font-size="10" class="t-muted">手续费在左边，风险在右边。</text>
+
+    <rect x="10" y="160" width="440" height="52" rx="8" class="f-surface s-rule" />
+    <text x="24" y="181" font-size="12" font-weight="600">CDS：把违约风险再卖一次</text>
+    <text x="24" y="200" font-size="10" class="t-muted">AIG 等机构卖出保护，收保费，不为赔付留资本；风险变成一张看不见的网。</text>
+
+    <rect x="10" y="228" width="440" height="70" rx="8" class="f-surface s-rule" />
+    <text x="24" y="249" font-size="12" font-weight="600">融资端：隔夜回购 + 资产支持商业票据</text>
+    <text x="24" y="268" font-size="10" class="t-muted">借 1 天的钱，买 30 年的资产。这叫期限错配。</text>
+    <text x="24" y="286" font-size="10" class="t-muted">表外工具（SIV）用短期票据养长期资产，滚不动就得回表。</text>
+
+    <rect x="10" y="314" width="440" height="46" rx="8" class="f-wash s-accent" />
+    <text x="24" y="334" font-size="12" font-weight="600" class="t-accent">杠杆：雷曼约 30 倍，贝尔斯登约 33 倍</text>
+    <text x="24" y="351" font-size="10" class="t-muted">资产只要跌 3%，股本就被吃光。</text>
+
+    <text x="10" y="384" font-size="11" font-weight="600">挤兑的引信：折价率上升</text>
+    <text x="10" y="402" font-size="10" class="t-muted">抵押品跌价 → 折价率上调 → 补现金 → 抛售 → 再跌。循环不需要储户。</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>上排是<b>资产</b>的旅程——一笔贷款被卖四次，每卖一次，放贷人的责任就轻一分，而风险离最初那个借款人越来越远。
+    中间两层是<b>旁路</b>：CDS 把"违约"这件事单独打包卖给别人，回购和商业票据则负责给整条链条供血。
+    最下面一行是引信：一旦抵押品跌价、折价率上调，整条链条会在几天内同时要求现金。
+    <b>关键点：</b>这条链上没有任何一个环节"持有到最后"，所以也没有任何一个环节真正为最终的损失负责。
+  </figcaption>
+</figure>
+
+<h2>第四步：杠杆的算术</h2>
+
+<p>到这里，机器还缺一个加速器：杠杆。</p>
+
+<p>2007 财年末，雷曼兄弟的资产约 6910 亿美元，股本约 225 亿美元，杠杆约 30 倍；贝尔斯登约 33 倍。意思是，资产只要贬值 3% 多一点，股本就被全部吃掉。这不是因为 CEO 们不懂风险，而是因为股本回报率的竞争：在同样的市场里，杠杆低的公司报表难看，股价低，管理层就会被换掉。<strong>杠杆是被同行逼出来的</strong>。</p>
+
+<p>杠杆和期限错配叠在一起，就产生了那个致命的组合：用隔夜的钱，买长期的、估值不透明的资产，只留一层薄薄的股本。这套结构在资产价格上涨时运转良好——抵押品升值，折价率下降，你能借到更多钱，买更多资产。它在价格转向时立刻变成绞索，而且没有中间档。</p>
+
+<h2>裂缝其实早就出现了</h2>
+
+<p>回到 2007 年。这一年，机器的每个零件都出过故障，只是没人把它们串起来看：</p>
+
+<ul>
+  <li><strong>2 月</strong>，汇丰（HSBC）为美国次贷业务计提约 105 亿美元减值；新世纪金融（New Century）随后走向破产。</li>
+  <li><strong>6 月</strong>，贝尔斯登旗下两只重仓次级 MBS 的基金出现巨额亏损，最终清盘。这是华尔街第一次公开承认，这类资产"卖不出去"。</li>
+  <li><strong>8 月 9 日</strong>，法国巴黎银行的冻结公告，全球短期资金市场瞬间收紧。</li>
+  <li><strong>9 月</strong>，英国北岩银行（Northern Rock）门口排起长队——一百多年来英国第一次真正的银行挤兑，起因正是它靠批发市场融资，而不是存款。</li>
+  <li><strong>12 月</strong>，美联储推出定期拍卖工具（TAF），开始绕开贴现窗口的污名，直接向银行供资。</li>
+</ul>
+
+<p>这五件事放在一起，已经画出了 2008 年的剧本：<strong>融资端先断，资产端后跌，最后才是资本</strong>。但当时的主流判断是"可控"——因为失业率还低，因为银行资本充足率还达标，因为"次级"只占整个房贷市场的一小块。这些判断每一条单独看都有道理，合起来就漏掉了那件真正要紧的事：<strong>这些机构不是靠存款活着的</strong>。</p>
+
+<h2>这一讲留下的判断问题</h2>
+
+<p><strong>第一，证券化的本意是分散风险，为什么结果是集中风险？</strong>因为它分散的是"单笔贷款的违约"，集中起来的是"所有人对同一个假设的信仰"——房价不会全国同时下跌。风险没有消失，它从许多小口袋进了一个大口袋，而那个口袋的名字叫"AAA"。</p>
+
+<p><strong>第二，评级到底是信息，还是许可证？</strong>如果它只是意见，错了就错了，投资者自担；但它被写进了监管规则和投资章程，成了"能不能买"的门槛，那它就是一种公共权力，却由被评者付钱。这个矛盾在 2008 年之后被写进了法律（第 11 讲会讲），但没有被真正解决。</p>
+
+<p><strong>第三，挤兑发生在没有存款保险的地方，谁来当最后贷款人？</strong>银行有美联储的贴现窗口，有 FDIC 的保险；而回购市场、商业票据市场、SIV，一样在"短借长贷"，却没有任何一层保护。这不是监管疏忽，而是当时的有意设计——它们被当作"专业机构之间的市场"，不需要保护。2008 年 9 月证明，这个假设是错的。</p>
+
+<h2>回顾：三个自测</h2>
+<div class="quiz">
+  <h3>先合上讲义，自己回答，再看核对</h3>
+
+  <p class="prompt">1. 为什么"AAA"在 2007 年会同时意味着"很安全"和"很危险"？</p>
+  <details><summary>看答案</summary>
+    <p>因为 AAA 只在一个假设下成立：池子里的贷款不会同时违约。全国房价下跌时，相关性趋近 1，分层结构失效，优先档也会亏损。评级给的是模型里的违约概率，不是价格保证。</p>
+  </details>
+
+  <p class="prompt">2. 折价率从 2% 升到 5%，为什么等同于一次挤兑？</p>
+  <details><summary>看答案</summary>
+    <p>因为抵押品能借到的钱变少了，机构必须在很短时间里补上现金缺口；补不上就只能卖资产，抛售压低价格，折价率再升，形成自我强化的循环。它不需要储户排队，只需要对手方同时收紧。</p>
+  </details>
+
+  <p class="prompt">3. 2007 年那些裂缝（贝尔斯登基金、BNP、北岩）为什么没有让监管者得出"系统出了问题"的结论？</p>
+  <details><summary>看答案</summary>
+    <p>因为每件事单独看都像是局部事故：基金清盘、几只产品冻结、一家靠批发融资的英国银行。加上失业率低、资本充足率达标、"次级"占比不大这些安慰性指标，没人把它们串成"融资端已经断了"这一条线。</p>
+  </details>
+</div>
+
+<p class="ask">这一讲哪里没说清？回到 OpenCode 里直接问你的老师（那个正在运行 <code>teach</code> 的 agent）——它比你更懂你的目标，可以为你重新举例、加练，或跳到你想深入的部分。</p>
+
+<p class="foot">
+  <strong>推荐一手资料：</strong>
+  <a href="https://www.federalreservehistory.org/essays/great-recession-of-200709" target="_blank" rel="noopener">
+  美联储历史项目："The Great Recession"</a> ——
+  官方综述，把 2007—2009 年的政策工具与时间线放在一张表里，正好用来校准本讲提到的每一次"裂缝"。
+  <br />上一讲：<a href="0001-september-12-2008.html">第 1 讲 · 9 月 12 日</a> ·
+  下一讲：<a href="0003-bear-stearns.html">第 3 讲 · 贝尔斯登</a> ·
+  速查：<a href="../reference/0001-glossary.html">金融术语表</a>
+</p>
+
+</body>
+</html>

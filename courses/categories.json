@@ -5,6 +5,10 @@
       "courses": ["duan-yongping", "inside-the-system"]
     },
     {
+      "name": "经济与金融",
+      "courses": ["wealth-of-nations", "too-big-to-fail"]
+    },
+    {
       "name": "认知与工作",
       "courses": ["thinking-fast-and-slow", "product-for-engineers"]
     },

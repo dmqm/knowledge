@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 4 讲 · 两房接管</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="kicker">大而不倒 · 第 4 讲</p>
+<h1>两房接管：雷曼周末之前，政府已经开过一枪</h1>
+<p class="lede">2008 年 9 月 7 日，星期天，美国政府把两家担保着半个国家房贷的公司收归托管。这不是危机的开始，却是政策空间的转折点——此后每一次"不救"，都有一句潜台词：我们已经用掉了那张牌。</p>
+
+<p class="toc" style="margin:.1rem 0 1.6rem;font-family:var(--sans);font-size:.82rem;color:var(--muted);">
+  上一讲：<a href="0003-bear-stearns.html">← 第 3 讲 · 贝尔斯登</a>
+  &nbsp;·&nbsp; <a href="0005-lehman-weekend.html">下一讲 · 雷曼周末 →</a>
+  &nbsp;·&nbsp; <a href="../reference/0001-glossary.html">金融术语表</a>
+</p>
+
+<h2>那个星期天上午的电话</h2>
+
+<p>2008 年 9 月 7 日，星期天，华盛顿。上午，联邦住房金融局（Federal Housing Finance Agency，FHFA）局长洛克哈特（James Lockhart）分别给两家公司的董事会打电话，通知他们：公司即日起被置于<strong>托管</strong>（conservatorship）之下，管理层交出经营权，董事会保留但不再有实权。当天下午，财政部对外公布了这个决定。</p>
+
+<p>电话那头是房利美（Fannie Mae）CEO 穆德（Daniel Mudd）和房地美（Freddie Mac）CEO 赛伦（Richard Syron）。两家公司合计承担或担保着约 <strong>5 万亿美元</strong>的住房抵押贷款，占当时美国房贷市场的一半左右；而它们的股本加起来只有约 700 亿美元。这个比例，是整件事的算术核心。</p>
+
+<p>星期五下午，保尔森已经给穆德打过电话，话说得很短：明天到财政部来一趟。穆德后来回忆，他当时还带着一份"我们可以自己融资"的方案。星期天上午，方案没有被讨论——因为 FHFA 的结论是，两家公司已经无法"安全且稳健地"运营，继续拖下去，某一天会有一笔到期债务滚不动，那时就只能在更糟的条件下救。</p>
+
+<p>消息公布后，两家公司的股价在星期一开盘后暴跌。普通股股东没有被立刻清零，但他们的权益被稀释到接近于零；优先股股息被暂停；政府拿到的是相当于 <strong>79.9%</strong> 的认股权证，以及各 1000 亿美元的优先股购买额度——这个额度后来被放宽，实际注入的金额远超最初数字。</p>
+
+<h2>两房到底是什么</h2>
+
+<p>要理解为什么必须救，得先理解这两家公司的奇怪身份。</p>
+
+<p>房利美 1938 年由联邦政府设立，最初的任务是在大萧条之后让房贷市场重新运转；房地美 1970 年成立，目的是给房利美制造竞争。两家后来都变成了<strong>政府支持企业</strong>（government-sponsored enterprise，GSE）：私人持股、在交易所上市，但享有联邦特许、免缴部分税、可以直接向财政部借钱（额度有限），而且市场普遍相信——<strong>政府不会让它们违约</strong>。</p>
+
+<p>这个"相信"就是它们的商业模式。因为它们能用接近国债的利率借钱，再拿这笔钱去买银行的房贷、打包成 MBS 卖给全球投资者，中间的利差就是利润。银行愿意把贷款卖给它们，因为它们的出价高；投资者愿意买它们的 MBS，因为背后有"隐含担保"。整个循环里，<strong>政府没有出一分钱，却提供了信用</strong>。</p>
+
+<p>问题在于，这种安排让两家公司有极强的动力去扩张，却没有相应的资本约束。它们的股本相对担保规模薄得惊人，监管资本要求也远低于商业银行。用一句通俗的话说：<strong>它们拿的是主权级的信用，做的是高杠杆的生意，承担的是准公共的使命</strong>。这三件事在房价上涨时互不冲突，在房价下跌时互相撕扯。</p>
+
+<figure class="figure">
+  <svg viewBox="0 0 440 392" role="img" aria-labelledby="fig-gse-t">
+    <title id="fig-gse-t">两房在房贷链条中的位置：信用来自政府，风险留在表外</title>
+
+    <defs>
+      <marker id="f4-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" markerUnits="userSpaceOnUse" orient="auto">
+        <path d="M0 0 L10 5 L0 10 Z" fill="currentColor" />
+      </marker>
+    </defs>
+
+    <rect x="120" y="8" width="200" height="42" rx="8" class="f-wash s-accent" />
+    <text x="220" y="27" text-anchor="middle" font-size="12" font-weight="600" class="t-accent">财政部 + FHFA</text>
+    <text x="220" y="42" text-anchor="middle" font-size="9" class="t-muted">隐性担保 / 9 月 7 日起托管</text>
+    <line x1="180" y1="50" x2="180" y2="94" class="s-accent" stroke-dasharray="3 3" />
+    <line x1="260" y1="50" x2="260" y2="94" class="s-accent" stroke-dasharray="3 3" />
+
+    <rect x="8" y="94" width="84" height="56" rx="8" class="f-bg s-rule" />
+    <text x="50" y="117" text-anchor="middle" font-size="11">借款人</text>
+    <text x="50" y="133" text-anchor="middle" font-size="9" class="t-muted">三十年房贷</text>
+
+    <rect x="102" y="94" width="84" height="56" rx="8" class="f-bg s-rule" />
+    <text x="144" y="117" text-anchor="middle" font-size="11">放款银行</text>
+    <text x="144" y="133" text-anchor="middle" font-size="9" class="t-muted">卖给两房</text>
+
+    <rect x="196" y="94" width="96" height="56" rx="8" class="f-wash s-accent" />
+    <text x="244" y="115" text-anchor="middle" font-size="11" font-weight="600" class="t-accent">房利美·房地美</text>
+    <text x="244" y="132" text-anchor="middle" font-size="9" class="t-muted">担保 5 万亿</text>
+
+    <rect x="302" y="94" width="70" height="56" rx="8" class="f-bg s-rule" />
+    <text x="337" y="117" text-anchor="middle" font-size="11">MBS</text>
+    <text x="337" y="133" text-anchor="middle" font-size="9" class="t-muted">AAA</text>
+
+    <rect x="380" y="94" width="52" height="56" rx="8" class="f-bg s-rule" />
+    <text x="406" y="115" text-anchor="middle" font-size="10">全球</text>
+    <text x="406" y="129" text-anchor="middle" font-size="10">投资者</text>
+
+    <line x1="92" y1="122" x2="100" y2="122" class="s-ink" stroke-width="1.5" marker-end="url(#f4-arrow)" />
+    <line x1="186" y1="122" x2="194" y2="122" class="s-ink" stroke-width="1.5" marker-end="url(#f4-arrow)" />
+    <line x1="292" y1="122" x2="300" y2="122" class="s-ink" stroke-width="1.5" marker-end="url(#f4-arrow)" />
+    <line x1="372" y1="122" x2="378" y2="122" class="s-ink" stroke-width="1.5" marker-end="url(#f4-arrow)" />
+
+    <rect x="8" y="176" width="424" height="56" rx="8" class="f-surface s-rule" />
+    <text x="22" y="197" font-size="11" font-weight="600">利差生意</text>
+    <text x="22" y="215" font-size="9" class="t-muted">以接近国债的利率借钱 → 买房贷 → 收中间的利差。信用越好，借得越便宜，规模越大。</text>
+
+    <rect x="8" y="246" width="424" height="56" rx="8" class="f-surface s-rule" />
+    <text x="22" y="267" font-size="11" font-weight="600">资本约束</text>
+    <text x="22" y="285" font-size="9" class="t-muted">股本约 700 亿，担保约 5 万亿。房价一跌，损失直接吃掉股本。</text>
+
+    <rect x="8" y="316" width="424" height="52" rx="8" class="f-surface s-rule" />
+    <text x="22" y="337" font-size="11" font-weight="600">9 月 7 日之后</text>
+    <text x="22" y="355" font-size="9" class="t-muted">政府成为优先股股东（79.9% 认股权证），普通股被稀释，股息暂停。</text>
+
+    <text x="8" y="384" font-size="9" class="t-muted">读法：链条越往右，风险越分散；越往左，信用越集中。</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>从左往右是资金的流向，从右往左是风险的流向。两房站在中间：<b>左边</b>它向银行买贷款，<b>右边</b>它把打包好的 MBS 卖给全球投资者。
+    它赚的是"主权级借款成本"与"房贷收益率"之间的利差，而支撑这个利差的是顶上的那条虚线——政府的隐性担保。
+    <b>关键：</b>这条担保不在资产负债表上，所以两房的杠杆看起来比实际温和；一旦房价下跌，表外的担保就会变成表内的损失。
+  </figcaption>
+</figure>
+
+<h2>为什么是"接管"，不是"注资"，也不是"破产"</h2>
+
+<p>摆在保尔森面前的有三条路，每条都有人反对。</p>
+
+<p><strong>第一条，让它们自己融资。</strong>这是两家公司一直想要的。问题是，融资需要向市场证明"我需要钱"，而一旦市场这么认为，股价就会跌，融资成本就会升，供应商和债权人就会收紧——这就是所谓的<strong>死亡螺旋</strong>。7 月刚通过的《住房与经济复苏法》给了财政部注资授权，本来是为了"让市场知道我们有火箭筒"，结果火箭筒一亮出来，市场反而更确信它们需要被救。</p>
+
+<p><strong>第二条，让它们破产或进入破产保护。</strong>技术上几乎不可行。两房不是普通公司，它们的债务被全球央行、货币基金、商业银行当作准国债持有；一旦违约，冲击的不是两家公司，而是"美国政府会兜底"这个信念本身。而且破产程序会冻结它们的担保义务，美国房贷市场会在几天内停摆。</p>
+
+<p><strong>第三条，托管。</strong>这是最后选的。托管不是破产，也不是国有化（虽然效果接近）：政府派人管理，注入优先股资本，普通股股东留在原地但被稀释。这样既能让公司继续运转、继续担保房贷，又能在法律上把"政府救助"包装成"监管接管"。</p>
+
+<p>这个包装很重要。保尔森在公开讲话里反复避免"nationalization（国有化）"这个词，因为这个词在美国政治里意味着社会主义。但市场的理解是直接的：<strong>政府现在为 5 万亿美元的房贷负责了。</strong></p>
+
+<p>法律上，"托管"（conservatorship）和"接管"（receivership）是两个不同的东西。接管意味着清算、变卖资产、按顺序偿付；托管意味着政府派人经营，公司继续存在，合同继续履行，房贷继续放，MBS 继续按期付息。选托管而不是接管，是因为目标不是"处理掉这两家公司"，而是"让美国的房贷市场明天早上还能开门"。这个区别在后来的争论里经常被忽略：很多批评者说"政府把两房国有化了"，但国有化的企业不会保留原来的董事会、不会继续向股东发报表、也不会在几年后把利润交回财政部。</p>
+
+<p>还有一个很少被提及的后果：两房的优先股，很多是被美国的中小银行买走的。它们买这些优先股，是因为收益率比国债高、评级又接近 AAA，在监管资本里还能算作资本。股息一停，这些银行账上就出现减记；2008 年下半年到 2009 年，一批社区银行正是因为持有的两房优先股被减记而倒闭。救助大机构的成本，常常是这样沿着持股链条，落到最没有能力承担的人身上。</p>
+
+<h2>它怎样用掉了雷曼周末的政策空间</h2>
+
+<p>这一讲真正要记住的，不是托管的细节，而是它对一周后那场谈判的影响。至少有三层。</p>
+
+<p><strong>第一层，钱。</strong>财政部为两房承诺了各 1000 亿美元的优先股额度（后来实际投入更多），这笔钱要从财政部的账上出，而财政部的"外汇稳定基金"并不是无限的。更重要的是，国会刚刚在 7 月为一个"紧急授权"投过票，再要一个更大的授权，政治难度会成倍上升。</p>
+
+<p><strong>第二层，信用。</strong>保尔森在 7 月说"火箭筒"时，意思是"我有工具，但最好别用"。9 月 7 日他用掉了。此后他在国会作证、在电话里跟议员沟通时，反复被问同一个问题：<em>你不是说不会用吗？</em> 一个刚刚被证明"会出手"的政府，要再说"这次真的不救"，可信度已经打折；而一个刚刚"接管"了两家公司的政府，要再说"我们尊重市场"，也没人信。</p>
+
+<p><strong>第三层，先例。</strong>两房的股东被稀释、优先股股息被停、管理层被换掉——这套组合传递的信号是：<strong>政府可以救，但股东要付代价</strong>。这个信号在 9 月被反复引用：保尔森对雷曼的买家说，政府不会像对待两房那样对待雷曼；对国会说，救雷曼不能再用"接管"这个办法，因为雷曼不是政府支持企业。</p>
+
+<p>还有一层不太被注意的：<strong>两房的债权人被完整保护了。</strong>债券持有人一分钱没损失，全球央行继续持有机构债。这个结果强化了一个预期——在系统性机构里，股权可以归零，债权会被保全。九天后，当雷曼的债权人发现自己的待遇完全不同时，恐慌才真正开始。</p>
+
+<h2>这一讲留下的判断问题</h2>
+
+<p><strong>第一，两房的问题到底是"经营失败"还是"制度设计"？</strong>它们没有发明次贷，也没有像投行那样把 CDO 平方卖到全世界；它们的失败更像是一种慢性病：用隐性担保借便宜钱，用便宜钱扩规模，用规模换政治支持，最后用纳税人的钱收场。把责任全推给管理层，会漏掉那个让管理层必须这么做的制度。</p>
+
+<p><strong>第二，"托管"是不是一种更诚实的救助？</strong>它比"注资"更彻底，因为政府直接接管了经营权；但它也比"注资"更模糊，因为它让"这是市场行为还是国家行为"变得说不清。当政府既是监管者、又是股东、又是担保人时，谁来监督它？</p>
+
+<p><strong>第三，如果 9 月 7 日没有接管两房，9 月 15 日会发生什么？</strong>这是一个反事实问题，书里没有答案。可以确定的是：如果两房在 9 月中旬违约，雷曼的倒闭会和一个更大的冲击同时发生，那时的政策选项只会更少。保尔森选择在雷曼之前动手，很可能正是为了避免这个"同时发生"。</p>
+
+<h2>回顾：三个自测</h2>
+<div class="quiz">
+  <h3>先合上讲义，自己回答，再看核对</h3>
+
+  <p class="prompt">1. 两房能用接近国债的利率借钱，靠的是什么？</p>
+  <details><summary>看答案</summary>
+    <p>靠市场对"政府不会让它们违约"的信念，也就是隐性担保。这个担保不写在资产负债表上，却实实在在压低了它们的融资成本，让它们能以极薄的股本撑起约 5 万亿美元的担保规模。</p>
+  </details>
+
+  <p class="prompt">2. 为什么"让它们自己融资"这条路走不通？</p>
+  <details><summary>看答案</summary>
+    <p>因为融资这个动作本身就会暴露"我需要钱"，股价随之下跌、融资成本上升、对手方收紧，形成死亡螺旋。7 月的注资授权本意是震慑市场，结果反而让市场确信它们非救不可。</p>
+  </details>
+
+  <p class="prompt">3. 接管两房如何缩小了雷曼那个周末的选择空间？</p>
+  <details><summary>看答案</summary>
+    <p>三层：财政部的钱和政治授权被用掉一次；保尔森"不会出手"的可信度受损；"股东归零、债权人保全"的先例被立下。于是雷曼既难拿到国会的新授权，也难以让对手方相信"这次真的不救"。</p>
+  </details>
+</div>
+
+<p class="ask">这一讲哪里没说清？回到 OpenCode 里直接问你的老师（那个正在运行 <code>teach</code> 的 agent）——它比你更懂你的目标，可以为你重新举例、加练，或跳到你想深入的部分。</p>
+
+<p class="foot">
+  <strong>推荐一手资料：</strong>
+  <a href="https://www.fhfa.gov/conservatorship/history" target="_blank" rel="noopener">
+  FHFA："History of the Conservatorships"</a> ——
+  官方对 2008 年 9 月 7 日托管安排的说明，含接管的法律依据与注资结构，适合与本讲的"三条路"对照阅读。
+  <br />上一讲：<a href="0003-bear-stearns.html">第 3 讲 · 贝尔斯登</a> ·
+  下一讲：<a href="0005-lehman-weekend.html">第 5 讲 · 雷曼周末</a> ·
+  速查：<a href="../reference/0001-glossary.html">金融术语表</a>
+</p>
+
+</body>
+</html>

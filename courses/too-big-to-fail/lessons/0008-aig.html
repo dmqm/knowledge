@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 8 讲 · AIG：850 亿</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="kicker">大而不倒 · 第 8 讲</p>
+<h1>AIG：850 亿，和一张看不见的网</h1>
+<p class="lede">雷曼倒下的第二天，美国政府做了一件它前一天刚说过不会做的事：用纳税人的钱，救一家保险公司。这一讲讲清楚——为什么是 AIG，为什么是 850 亿，以及这笔钱真正流向了谁。</p>
+
+<p class="toc" style="margin:.1rem 0 1.6rem;font-family:var(--sans);font-size:.82rem;color:var(--muted);">
+  <a href="0007-merrill-24-hours.html">← 上一讲 · 美林 24 小时</a>
+  &nbsp;·&nbsp; <a href="0009-tarp.html">下一讲 · TARP →</a>
+  &nbsp;·&nbsp; <a href="../reference/0001-glossary.html">术语表</a>
+</p>
+
+<p>2008 年 9 月 15 日，星期一，上午。罗伯特·威卢姆斯塔德（Robert Willumstad）坐在曼哈顿下城松树街 70 号的顶层会议室里。他接任美国国际集团（American International Group，AIG）首席执行官才十三周。桌上摊着三份文件：标普、穆迪、惠誉三家评级机构当天早上发来的降级通知；一份列出 AIG 需要在当天补足的抵押品清单，金额约 145 亿美元；还有一张公司股价的走势图——上个星期五收盘 12.14 美元，当天开盘后一路下坠，收在 4.76 美元，跌了六成。</p>
+
+<p>同一天，几个街区外，雷曼兄弟（Lehman Brothers）已经申请破产。市场在问同一个问题：下一个是谁。威卢姆斯塔德知道答案写在纸上：AIG 的账上拿不出这 145 亿美元，而拿不出的后果不是亏损，是当天违约。</p>
+
+<p>他打电话给纽约联储（Federal Reserve Bank of New York）的盖特纳（Tim Geithner）。当天晚上，纽约联储请高盛（Goldman Sachs）和摩根大通（JPMorgan Chase）牵头，组织一个 750 亿美元的银团贷款给 AIG。星期二早上，这个方案失败了——没有一家银行愿意在一夜之间把 750 亿美元押在一家正在被降级的保险公司身上。</p>
+
+<p>9 月 16 日傍晚，美联储宣布：依据《联邦储备法》第 13(3) 条，向 AIG 提供 850 亿美元、为期两年的循环信贷额度，利率为三个月伦敦银行间同业拆借利率（London Interbank Offered Rate，LIBOR）加 850 个基点，作为交换，美国政府获得 AIG 79.9% 的股权。这是美国历史上政府第一次以这种方式接管一家私人保险公司。</p>
+
+<p>前一天，保尔森（Hank Paulson）还在说"不会用纳税人的钱救雷曼"。二十四小时后，同样的钱以另一个名义出去了。这个反差不是虚伪，而是一个信号：在雷曼倒下的那一刻，政府对"什么能倒、什么不能倒"的判断，已经换了一套标准。</p>
+
+<h2>一、一家保险公司怎么会有 780 亿美元的 CDS</h2>
+
+<p>AIG 本来不该出现在这张名单上。它是一家正经的保险公司：在约 130 个国家经营人寿、财产险、退休金服务和飞机租赁，客户数以千万计，资产负债表上是可以逐年收保费、逐年赔付的长久期负债。它的评级是 AA 级，和危机前的很多主权国家一样高。</p>
+
+<p>问题出在一个叫 AIG 金融产品（AIG Financial Products，AIGFP）的子公司身上。这个部门在康涅狄格州威尔顿和伦敦办公，只有几百人，却做着一件和保险很像、风险结构完全相反的事：卖信用违约互换（credit default swap，CDS）。</p>
+
+<p>CDS 的逻辑不难。银行持有 1 亿美元的债务抵押债券（collateralized debt obligation，CDO），怕它违约，就找 AIGFP 买一份"保险"：每年付一笔保费，如果债券出事，AIGFP 赔本金。对 AIGFP 来说，这看起来是一门稳赚的生意——它卖的主要是"超优先级"（super senior）档，也就是 CDO 里最不容易亏的那一层，历史模型显示违约概率极低。部门负责人约瑟夫·卡萨诺（Joseph Cassano）在投资者电话会上说过一句后来被反复引用的话：这些合同的赔付概率太低，"我们很难在这些交易上亏掉一美元"。</p>
+
+<p>AIGFP 的衍生品名义本金一度超过 2 万亿美元。其中真正致命的是约 780 亿美元的多部门 CDO 超优先级 CDS。这 780 亿里，AIGFP 几乎没有为任何一笔做过对冲——它不是在转移风险，它是在承担风险，并且把承担风险的收入提前记成了利润。</p>
+
+<p>更要命的是合同条款。这些 CDS 里写着抵押品触发条件：一旦 AIG 的评级被下调，或者被保险的 CDO 本身被下调，AIGFP 就必须向交易对手追加现金或高等级证券作为抵押。它卖的是保险，签的却是保证金合约。</p>
+
+<figure class="figure">
+  <svg viewBox="0 0 440 386" role="img" aria-labelledby="fig-aig-t">
+    <title id="fig-aig-t">AIG 的中心—外围结构：AIGFP 向多家交易对手卖出 CDS 保护，评级下调后抵押品从四面八方向中心追缴</title>
+    <defs>
+      <marker id="m8-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" markerUnits="userSpaceOnUse" orient="auto">
+        <path d="M0 0 L10 5 L0 10 Z" class="f-accent" />
+      </marker>
+    </defs>
+
+    <line x1="220" y1="168" x2="220" y2="42" class="s-muted" stroke-width="1.2" />
+    <line x1="220" y1="168" x2="356" y2="98" class="s-muted" stroke-width="1.2" />
+    <line x1="220" y1="168" x2="356" y2="246" class="s-muted" stroke-width="1.2" />
+    <line x1="220" y1="168" x2="220" y2="312" class="s-muted" stroke-width="1.2" />
+    <line x1="220" y1="168" x2="84" y2="246" class="s-muted" stroke-width="1.2" />
+    <line x1="220" y1="168" x2="84" y2="98" class="s-muted" stroke-width="1.2" />
+
+    <rect x="168" y="11" width="104" height="30" rx="7" class="f-surface s-rule" />
+    <text x="220" y="31" text-anchor="middle" font-size="11.5">高盛 约 140 亿</text>
+
+    <rect x="316" y="83" width="112" height="30" rx="7" class="f-surface s-rule" />
+    <text x="372" y="103" text-anchor="middle" font-size="11.5">德意志银行</text>
+
+    <rect x="316" y="231" width="112" height="30" rx="7" class="f-surface s-rule" />
+    <text x="372" y="251" text-anchor="middle" font-size="11.5">法兴 · 美林</text>
+
+    <rect x="145" y="297" width="150" height="30" rx="7" class="f-surface s-rule" />
+    <text x="220" y="317" text-anchor="middle" font-size="11.5">货币基金 · 市政债</text>
+
+    <rect x="12" y="231" width="112" height="30" rx="7" class="f-surface s-rule" />
+    <text x="68" y="251" text-anchor="middle" font-size="11.5">证券借贷对手</text>
+
+    <rect x="12" y="83" width="112" height="30" rx="7" class="f-surface s-rule" />
+    <text x="68" y="103" text-anchor="middle" font-size="11.5">保险子公司</text>
+
+    <circle cx="220" cy="168" r="52" class="f-wash s-accent" stroke-width="1.6" />
+    <text x="220" y="163" text-anchor="middle" font-size="14" font-weight="600">AIG FP</text>
+    <text x="220" y="182" text-anchor="middle" font-size="10.5" class="t-muted">CDS 卖方</text>
+
+    <line x1="128" y1="356" x2="300" y2="356" class="s-accent" stroke-width="1.5" marker-end="url(#m8-arrow)" />
+    <text x="214" y="348" text-anchor="middle" font-size="10.5" class="t-accent">抵押品追缴的方向：从外围流向中心</text>
+    <text x="14" y="378" font-size="10.5" class="t-muted">中心没有对冲，只有承诺。</text>
+  </svg>
+  <figcaption>
+    <b>怎么读：</b>中心那个圆是 AIGFP——它不持有资产，只卖出保护，所以它的问题不是"资产贬值"，而是"承诺要兑现"。六个外围节点是真实存在的交易对手类型：投行（高盛、德意志银行、法兴、美林）、货币市场基金与市政债发行人（它们持有 AIG 担保的票据）、证券借贷对手、以及 AIG 自己的保险子公司。<b>关键在读连线</b>：这些线平时代表保费流向中心，评级下调的那一刻全部反向——抵押品从外围涌向中心。中心没有足够的现金，于是整张网同时收紧。
+  </figcaption>
+</figure>
+
+<h2>二、9 月 15 日：评级下调如何变成挤兑</h2>
+
+<p>理解 AIG 的关键，是理解"降级"在这套结构里等于什么。对一家普通保险公司，降级意味着借钱变贵、客户犹豫。对 AIGFP，降级是一个自动执行的开关：合同规定，评级每降一档，就要按市值追加抵押品。三家机构在 9 月 15 日同时下调评级，开关同时合上。</p>
+
+<p>于是出现了一个自我强化的循环。第一步，CDO 的市值下跌，AIGFP 要在账上确认未实现损失；第二步，损失让评级机构下调 AIG 的评级；第三步，降级触发抵押品追缴，AIG 要拿出几百亿现金；第四步，市场看到 AIG 在筹钱，进一步下调它的评级和股价；第五步，回到第一步。</p>
+
+<p>这个循环和贝尔斯登（Bear Stearns）的回购挤兑（repo run）在机制上是同一种东西，只是入口不同。贝尔斯登是债权人不再续借隔夜回购；AIG 是交易对手按合同追缴抵押品。两者都叫"流动性危机"：资产负债表上的资产名义上还在，但今天要付的现金拿不出来。</p>
+
+<p>而 AIG 的麻烦不止 CDS 一处。它还有一块约 750 亿美元的证券借贷业务：把客户交给自己保管的证券借出去，换回现金，再把现金投进抵押贷款支持证券（mortgage-backed security，MBS）。这在平时是加杠杆赚利差，在 2008 年夏天变成了"借来的证券要不回来、投出去的 MBS 卖不掉"。这条线和 CDS 那条线互不相干，却在同一个星期一起爆。</p>
+
+<p>威卢姆斯塔德在星期一上午其实还有别的选择：把飞机租赁子公司国际租赁金融公司（International Lease Finance Corporation，ILFC）卖掉，把部分保险子公司挂牌。但这些交易需要几个月，而抵押品是当天到期。危机里最残酷的约束从来不是"有没有资产"，而是"资产能不能在星期二早上变成现金"。</p>
+
+<h2>三、为什么美联储救 AIG 却不救雷曼</h2>
+
+<p>这是全书最容易被误读的一处。流行说法是"政府选择救 AIG、放弃雷曼"，听起来像政治偏好。实际的法律框架要窄得多。</p>
+
+<p>美联储能做的紧急贷款，依据是《联邦储备法》第 13(3) 条：在"异常且紧急的情况"下，美联储可以向任何个人、合伙企业或公司提供贷款，但贷款必须有"足额担保"（secured to the satisfaction of the Federal Reserve Bank）。这一条给了美联储权力，也给了它一道硬约束：不能凭空送钱，必须有抵押品。</p>
+
+<p>雷曼的问题在于，它的抵押品主要是房地产和结构化产品，美联储和财政部判断这些资产在当时的市场里无法可靠估值，也无法在违约时变现。AIG 的问题不同：它是一家还在正常经营、拥有大量受监管保险子公司的集团，美联储的贷款以 AIG 的全部资产（包括子公司股权）作担保，官方判断这些担保是足的。伯南克（Ben Bernanke）后来在国会作证时的说法大意是：在所有这些公司里，AIG 的倒闭后果最严重，而它也是少数几家美联储有法律空间去救的公司。</p>
+
+<p>这个理由站得住，但不完整。它解释的是"能不能"，不是"该不该"。真正让美联储下决心的是第二层考虑：AIG 的 CDS 对手方是系统里最重要的那批银行。如果 AIG 违约，这些银行手里的"保护"会同时失效，它们要在同一周确认巨额减记，而那时没有一家银行承受得起又一次资本冲击。换句话说，救 AIG 不是救它的保单持有人，是救它的交易对手。</p>
+
+<p>这也解释了后来最受争议的一件事：AIG 拿到钱之后，向 CDS 对手方支付了约 620 亿美元，其中高盛约 140 亿美元（含通过 Maiden Lane III 支付的 25 亿）。这些支付是按合同面值 100 美分对 1 美元结算的，没有打折。批评者的说法是：政府既然已经接管了 AIG，为什么不让银行承担一部分损失？盖特纳的回应是：美联储没有权力单方面修改私人合同，强行打折会引发诉讼，也会让所有持有 CDS 的机构怀疑合同的可执行性——而那正是当时最不能动摇的东西。</p>
+
+<p>这里没有干净的答案。它暴露的是危机处置里一个反复出现的取舍：<strong>保护合同的确定性，还是保护纳税人的钱</strong>。选了前者，钱就流向合同上写明的那些人；选了后者，整个衍生品市场的法律基础会在最坏的时点被动摇。</p>
+
+<h2>四、这一集留下的判断问题</h2>
+
+<p><strong>第一，850 亿只是首付。</strong>这笔额度在几周内就被用完。10 月 8 日，美联储再开 378 亿美元，通过 Maiden Lane III 直接从对手方手里买下 CDO；11 月 10 日，财政部用 TARP 买入 400 亿美元优先股，整个救助重组为约 1500 亿美元。到 2009 年，政府对 AIG 的承诺峰值约 1820 亿美元。这个数字后来被完整收回并略有盈余，但那是十年之后的事，而且过程中股东几乎被清零、AIGFP 被逐步关闭。</p>
+
+<p><strong>第二，救的是网络，不是公司。</strong>AIG 的保险业务本身没有致命问题，致命的是它在网络中的位置：它为别人的资产负债表提供了"保险"，而这份保险没有资本支撑。这带来一个反直觉的结论——系统重要性不取决于你有多大，取决于<strong>有多少人的资产负债表上写着你的名字</strong>。这也是后来"全球系统重要性金融机构"（global systemically important financial institution，G-SIB）名单要把"关联度"单列为一个指标的原因。</p>
+
+<p><strong>第三，道德风险被转移了，不是被消除了。</strong>AIG 的股东被稀释到不足两成，管理层被换掉，这看起来是"有人付出了代价"。但真正拿到钱的是那些买了保护的大银行，它们没有损失，也没有被要求返还。于是市场学到的教训可能是：买 CDS 保护是安全的，因为政府会在卖方倒下时保证兑付。这个信号直到今天仍在影响衍生品市场的定价。</p>
+
+<p>下一讲回到华盛顿。当保尔森发现，一家一家地救已经来不及，他需要的不再是电话和贷款，而是一部法律——而国会正在准备拒绝他。</p>
+
+<h2>回顾：三个自测</h2>
+<div class="quiz">
+  <h3>先合上讲义，自己回答，再看核对</h3>
+
+  <p class="prompt">1. AIG 卖的是"保险"，为什么一次评级下调就能立刻要它的命？</p>
+  <details><summary>看答案</summary>
+    <p>因为它签的不是普通保险合同，而是带抵押品触发条款的 CDS。评级每降一档，就必须按市值向对手方追加现金或高等级证券。三家机构同时在 9 月 15 日降级，触发约 145 亿美元当天到期的追缴，而 AIG 账上没有这笔现金——它遇到的不是资不抵债，是当天的流动性断裂。</p>
+  </details>
+
+  <p class="prompt">2. 美联储用第 13(3) 条救了 AIG 却没救雷曼，官方理由是什么？这个理由够不够？</p>
+  <details><summary>看答案</summary>
+    <p>官方理由是法律约束：13(3) 要求贷款必须有足额担保，美联储判断 AIG 有可估值的资产（含保险子公司股权）作抵押，而雷曼的房地产与结构化资产无法可靠估值、无法在违约时变现。这个理由解释了"能不能"，但没回答"该不该"——真正让美联储下决心的是 AIG 违约会让一批大银行同时确认巨额减记。</p>
+  </details>
+
+  <p class="prompt">3. 说"AIG 救了高盛"准确吗？更准确的说法是什么？</p>
+  <details><summary>看答案</summary>
+    <p>不准确，但也不全错。高盛确实从 AIG 的救助中间接收到约 140 亿美元（含 Maiden Lane III 支付的 25 亿），因为它是 CDS 买方；但钱是按合同面值付的，不是政府指定给它的。更准确的说法是：政府为了保住整张 CDS 网络的合同确定性，选择让所有对手方按面值兑付，高盛只是其中最大的一家。</p>
+  </details>
+</div>
+
+<p class="ask">这一讲哪里没说清？回到 OpenCode 里直接问你的老师（那个正在运行 <code>teach</code> 的 agent）——它可以把 CDS、抵押品追缴和 13(3) 条的法律边界再拆细一层，或者带你算一遍 AIG 的现金流缺口。</p>
+
+<p class="foot">
+  <strong>推荐一手资料：</strong>
+  <a href="https://www.federalreservehistory.org/essays/support-for-specific-institutions" target="_blank" rel="noopener">
+  Federal Reserve History, "Support for Specific Institutions"</a> ——
+  美联储官方对 9 月 16 日这笔交易的复盘，含 850 亿美元额度、79.9% 股权与后续重组的原始数字，适合与本讲的叙事逐条对照。
+  <br />上一讲：<a href="0007-merrill-24-hours.html">第 7 讲 · 美林 24 小时</a> ·
+  下一讲：<a href="0009-tarp.html">第 9 讲 · TARP：三页纸与两次投票</a> ·
+  速查：<a href="../reference/0001-glossary.html">金融术语表</a>
+</p>
+
+</body>
+</html>
