@@ -366,6 +366,13 @@ function takeScrollRestore() {
 }
 
 function applyTheme(theme, persist = true) {
+  // Safari 26 samples this fixed 4px strip for the status bar tint. Paint it
+  // before the rest of the theme so the system sees the new surface at once.
+  const statusTint = document.getElementById('lc-status-tint');
+  if (statusTint) {
+    statusTint.style.backgroundColor = THEME_COLOR[theme];
+    void statusTint.offsetHeight;
+  }
   document.documentElement.dataset.theme = theme;
   document.documentElement.style.colorScheme = theme;
   let stored = false;
