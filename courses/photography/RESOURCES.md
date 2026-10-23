@@ -1,4 +1,4 @@
-# 摄影 Resources
+# 我的摄影实践 Resources
 
 > **联网说明（2026-10-16 实测）**：这台机器**打不开 `wikipedia.org` 和 `reddit.com`**（连接被阻断），
 > `petapixel.com` 也不通。所以下面只收录**实测能打开**（HTTP 200）的来源。
