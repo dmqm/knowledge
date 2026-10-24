@@ -61,7 +61,9 @@ async function api(path, opts = {}) {
 }
 
 async function fetchJson(path) {
-  const res = await fetch(path, { headers: { Accept: 'application/json' } });
+  // Static builds are republished on every push; GitHub Pages caches JSON for
+  // several minutes, so always bypass the HTTP cache to pick up new courses.
+  const res = await fetch(path, { headers: { Accept: 'application/json' }, cache: 'no-store' });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
