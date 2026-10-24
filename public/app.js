@@ -27,6 +27,15 @@ const esc = (s) =>
 
 const state = { courses: [], course: null, progress: {} };
 
+// A chevron for the reader's circular nav buttons. Inline SVG instead of a
+// text arrow: the glyph stays crisp at any size and inherits the button's
+// colour, so it follows the theme without extra rules.
+const chevron = (dir) =>
+  `<svg class="chev chev-${dir}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">` +
+  `<path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.2" ` +
+  `stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+
 // Home category filter (null = 全部). Reset every time the home page is opened.
 let homeFilter = null;
 
@@ -989,9 +998,9 @@ async function renderReader(id, kind, file) {
       <div class="rprog" id="r-prog"><span></span></div>
       <iframe id="r-frame" src="${esc(frameSrc)}" referrerpolicy="no-referrer"></iframe>
       <div class="rfoot">
-        <button class="fbtn" id="r-prev" title="上一讲" ${prev ? '' : 'disabled'}>‹ 上一讲</button>
+        <button class="navbtn" id="r-prev" title="上一讲" aria-label="上一讲" ${prev ? '' : 'disabled'}>${chevron('left')}</button>
         <button class="fbtn done ${done ? 'on' : ''}" id="r-done" title="标记完成">${done ? '已完成' : '✓ 完成'}</button>
-        <button class="fbtn" id="r-next" title="下一讲" ${next ? '' : 'disabled'}>下一讲 ›</button>
+        <button class="navbtn" id="r-next" title="下一讲" aria-label="下一讲" ${next ? '' : 'disabled'}>${chevron('right')}</button>
       </div>
     </div>
     <div class="reader-load" id="r-load"></div>`;

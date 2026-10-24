@@ -96,7 +96,7 @@ a { color: var(--accent); text-decoration: none; }
 /* Interactive things: kill the 300ms double-tap-zoom delay on older mobile
    browsers and the accidental text-select on long-press. */
 button, .row, .card, .resume, .tabs button, .tab,
-.rbar .back, .rbar .iconbtn, .rbar a, .rfoot .fbtn {
+.rbar .back, .rbar .iconbtn, .rbar a, .rfoot .fbtn, .rfoot .navbtn {
   touch-action: manipulation;
   user-select: none;
 }
@@ -676,10 +676,44 @@ a.row:active { transform: none; opacity: 0.75; }
 }
 .rfoot .fbtn:disabled { opacity: 0.35; cursor: default; }
 .rfoot .fbtn:not(:disabled):active { transform: scale(0.97); }
+
+/* The lesson stepper: two circular chevrons flanking the finish button.
+   Fixed-size circles stay out of the way of the text, and the finish button
+   takes whatever width is left — it is the only action worth mis-tapping. */
+.rfoot .navbtn {
+  appearance: none;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  align-self: center;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 0.12s ease, background-color 0.12s ease;
+}
+.rfoot .navbtn:disabled { opacity: 0.3; cursor: default; }
+.rfoot .navbtn:not(:disabled):active { transform: scale(0.92); }
+.rfoot .navbtn .chev {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+.rfoot .navbtn .chev-left { transform: rotate(0deg); }
+.rfoot .navbtn .chev-right { transform: rotate(180deg); }
+
 /* The done toggle stays narrow so 上一讲 / 下一讲 keep most of the width. */
 .rfoot .fbtn.done {
-  flex: 0 0 76px;
+  flex: 1 1 auto;
+  min-height: 48px;
+  font-size: 15px;
+  border-radius: 14px;
   color: var(--muted);
+  border-color: var(--border);
 }
 .rfoot .fbtn.done.on {
   background: var(--good);
