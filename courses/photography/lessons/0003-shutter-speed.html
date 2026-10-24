@@ -21,7 +21,10 @@
 <p>先看一张照片。</p>
 
 <figure class="figure photo">
-  <img src="../assets/img/muybridge-horse-in-motion.jpg" alt="一匹奔跑的马的连续动作分解：一排连续拍摄的画面，马在其中的一格四蹄同时离地" />
+  <picture>
+    <source type="image/webp" srcset="../assets/img/opt/muybridge-horse-in-motion-640.webp 640w, ../assets/img/opt/muybridge-horse-in-motion-1000.webp 1000w" sizes="(max-width: 720px) 100vw, 704px">
+    <img src="../assets/img/opt/muybridge-horse-in-motion.jpg" width="1280" height="789" loading="lazy" decoding="async" alt="一匹奔跑的马的连续动作分解：一排连续拍摄的画面，马在其中的一格四蹄同时离地" />
+  </picture>
   <figcaption>
     <b>《运动的马》（Sallie Gardner）</b>——1878 年，Eadweard Muybridge 沿着跑道摆了一排相机，
     用细线牵着快门，马跑过时依次触发。他要回答一个当时吵得很凶的问题：<b>马奔跑时，四蹄会不会同时离地？</b>

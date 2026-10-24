@@ -227,10 +227,34 @@ function searchLocally(index, q) {
       kind: doc.kind,
       url: doc.url,
       snippet: snippet.trim(),
+      score: localRelevance(doc, needle),
     });
-    if (results.length >= 60) break;
   }
-  return results;
+  // Same ranking as the server: title beats body, more mentions beat one,
+  // an early mention beats a late one.
+  results.sort((a, b) => b.score - a.score);
+  return results.slice(0, 60);
+}
+
+function localRelevance(doc, q) {
+  const label = String(doc.label || '').toLowerCase();
+  const courseTitle = String(doc.courseTitle || '').toLowerCase();
+  const lower = String(doc.text || '').toLowerCase();
+  let score = 0;
+  if (label.includes(q)) score += 60;
+  if (courseTitle.includes(q)) score += 30;
+  if (label.trim() === q) score += 40;
+  let count = 0;
+  let at = lower.indexOf(q);
+  let first = at;
+  while (at !== -1) {
+    count += 1;
+    at = lower.indexOf(q, at + q.length);
+  }
+  if (count === 0) return 0;
+  score += Math.min(count, 10) * 8;
+  if (first >= 0) score += Math.max(0, 20 - Math.floor(first / 120));
+  return score;
 }
 
 async function searchCourses(q) {
@@ -850,7 +874,7 @@ function lessonRows(lessons) {
     .map((l, i) => {
       const done = (state.progress[l.file] || {}).status === 'done';
       const isNext = i === nextIdx;
-      const sub = isNext ? `继续读${l.words ? ` · ${l.words} 词` : ''}` : l.words ? `${l.words} 词` : '';
+      const sub = isNext ? `继续读${l.words ? ` · ${l.words} 字` : ''}` : l.words ? `${l.words} 字` : '';
       return `
       <div class="row ${done ? 'done' : ''} ${isNext ? 'next-up' : ''}" data-open="1" data-file="${esc(l.file)}" title="${esc(l.title)}">
         <span class="idx">${String(i + 1).padStart(2, '0')}</span>

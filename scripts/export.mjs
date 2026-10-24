@@ -66,8 +66,10 @@ async function copyFile(src, dest) {
 }
 
 // Skip editor backups and dotfiles when mirroring a course.
+// `_originals` holds the untouched source images (full-resolution masters kept
+// for provenance); only the optimized derivatives belong on the published site.
 function isPublishable(name) {
-  return !name.startsWith('.') && !name.endsWith('.bak');
+  return !name.startsWith('.') && !name.endsWith('.bak') && name !== '_originals';
 }
 
 async function copyDir(src, dest) {

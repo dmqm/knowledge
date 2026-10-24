@@ -21,7 +21,10 @@
 <p>先看一张照片。</p>
 
 <figure class="figure photo">
-  <img src="../assets/img/niepce-le-gras.png" alt="一张灰暗模糊的窗外屋顶照片，是人类现存最早的照片" />
+  <picture>
+    <source type="image/webp" srcset="../assets/img/opt/niepce-le-gras-640.webp 640w, ../assets/img/opt/niepce-le-gras-1000.webp 1000w" sizes="(max-width: 720px) 100vw, 704px">
+    <img src="../assets/img/opt/niepce-le-gras.jpg" width="1280" height="890" loading="lazy" decoding="async" alt="一张灰暗模糊的窗外屋顶照片，是人类现存最早的照片" />
+  </picture>
   <figcaption>
     <b>《勒格拉窗外的景色》</b>——人类现存最早的一张照片。1826 年前后，法国人 Joseph Nicéphore Niépce
     把一块涂了沥青的锡板放进暗箱，对着自家窗外曝了很长时间，才有了屋脊和烟囱的轮廓。

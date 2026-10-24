@@ -285,6 +285,9 @@ tbody tr:hover { background: var(--accent-wash); }
   border-radius: 12px;
 }
 .figure svg { display: block; width: 100%; height: auto; }
+/* <picture> is inline by default; make it a block so the <img> inside fills
+   the figure the same way a bare <img> did. */
+.figure picture { display: block; }
 .figure img {
   display: block;
   width: 100%;
