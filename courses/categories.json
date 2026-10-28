@@ -19,6 +19,10 @@
     {
       "name": "摄影与审美",
       "courses": ["photography"]
+    },
+    {
+      "name": "媒介与批判",
+      "courses": ["amusing-ourselves-to-death", "disappearance-of-childhood", "technopoly"]
     }
   ]
 }
