@@ -187,7 +187,7 @@
     <strong>推荐一手资料：</strong>
     <a href="https://www.rfc-editor.org/rfc/rfc8888.html" target="_blank" rel="noopener">RFC 8888 — RTP Control Protocol (RTCP) Feedback for Congestion Control</a>
     —— 先读第 3 节（反馈格式：序列号、13 位到达时间偏移、ECN）与第 4 节（反馈频率），你就明白「逐包到达时间」这个信息量有多大——它是延迟梯度能算出来的前提。第 8 节对比了 TMMBR、RTCP XR 等早期方案，能看清为什么这些都不够用。<br />
-    配合 <a href="https://www.w3.org/TR/webrtc/" target="_blank" rel="noopener">W3C WebRTC 规范</a>里 <code>RTCIceCandidatePairStats</code> / <code>RTCOutboundRtpStreamStats</code> 的字段定义一起看，把 <code>availableOutgoingBitrate</code> 与 <code>qualityLimitationReason</code> 的语义对准。<br />
+    配合 <a href="https://www.w3.org/TR/webrtc-stats/" target="_blank" rel="noopener">W3C WebRTC 统计 API（webrtc-stats）</a>里 <code>RTCOutboundRtpStreamStats</code> / <code>RTCIceCandidatePairStats</code> 的字段定义一起看，把 <code>availableOutgoingBitrate</code> 与 <code>qualityLimitationReason</code> 的语义对准。注意这两份规范分工不同：<code>getStats()</code> 这个方法定义在 <a href="https://www.w3.org/TR/webrtc/" target="_blank" rel="noopener">WebRTC 主规范</a>，而各个统计对象的<strong>字段名与枚举值</strong>定义在 webrtc-stats 里——查字段该去后者。<br />
     相关：<a href="../lessons/0006-rtp-packets.html">第 6 讲 · 丢包之后发生了什么</a> ·
     <a href="../lessons/0008-topology-and-cost.html">第 8 讲 · 架构选型与那道账单</a> ·
     <a href="../reference/0002-debug-ladder.html">排障阶梯</a>

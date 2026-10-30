@@ -8,6 +8,8 @@
 
 - [W3C: WebRTC — Real-Time Communication in Browsers](https://www.w3.org/TR/webrtc/)
   现行 W3C Recommendation（最初 2021-01-26 发布，现行修订版 2025-03-13）。用于：`RTCPeerConnection` 的状态机、offer/answer 规则、`getStats()` 指标定义的**权威来源**。遇到「浏览器行为该不该这样」的问题，先查它而不是查博客。
+- [W3C: Identifiers for WebRTC's Statistics API（webrtc-stats）](https://www.w3.org/TR/webrtc-stats/)
+  用于：`getStats()` 返回的每个统计对象的**字段名与枚举值**——`qualityLimitationReason`、`availableOutgoingBitrate`、`freezeCount` 这些都定义在这里，而不在主规范里。查字段写错名字时来这份。
 - [RFC 8825 — Overview: Real-Time Protocols for Browser-Based Applications](https://www.rfc-editor.org/rfc/rfc8825.html)
   WebRTC 协议族的总体说明。用于：搞清楚「哪些东西被标准化了、哪些被**故意**留给应用」（信令就是后者）。
 - [RFC 9429 — JSEP（JavaScript Session Establishment Protocol）](https://www.rfc-editor.org/rfc/rfc9429.html)
