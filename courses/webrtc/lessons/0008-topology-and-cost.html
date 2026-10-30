@@ -62,7 +62,7 @@
       <title>三种拓扑的连接数对比：5 个用户时，Mesh 有 10 条两两相连的路径，SFU 与 MCU 各只有 5 条指向服务端的路径</title>
       <defs>
         <marker id="arrow-ink" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M2 1L8 5L2 9" fill="none" style="stroke:var(--muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
         </marker>
       </defs>
 
@@ -119,7 +119,7 @@
       <circle class="f-bg s-accent" cx="609.7" cy="198.7" r="8" stroke-width="1.2" />
       <circle class="f-bg s-accent" cx="546.3" cy="198.7" r="8" stroke-width="1.2" />
       <circle class="f-bg s-accent" cx="526.7" cy="138.3" r="8" stroke-width="1.2" />
-      <rect class="f-wash s-accent" x="552" y="142" width="52" height="26" rx="6" stroke-width="1.2" />
+      <rect class="f-wash s-accent" x="546" y="142" width="64" height="26" rx="6" stroke-width="1.2" />
       <text class="t-accent" x="578" y="159" font-size="9.5" text-anchor="middle">MCU 解/编</text>
       <text class="t-muted" x="578" y="228" font-size="9.5" text-anchor="middle">5 条连接 · 每人 1 路下行</text>
     </svg>
@@ -164,10 +164,10 @@
       <title>媒体路径：说话人上行到 SFU，SFU 出口到 TURN，TURN 出口到观众；两段出口各计一次费</title>
       <defs>
         <marker id="arrow-mute" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M2 1L8 5L2 9" fill="none" style="stroke:var(--muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
         </marker>
         <marker id="arrow-accent" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M2 1L8 5L2 9" fill="none" style="stroke:var(--accent)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
         </marker>
       </defs>
 
@@ -213,7 +213,7 @@
   = 中继流数 × 每路码率(Mbps) × 每天小时数 × 3600 × 30 ÷ 8 ÷ 1000 × 2
      └ 并发中继的媒体流    └ R      └ 4        └ 秒     └ 天  └ bit→Byte └ MB→GB └ 两跳</code></pre>
 
-  <p>「中继流数」要数清楚：1 对 1 通话若需中继，<strong>两个方向都过 TURN</strong>，是 2 条流不是 1 条。按「会话数」算会少一半，这是最容易错的地方。</p>
+  <p>「中继流数」要数清楚：1 对 1 通话若需中继，<strong>两个方向都过 TURN</strong>，是 2 条流不是 1 条。按「会话数」算会少一半，这里最容易错。</p>
 
   <p><strong>算例。</strong> 假设峰值 100 路并发 1 对 1 通话，其中 20% 需要中继；每路视频下行 800 kbps；每天有效通话 4 小时；出口单价<strong>假设</strong> 0.5 元/GB（这个价格是我编的假设值，换成你自己的账单）。</p>
 
