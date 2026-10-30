@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 9 讲 · 场景地图：同一套协议，三种取舍</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+  <nav aria-label="讲义导航">
+    <a class="tag" href="../lessons/0008-topology-and-cost.html">← 第 8 讲 · 架构选型与那道账单</a>
+    <a class="tag" href="../lessons/0010-low-latency-inverted.html">第 10 讲 · 反着配 →</a>
+    <a class="tag" href="../reference/0003-scenario-cheatsheet.html">场景速查表</a>
+  </nav>
+
+  <p class="kicker">深入 WebRTC · 第 9 讲</p>
+  <h1>场景地图：同一套协议，三种取舍</h1>
+  <p class="lede">一句话目标：读完这一讲，拿到任何一个「要用实时音视频」的需求，你能在十分钟内判断它归到哪一组、以及归组之后哪几个参数必须改——而不是从别人的 demo 里抄一套配置。</p>
+
+  <h2>引子：三个客户，说的是同一句话</h2>
+
+  <p>三个人在同一天找你，说的都是「我们要做视频通话」。</p>
+
+  <p><strong>第一个是在线问诊。</strong> 医生和患者 1 对 1，要求通话全程可存档、可回溯，患者可能在地铁里用手机。</p>
+  <p><strong>第二个是大班课。</strong> 一个老师，最多一千个学生同时在线，学生只需要看，偶尔举手。</p>
+  <p><strong>第三个是云游戏。</strong> 玩家用手柄，画面 60 帧，按键到画面的延迟要压在一百毫秒以内，一帧花屏都不能忍。</p>
+
+  <p>如果你的回答都是「上 WebRTC，用 SFU」，那你对了三分之一。三者的技术选型依赖同一套协议，但<strong>参数几乎不重叠</strong>：问诊要的是可录制与合规，大班课要的是把成本摊给 CDN，云游戏要的是把延迟压到极限并放弃重传。<strong>把它们当同一个东西做，结果一定是其中一个彻底不能用。</strong></p>
+
+  <p>所以这一讲不给场景清单，给一把尺子。</p>
+
+  <h2>四个变量，两个是决定性的</h2>
+
+  <p>任何实时音视频需求，都能用四个变量描述。前两个决定架构，后两个决定成本和工程形态。</p>
+
+  <table>
+    <thead>
+      <tr><th>变量</th><th>问法</th><th>它决定什么</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>延迟预算</strong></td><td>迟到多少毫秒，这件事就废了？</td><td>用哪套协议栈、缓冲留多深、能不能重传</td></tr>
+      <tr><td><strong>对称性</strong></td><td>每个人既发又收，还是只有少数人发？</td><td>上行带宽怎么算、拓扑选 P2P 还是 SFU、要不要层</td></tr>
+      <tr><td><strong>规模</strong></td><td>同时多少人？一个房间最大多少？</td><td>成本曲线是线性还是平方、要不要级联或转协议</td></tr>
+      <tr><td><strong>合规与落地</strong></td><td>要不要录制、审计、端到端加密？</td><td>能不能纯 P2P、服务器要不要碰明文</td></tr>
+    </tbody>
+  </table>
+
+  <p>把前两个变量叉开，场景自己就落位了。</p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 460 268" role="img">
+      <title>以延迟预算和对称性为两轴，把场景归入三组</title>
+      <line class="s-rule" x1="60" y1="28" x2="60" y2="210" stroke-width="1" />
+      <line class="s-rule" x1="60" y1="210" x2="430" y2="210" stroke-width="1" />
+      <text class="t-muted" x="14" y="34" font-size="9">延迟</text>
+      <text class="t-muted" x="14" y="46" font-size="9">预算</text>
+      <text class="t-muted" x="14" y="120" font-size="9">紧</text>
+      <text class="t-muted" x="366" y="224" font-size="9">对称性 →</text>
+      <text class="t-muted" x="72" y="224" font-size="9">少数人发</text>
+      <text class="t-muted" x="330" y="224" font-size="9">人人收发</text>
+
+      <rect class="f-wash" x="70" y="40" width="170" height="76" rx="8" />
+      <rect class="s-accent" fill="none" stroke-width="1.2" x="70" y="40" width="170" height="76" rx="8" />
+      <text class="t-accent" x="84" y="62" font-size="11">广播型</text>
+      <text class="t-muted" x="84" y="80" font-size="9">大班课 · 直播 · 安防拉流</text>
+      <text class="t-muted" x="84" y="96" font-size="9">2–5 秒也能接受</text>
+
+      <rect class="f-wash" x="258" y="40" width="164" height="76" rx="8" />
+      <rect class="s-accent" fill="none" stroke-width="1.2" x="258" y="40" width="164" height="76" rx="8" />
+      <text class="t-accent" x="272" y="62" font-size="11">保真型</text>
+      <text class="t-muted" x="272" y="80" font-size="9">云游戏 · 远程操控</text>
+      <text class="t-muted" x="272" y="96" font-size="9">预算 100 ms 且要帧完整</text>
+
+      <rect class="f-wash" x="258" y="128" width="164" height="66" rx="8" />
+      <rect class="s-accent" fill="none" stroke-width="1.2" x="258" y="128" width="164" height="66" rx="8" />
+      <text class="t-accent" x="272" y="150" font-size="11">对话型</text>
+      <text class="t-muted" x="272" y="168" font-size="9">会议 · 问诊 · 客服 · 1 对 1</text>
+
+      <text class="t-muted" x="70" y="152" font-size="9">这一格几乎不存在：</text>
+      <text class="t-muted" x="70" y="168" font-size="9">没人会对「只有少数人发」</text>
+      <text class="t-muted" x="70" y="184" font-size="9">还要求 150 ms 对话级延迟</text>
+    </svg>
+    <figcaption>读法：<strong>两轴一叉，场景自己就归位了。</strong> 左上角是空的——因为「只有少数人发」通常意味着观众在看，而他并不需要 150 毫秒级的对话延迟。这个空格本身就是一个判据：<strong>如果一个需求同时落在「非对称」和「紧延迟」上，先怀疑需求描述错了</strong>（比如「我们要做低延迟直播，观众还要能连麦」——那其实是两个系统）。</figcaption>
+  </figure>
+
+  <h2>三组，三套默认值</h2>
+
+  <p>归组之后，很多参数不用讨论就有了默认值。下面这张表是全课的收束，把前八讲的机制落到了决策上。</p>
+
+  <table>
+    <thead>
+      <tr><th>维度</th><th>对话型</th><th>广播型</th><th>保真型</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>拓扑</td><td>2 人 P2P，3 人以上小 SFU</td><td>SFU 级联 + 转 LL-HLS/CDN</td><td>单 SFU 就近部署，或私有 UDP 协议</td></tr>
+      <tr><td>上行</td><td>每人 1 路</td><td>只有主播 1 路（或几层）</td><td>只有玩家输入，几十 kbps</td></tr>
+      <tr><td>抗丢包</td><td>NACK 重传 + PLC</td><td>FEC + 深缓冲</td><td>FEC，重传基本没用</td></tr>
+      <tr><td>抖动缓冲</td><td>40–200 ms 自适应</td><td>500 ms 以上，甚至按秒</td><td>压到 1–2 帧</td></tr>
+      <tr><td>带宽不足时</td><td>降分辨率保流畅</td><td>降码率、换低档</td><td>保分辨率与帧完整，宁可短暂花屏</td></tr>
+      <tr><td>成本大头</td><td>中继 + SFU 出口</td><td>CDN 流量</td><td>边缘节点密度</td></tr>
+    </tbody>
+  </table>
+
+  <p>请注意最后一列——<strong>它整列都和会议相反</strong>。这不是巧合，也不是配置差异，是物理约束不同导致的：会议可以接受「糊一下」，云游戏不能；会议可以等一次重传，云游戏等不起。第 10 讲专门拆这一列。</p>
+
+  <h2>延迟预算的四个档位</h2>
+
+  <p>「延迟」这个词太粗。工程上要问的是<strong>玻璃到玻璃</strong>（glass-to-glass）：从摄像头/画面产生，到对方屏幕上显示出来，一共多久。分成四档，每档对应完全不同的技术栈。</p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 460 200" role="img">
+      <title>延迟预算的四个档位与对应的协议栈</title>
+      <line class="s-rule" x1="40" y1="96" x2="430" y2="96" stroke-width="1" />
+      <path class="s-accent" fill="none" stroke-width="1" d="M40 90 L40 102 M200 90 L200 102 M300 90 L300 102 M370 90 L370 102 M430 90 L430 102" />
+
+      <text class="t-muted" x="30" y="120" font-size="9">0</text>
+      <text class="t-muted" x="186" y="120" font-size="9">150 ms</text>
+      <text class="t-muted" x="286" y="120" font-size="9">500 ms</text>
+      <text class="t-muted" x="354" y="120" font-size="9">2–5 s</text>
+
+      <rect class="f-wash" x="40" y="52" width="160" height="30" rx="5" />
+      <text class="t-accent" x="50" y="72" font-size="10">对话级 · 会议 / 问诊</text>
+      <rect class="f-wash" x="200" y="52" width="100" height="30" rx="5" />
+      <text class="t-accent" x="210" y="72" font-size="10">交互级</text>
+      <rect class="f-wash" x="300" y="52" width="70" height="30" rx="5" />
+      <text class="t-accent" x="308" y="72" font-size="10">广播级</text>
+      <rect class="f-rule" x="370" y="52" width="60" height="30" rx="5" />
+      <text class="t-muted" x="378" y="72" font-size="10">点播级</text>
+
+      <text class="t-muted" x="40" y="150" font-size="9">WebRTC，抖动缓冲 40–200 ms</text>
+      <text class="t-muted" x="300" y="150" font-size="9">LL-HLS / LL-DASH</text>
+      <text class="t-muted" x="40" y="170" font-size="9">重传与缓冲都还有空间</text>
+      <text class="t-muted" x="40" y="186" font-size="9">越往右，CDN 能参与的程度越高，单位成本越低</text>
+    </svg>
+    <figcaption>读法：<strong>延迟档位不是一个连续偏好，而是几个断开的技术栈。</strong> 0–500 毫秒这一段只有 WebRTC 能做；2 秒以上 LL-HLS 能以低得多的成本做到；两者之间存在一段「谁都不擅长」的夹缝。所以真正要回答的问题不是「能不能再快一点」，而是<strong>「我这个业务到底落在哪一档」</strong>——落在哪档，栈就定了。</figcaption>
+  </figure>
+
+  <p>依据：Apple 的 LL-HLS 设计要求把播放位置保持在最新已发布内容之后至少几秒的量级，业界实现普遍落在 <strong>2–5 秒</strong>的玻璃到玻璃延迟；而 WebRTC 在同区域健康网络下可以做到数百毫秒以内。这两个数字的差距不是调优能弥合的——它们的差距来自「要不要等一个完整的媒体分段」，属于架构层面的差异。</p>
+
+  <h2>九个场景，各自落在哪</h2>
+
+  <table>
+    <thead>
+      <tr><th>场景</th><th>组</th><th>一句话理由</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1 对 1 客服 / 问诊</td><td>对话型</td><td>对称、要对话感；但要额外算录制与合规</td></tr>
+      <tr><td>多人会议（3–30 人）</td><td>对话型</td><td>典型 SFU + simulcast，人数决定上行层数</td></tr>
+      <tr><td>大班课 / 互动直播</td><td>广播型</td><td>只有主播上行；学生端越便宜越好</td></tr>
+      <tr><td>直播分发到万人级</td><td>广播型</td><td>必须让 CDN 参与，纯 SFU 直连不经济</td></tr>
+      <tr><td>云游戏</td><td>保真型</td><td>100 ms 预算 + 帧完整性，见第 10 讲</td></tr>
+      <tr><td>远程桌面 / 远程操控</td><td>保真型</td><td>输入延迟是硬约束，文字清晰度优先</td></tr>
+      <tr><td>安防摄像头 / 门铃</td><td>广播型</td><td>长期在线、弱网、只需单向看</td></tr>
+      <tr><td>协同白板 / 文件传输</td><td>无媒体</td><td>只用 DataChannel，别为它引入整套媒体栈</td></tr>
+      <tr><td>实时语音 AI（对话式助手）</td><td>对话型</td><td>只有音频，延迟预算比视频更紧</td></tr>
+    </tbody>
+  </table>
+
+  <p>这份表可以当速查用（<a href="../reference/0003-scenario-cheatsheet.html">场景速查表</a>里有更细的参数列）。但比记住表更重要的，是记住三个<strong>常被搞错</strong>的地方。</p>
+
+  <h2>三个常见误判</h2>
+
+  <p><strong>一、「WebRTC 延迟最低，所以直播也用 WebRTC」。</strong> 结论对，前提错。WebRTC 的单流延迟确实最低，但<strong>观众规模会改变成本结构</strong>：一万个观众意味着 SFU 要给一万条连接持续出口，而 CDN 的单位成本低一到两个数量级。所以大观众量的正确做法通常是<strong>混合架构</strong>——主播和连麦嘉宾走 WebRTC（保住互动），普通观众走 LL-HLS（把成本摊给 CDN）。代价是观众看到的比主播晚 2–5 秒，这在校准好「弹幕延迟」之后通常无感。</p>
+
+  <p><strong>二、「1 对 1 一定是 P2P，所以不花钱」。</strong> 第 4 讲算过：移动网络和企业网络下的中继比例不低。1 对 1 的优势是「多数情况下不花钱」，不是「不花钱」。做预算时按一个中继比例估上限，别按零估。</p>
+
+  <p><strong>三、「延迟越低越好」。</strong> 这是最贵的一条误区。把广播从 2 秒压到 500 毫秒，代价不是「调个参数」，而是<strong>放弃 CDN、改成 SFU 直连每一个观众</strong>——单位成本可能翻几倍，而用户未必感知得到差别。正确问法是「<strong>迟到多少，这个业务就废了</strong>」：体育博彩的赔率要跟画面同步，那是硬需求；录播课晚 5 秒没人会投诉。</p>
+
+  <h2>这一讲没有回答的那个格子</h2>
+
+  <p>右上角的「保真型」我只给了位置，没给配置。因为它的做法与前八讲几乎全部相反：<strong>重传是不能用的、缓冲是不能留的、分辨率是不能降的</strong>。这三条每一条都在推翻前面的结论，值得单独一讲——下一讲就拆它，顺便回头验证第 6、7 讲里那些「为什么可以这样」的前提。</p>
+
+  <div class="quiz" aria-label="回顾练习">
+    <span class="card-title">点选项，立刻看解析</span>
+
+    <div class="q">
+      <p class="stem">1. 决定架构的两个变量是什么？</p>
+      <button type="button" class="opt">规模大小，以及服务器的地理分布</button>
+      <button type="button" class="opt" data-correct="true">延迟预算，以及收发的对称程度</button>
+      <button type="button" class="opt">编码格式，以及终端的硬件性能</button>
+      <button type="button" class="opt">预算多少，以及团队的技术栈偏好</button>
+      <p class="fb" hidden data-explain="延迟预算决定用哪套协议栈与能留多深的缓冲；对称性决定上行怎么算、选 P2P 还是 SFU。规模与合规同样重要，但它们主要影响成本与工程形态，不改变架构的基本形状。两轴一叉，场景自己就归位了。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">2. 为什么大观众量的直播通常不全程用 WebRTC？</p>
+      <button type="button" class="opt">WebRTC 对并发连接数有协议层上限</button>
+      <button type="button" class="opt" data-correct="true">SFU 要给每个观众单独出口，单位成本高</button>
+      <button type="button" class="opt">浏览器播放 WebRTC 流需要额外插件</button>
+      <button type="button" class="opt">WebRTC 无法承载超过一路的视频流</button>
+      <p class="fb" hidden data-explain="不是协议做不到，是经济性不成立：每个观众都要一条持续连接与一份独立出口流量，而 CDN 靠缓存与就近分发把单位成本压低一到两个数量级。所以常见做法是混合——主播与连麦走 WebRTC 保互动，普通观众走 LL-HLS 摊成本。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">3. 「广播型」与「保真型」在带宽不足时的取舍有何不同？</p>
+      <button type="button" class="opt">两者都优先降分辨率以保住帧率</button>
+      <button type="button" class="opt" data-correct="true">广播降画质，保真优先保帧的完整性</button>
+      <button type="button" class="opt">两者都优先提高缓冲以吸收抖动</button>
+      <button type="button" class="opt">广播优先降延迟，保真优先降码率</button>
+      <p class="fb" hidden data-explain="广播型（大班课、直播）观众能接受画质下降与秒级延迟，所以降码率、加深缓冲都可行。保真型（云游戏）里画面上的 HUD 文字与操作反馈不能被糊掉，而且缓冲一加深就等于增加输入延迟，所以它宁可短暂花屏也不降分辨率、不留缓冲。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">4. 判断「延迟是否够低」的正确问法是？</p>
+      <button type="button" class="opt">行业里同类产品的延迟是多少</button>
+      <button type="button" class="opt">能不能做到五百毫秒以内</button>
+      <button type="button" class="opt" data-correct="true">迟到多少毫秒这件事就废了</button>
+      <button type="button" class="opt">当前网络条件下的理论最低值</button>
+      <p class="fb" hidden data-explain="延迟不是越低越好：压到亚秒通常意味着放弃 CDN、改成 SFU 直连每个观众，单位成本可能翻几倍。所以要先问业务能容忍多少——体育博彩的赔率必须与画面同步是硬需求，录播课晚几秒没人投诉。落在哪一档，协议栈就定了。"></p>
+    </div>
+  </div>
+
+  <p class="ask">哪里没说清？<strong>回头直接问你的老师</strong>（那个正在运行本工作区的 agent）。它知道你的目标，可以就任何一句追问下去、举更多例子。</p>
+
+  <p class="foot">
+    <strong>推荐一手资料：</strong>
+    <a href="https://www.rfc-editor.org/rfc/rfc8216.html" target="_blank" rel="noopener">RFC 8216 — HTTP Live Streaming</a> ＋
+    <a href="https://developer.apple.com/documentation/http-live-streaming" target="_blank" rel="noopener">Apple 的 HLS 文档</a>
+    —— 想理解「为什么广播级延迟卡在 2 秒以上下不来」，答案在分段与播放列表这套机制里，不在播放器参数里。读这两份你会明白：LL-HLS 已经把这套模型优化到极限，再往下压就必须换协议。<br />
+    <strong>诚实提示：</strong>这一讲的延迟区间（对话级 ≤150 ms、LL-HLS 2–5 s）来自工程界的普遍实现与厂商文档，<strong>没有</strong>像第 4 讲那种公开的一手测量。请当量级用，并且在你自己的网络与设备上实测之后再做承诺。<br />
+    相关：<a href="../lessons/0008-topology-and-cost.html">第 8 讲 · 架构选型与那道账单</a> ·
+    <a href="../lessons/0010-low-latency-inverted.html">第 10 讲 · 反着配</a> ·
+    <a href="../reference/0003-scenario-cheatsheet.html">场景速查表</a>
+  </p>
+
+<script>
+(function () {
+  var questions = document.querySelectorAll('.quiz .q');
+  for (var i = 0; i < questions.length; i++) {
+    (function (q) {
+      var opts = q.querySelectorAll('.opt');
+      var fb = q.querySelector('.fb');
+      for (var j = 0; j < opts.length; j++) {
+        (function (opt) {
+          opt.addEventListener('click', function () {
+            if (q.dataset.answered === '1') return;
+            q.dataset.answered = '1';
+            for (var k = 0; k < opts.length; k++) {
+              opts[k].disabled = true;
+              if (opts[k].dataset.correct === 'true') opts[k].classList.add('correct');
+            }
+            var ok = opt.dataset.correct === 'true';
+            if (!ok) opt.classList.add('wrong');
+            fb.innerHTML = (ok ? '<b>✓ 对。 </b>' : '<b>✗ 再想一下。 </b>') + fb.dataset.explain;
+            fb.hidden = false;
+          });
+        })(opts[j]);
+      }
+    })(questions[i]);
+  }
+})();
+</script>
+</body>
+</html>

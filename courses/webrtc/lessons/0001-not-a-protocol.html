@@ -142,7 +142,7 @@ signal.send(JSON.stringify(pc.localDescription));</code></pre>
 
   <h2>这条线要走到哪里</h2>
 
-  <p>后面七讲是一条单向的路，每一讲都在回答上一讲留下的问题：</p>
+  <p>后面九讲是一条单向的路，每一讲都在回答上一讲留下的问题：</p>
 
   <ol class="flow">
     <li><strong>协商</strong>——SDP 与 offer/answer：为什么它是状态机而不是配置表，为什么「改 SDP」是个危险动作（<a href="../lessons/0002-sdp-offer-answer.html">第 2 讲</a>）。</li>
@@ -152,6 +152,8 @@ signal.send(JSON.stringify(pc.localDescription));</code></pre>
     <li><strong>容错</strong>——RTP 打包、NACK、抖动缓冲：丢包之后到底发生了什么（<a href="../lessons/0006-rtp-packets.html">第 6 讲</a>）。</li>
     <li><strong>自适应</strong>——拥塞控制：为什么「糊一下」是算法主动做出的选择（<a href="../lessons/0007-congestion-control.html">第 7 讲</a>）。</li>
     <li><strong>决策</strong>——拓扑、容量、可观测性：上线前该检查什么（<a href="../lessons/0008-topology-and-cost.html">第 8 讲</a>）。</li>
+    <li><strong>归类</strong>——用延迟预算与对称性两轴，把任意需求归到三组取舍里（<a href="../lessons/0009-scenario-map.html">第 9 讲</a>）。</li>
+    <li><strong>例外</strong>——保真型场景为什么把前九讲的默认值全部反过来（<a href="../lessons/0010-low-latency-inverted.html">第 10 讲</a>）。</li>
   </ol>
 
   <div class="quiz" aria-label="回顾练习">

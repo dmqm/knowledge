@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 10 讲 · 反着配：云游戏与远程操控</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+  <nav aria-label="讲义导航">
+    <a class="tag" href="../lessons/0009-scenario-map.html">← 第 9 讲 · 场景地图</a>
+    <a class="tag" href="../reference/0003-scenario-cheatsheet.html">场景速查表</a>
+    <a class="tag" href="../reference/0002-debug-ladder.html">排障阶梯</a>
+  </nav>
+
+  <p class="kicker">深入 WebRTC · 第 10 讲</p>
+  <h1>反着配：云游戏与远程操控</h1>
+  <p class="lede">一句话目标：读完这一讲，你能说清为什么「把这套参数搬去做云游戏，必然没法玩」，并知道保真型场景在哪三处与前八讲的默认做法完全相反——以及什么时候根本不该用 WebRTC。</p>
+
+  <h2>引子：一次照抄配置的事故</h2>
+
+  <p>你按会议的经验把一切调好了：码率自适应开着，NACK 重传开着，抖动缓冲交给算法自适应，断线就降分辨率。画面很清楚——延迟 300 毫秒，玩家推一下摇杆，人物要过半秒才动。</p>
+
+  <p>这时候你会以为是网络差。但网络不差：RTT 40 毫秒，丢包 0.5%。问题在你把<strong>「可以等一下」的假设</strong>带进了一个<strong>「一下都不能等」</strong>的场景。会议里那 200 毫秒的抖动缓冲是贴心设计；在这里，它就是 200 毫秒的输入延迟。</p>
+
+  <p>先把预算摊开看，一切就清楚了。</p>
+
+  <h2>一百毫秒怎么分</h2>
+
+  <p>云游戏的共识临界值是<strong>总延迟 100 毫秒</strong>——从你按下按键，到屏幕上看到结果。这个数字在多项 QoE 研究里反复出现：超过它就「能被察觉」，玩家的操作表现开始稳定变差；到 200 毫秒，多数人就不愿意继续玩了。而在这 100 毫秒里，大约 <strong>20 毫秒</strong>要留给播放与端侧处理，剩下能分给网络的只有 <strong>80 毫秒</strong>左右。</p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 460 214" role="img">
+      <title>同样的四段延迟，会议与云游戏的预算分配完全不同</title>
+      <text class="t-muted" x="40" y="34" font-size="10">会议 / 对话型 · 预算约 300 ms</text>
+      <rect class="f-wash" x="60" y="44" width="40" height="26" rx="4" />
+      <rect class="f-rule" x="100" y="44" width="80" height="26" rx="4" />
+      <rect class="f-wash" x="180" y="44" width="150" height="26" rx="4" />
+      <rect class="f-rule" x="330" y="44" width="60" height="26" rx="4" />
+      <text class="t-muted" x="60" y="86" font-size="9">采集编码</text>
+      <text class="t-muted" x="100" y="100" font-size="9">网络</text>
+      <text class="t-accent" x="180" y="86" font-size="9">抖动缓冲 150 ms</text>
+      <text class="t-muted" x="330" y="100" font-size="9">解码显示</text>
+
+      <text class="t-muted" x="40" y="132" font-size="10">云游戏 / 保真型 · 预算 100 ms</text>
+      <rect class="f-wash" x="60" y="142" width="18" height="26" rx="4" />
+      <rect class="f-rule" x="78" y="142" width="72" height="26" rx="4" />
+      <rect class="f-accent" x="150" y="142" width="10" height="26" rx="4" />
+      <rect class="f-rule" x="160" y="142" width="10" height="26" rx="4" />
+      <text class="t-muted" x="60" y="184" font-size="9">编码</text>
+      <text class="t-muted" x="84" y="184" font-size="9">网络 ≤80 ms</text>
+      <text class="t-accent" x="176" y="184" font-size="9">缓冲几乎为零</text>
+
+      <text class="t-muted" x="40" y="204" font-size="9">同样的四段，总长度差三倍；差别几乎全在缓冲那一段</text>
+    </svg>
+    <figcaption>读法：<strong>不要把「延迟」当成一个整体去优化，它由四段拼成，而各段的可压缩程度完全不同。</strong> 编码与解码受编码器限制，网络受光速与路由限制，只有抖动缓冲是你可以自由裁量的——也正因如此，会议把预算的大部分花在缓冲上（换来流畅），云游戏几乎不给它留位置（换来跟手）。<strong>同一份代码，这个参数一改，体验就从「能开会」变成「不能玩」。</strong></figcaption>
+  </figure>
+
+  <p>依据：这组数字（总 100 ms 临界、约 20 ms 播放与处理开销、网络侧约 80 ms）在多篇云游戏 QoE 研究里被反复引用与验证，我采用的是大阪大学一篇博士论文中对 Choy 等人结论的复述与实测框架。</p>
+
+  <h2>反转一：重传不能用</h2>
+
+  <p>第 6 讲说过，NACK 是「报缺哪几个包、让对方补发」，代价是<strong>至少一个 RTT</strong>。在会议里这个代价是可接受的：RTT 50 毫秒，缓冲留了 150 毫秒，重传回来的包还赶得上播放。</p>
+
+  <p>但在云游戏里，一次重传就要吃掉 40–80 毫秒——那是<strong>整份网络预算</strong>。更糟的是，等你确认丢包、发 NACK、等重传、再解码，屏幕上已经过去三四帧，玩家的操作反馈已经断了。</p>
+
+  <p>所以保真型的抗丢包手段是<strong>前向纠错（FEC）</strong>，或者干脆<strong>不补</strong>：丢一小块，画面花 16 毫秒，下一帧就恢复了，人的视觉系统几乎察觉不到——这比「等 60 毫秒补全再显示」体验好得多。这和会议的直觉相反：会议里宁可晚一点也要补全，因为音频断一下很明显；画面在这里恰恰是可以牺牲的。</p>
+
+  <blockquote>
+    <p><strong>第 6 讲那条结论在这里反过来了：</strong>「NACK 是否有效，取决于 RTT 与缓冲深度之比」。当缓冲被压到 1–2 帧，这个比值趋近于零，重传就从「补救」变成「拖累」。</p>
+  </blockquote>
+
+  <h2>反转二：缓冲不是朋友，是成本</h2>
+
+  <p>抖动缓冲在会议里的角色是「用延迟换连续」。它等得越久，画面越稳。云游戏里它只有一个身份：<strong>纯增加的输入延迟</strong>。因为它等的是「上一帧有没有齐」，而玩家等的是「我按了为什么没动」——这两件事在感知上是同一件事。</p>
+
+  <p>所以保真型会把缓冲压到 1–2 帧（16–33 毫秒），并接受由此带来的代价：<strong>任何一点抖动都会直接表现为卡顿或花屏</strong>，没有缓冲替你吸收。这也解释了为什么云游戏对网络质量的要求远高于会议——不是因为它更娇气，而是因为它把「容错的空间」主动让掉了。</p>
+
+  <h2>反转三：不能靠降分辨率救场</h2>
+
+  <p>带宽不足时，会议的默认动作是降分辨率：画面糊一点，但流畅，用户能接受。云游戏不行——画面里有 HUD、有小字号的任务提示、有需要辨认的远处敌人，<strong>分辨率一降，可读性就没了</strong>。</p>
+
+  <p>它能接受的是降帧率（60 → 30 帧，多数人可忍），以及短暂的画质劣化。<strong>优先级是「帧的完整性 &gt; 分辨率 &gt; 帧率」</strong>，而会议的顺序恰好是「流畅 &gt; 清晰度」。这也是为什么第 7 讲里那个字段这么有用：<code>qualityLimitationReason</code> 报 <code>bandwidth</code> 时，两类场景要做的事完全相反——会议降分辨率，云游戏宁可降帧率或短暂花屏。</p>
+
+  <h3>顺带一个细节：关键帧不要周期性来</h3>
+
+  <p>会议里周期性插入 IDR 关键帧是常规做法，代价是每隔几秒码率尖峰一次——在深缓冲下这把尖峰被吸收掉了。云游戏没有缓冲可吸收，一次关键帧就可能造成一次可见的延迟抖动。所以保真型常用 <strong>intra-refresh</strong>：不插整帧，而是把关键信息分摊到连续多帧里逐步刷新。<strong>码率平了，延迟才平。</strong> 这一条在会议里也有用，只是紧迫性低得多。</p>
+
+  <h2>第四个东西：输入通道</h2>
+
+  <p>会议通常不需要专门的上行通道（麦克风和摄像头本身就是上行）。远程操控和云游戏需要——玩家的按键、摇杆、鼠标位置要高频回传，通常 60–125 次/秒。</p>
+
+  <p>这条通道的正确配置是 <code>RTCDataChannel</code> 的<strong>不可靠、无序</strong>模式：</p>
+
+  <pre><code>const dc = pc.createDataChannel('input', {
+  ordered: false,          // 旧包不值得等新包
+  maxRetransmits: 0        // 丢了就丢了，下一帧会带新状态
+});</code></pre>
+
+  <p>为什么可以这么激进？因为<strong>传的是绝对状态，不是增量</strong>。「左摇杆在 (0.3, -0.7)」这个信息，丢一包无所谓，下一包 16 毫秒后就来，状态自愈。反过来，如果传「向左移动 3 像素」这种增量，丢一包就永久错位——那就必须可靠传输，也就必须等重传，也就把延迟预算吃光了。<strong>设计输入协议时选绝对量，等于免费获得抗丢包能力。</strong></p>
+
+  <h2>远程操控多一条要求：确定性</h2>
+
+  <p>云游戏要的是<strong>平均延迟低</strong>；远程操控（机械臂、无人机、工控）要的是<strong>延迟稳定</strong>。因为控制回路会做预测与补偿，而补偿的前提是「延迟可预测」。一条稳定 60 毫秒的链路，比「平时 20 毫秒、偶尔飙到 150 毫秒」的链路安全得多——后者会让补偿算错，表现为机械臂过冲。</p>
+
+  <p>所以这类场景要看的指标不是平均 RTT，而是 <strong>RTT 的分布尾部</strong>（P95 / P99）与抖动。第 7 讲的拥塞控制在这里也要调保守：宁可少发一点，也不要因为激进试探造成周期性排队。</p>
+
+  <h2>什么时候根本不该用 WebRTC</h2>
+
+  <p>必须诚实说一句：<strong>商业云游戏的主流实现并不都用 WebRTC。</strong> Parsec 走的是自研的、基于 UDP 的传输协议，为低延迟定制的可靠性语义；Moonlight 走 RTP。<strong>WebRTC 在这个领域的独特价值是「浏览器里直接能跑」</strong>——不需要装客户端。如果你要做的是网页版云游戏、网页远程桌面，它是最短的路径；如果你要做的是原生客户端，那么 WebRTC 带来的复杂度（ICE、DTLS、SDP、拥塞控制的全套）未必划算。</p>
+
+  <p>判断方法很简单：<strong>终端是浏览器，就用 WebRTC；终端是自家客户端，先问「我能不能只做一条 UDP 流 + 自己的重传策略」。</strong> 后者的代码量可能只有前者的三分之一。</p>
+
+  <h2>这一讲真正的收获</h2>
+
+  <p>不是记住云游戏的参数，而是意识到：<strong>前九讲那些「最佳实践」，全部建立在一个隐含前提上——「可以用等待换质量」。</strong> 一旦这个前提不成立，几乎所有默认值都要反过来。所以以后看到任何一条 WebRTC 的「推荐配置」，先问它假设了什么。</p>
+
+  <div class="quiz" aria-label="回顾练习">
+    <span class="card-title">点选项，立刻看解析</span>
+
+    <div class="q">
+      <p class="stem">1. 云游戏里 NACK 重传为什么基本不可用？</p>
+      <button type="button" class="opt">因为云游戏的丢包率通常远高于会议</button>
+      <button type="button" class="opt" data-correct="true">一次重传就吃掉大部分网络预算</button>
+      <button type="button" class="opt">因为浏览器不支持在高帧率下重传</button>
+      <button type="button" class="opt">因为重传会破坏 SRTP 的序列号校验</button>
+      <p class="fb" hidden data-explain="网络侧预算只有 80 毫秒左右，而一次重传至少一个 RTT（40–80 毫秒），等于把整份预算花光。更关键的是缓冲被压到 1–2 帧后，重传回来的包早已错过显示时刻。所以改用 FEC，或者接受短暂花屏不补。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">2. 带宽不足时，保真型场景的优先顺序是？</p>
+      <button type="button" class="opt">先降分辨率，再降帧率，最后降画质</button>
+      <button type="button" class="opt" data-correct="true">先保帧完整，再保分辨率，最后才降帧率</button>
+      <button type="button" class="opt">先加深缓冲，把抖动全部吸收掉再说</button>
+      <button type="button" class="opt">先关掉 FEC，把带宽让给主体画面</button>
+      <p class="fb" hidden data-explain="画面里的 HUD、小字提示、远处目标都依赖分辨率，一降就不可读；而 60 帧降到 30 帧多数人能忍。缓冲一加深就直接变成输入延迟，所以不能靠它救场。结论：帧完整 > 分辨率 > 帧率，与会议的「流畅 > 清晰」正好相反。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">3. 输入通道为什么用「不可靠无序」的 DataChannel 就够？</p>
+      <button type="button" class="opt">因为输入数据量极小，丢包的损失可以忽略</button>
+      <button type="button" class="opt" data-correct="true">因为传的是绝对状态，下一包会自动自愈</button>
+      <button type="button" class="opt">因为 UDP 本身保证了输入包的到达顺序</button>
+      <button type="button" class="opt">因为浏览器会自动为输入通道补发丢失包</button>
+      <p class="fb" hidden data-explain="「左摇杆在 (0.3,-0.7)」是绝对状态：丢一包无所谓，16 毫秒后新状态就覆盖了。如果传的是「向左移动 3 像素」这种增量，丢一包就永久错位，那就必须可靠传输、必须等重传，也就把延迟预算吃光了。选绝对量等于免费获得抗丢包。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">4. 远程操控比云游戏更在意哪一项？</p>
+      <button type="button" class="opt">画面的峰值亮度与色彩准确度</button>
+      <button type="button" class="opt" data-correct="true">延迟的稳定性而非平均值高低</button>
+      <button type="button" class="opt">单位时间内可承载的最大分辨率</button>
+      <button type="button" class="opt">同时接入的操控端数量上限</button>
+      <p class="fb" hidden data-explain="控制回路要靠「延迟可预测」来做补偿：稳定 60 毫秒的链路可以被补偿掉，而「平时 20 毫秒、偶尔 150 毫秒」会让补偿算错，表现为机械臂过冲。所以要看 RTT 分布的尾部（P95/P99）与抖动，拥塞控制也要调保守。"></p>
+    </div>
+  </div>
+
+  <p class="ask">哪里没说清？<strong>回头直接问你的老师</strong>（那个正在运行本工作区的 agent）。它知道你的目标，可以就任何一句追问下去、举更多例子。</p>
+
+  <p class="foot">
+    <strong>推荐一手资料：</strong>
+    <a href="https://ir.library.osaka-u.ac.jp/repo/ouka/all/96225/34144_Dissertation.pdf" target="_blank" rel="noopener">A Study on Delay and Traffic Reduction for Cloud Gaming Systems（大阪大学博士论文）</a>
+    —— 我引的「100 ms 临界 / 其中约 20 ms 是播放与处理 / 网络侧不超过 80 ms」出自它对 Choy 等人研究的复述与实验框架。读第 2 章的延迟分解，你会看到延迟预算怎么被逐段拆开、每一段的物理下限在哪；这比记住任何一组参数都有用。<br />
+    <strong>诚实提示：</strong>这一讲的工程结论（FEC 优于 NACK、缓冲压到 1–2 帧、intra-refresh）属于业界实践共识，<strong>没有</strong>公开的一手测量能证明「某个具体参数最优」——它高度依赖你的网络与终端。请把它们当<strong>方向</strong>，具体数值自己压测。<br />
+    相关：<a href="../lessons/0009-scenario-map.html">第 9 讲 · 场景地图</a> ·
+    <a href="../lessons/0006-rtp-packets.html">第 6 讲 · 丢包之后发生了什么</a> ·
+    <a href="../lessons/0007-congestion-control.html">第 7 讲 · 糊一下是算出来的</a> ·
+    <a href="../reference/0003-scenario-cheatsheet.html">场景速查表</a>
+  </p>
+
+<script>
+(function () {
+  var questions = document.querySelectorAll('.quiz .q');
+  for (var i = 0; i < questions.length; i++) {
+    (function (q) {
+      var opts = q.querySelectorAll('.opt');
+      var fb = q.querySelector('.fb');
+      for (var j = 0; j < opts.length; j++) {
+        (function (opt) {
+          opt.addEventListener('click', function () {
+            if (q.dataset.answered === '1') return;
+            q.dataset.answered = '1';
+            for (var k = 0; k < opts.length; k++) {
+              opts[k].disabled = true;
+              if (opts[k].dataset.correct === 'true') opts[k].classList.add('correct');
+            }
+            var ok = opt.dataset.correct === 'true';
+            if (!ok) opt.classList.add('wrong');
+            fb.innerHTML = (ok ? '<b>✓ 对。 </b>' : '<b>✗ 再想一下。 </b>') + fb.dataset.explain;
+            fb.hidden = false;
+          });
+        })(opts[j]);
+      }
+    })(questions[i]);
+  }
+})();
+</script>
+</body>
+</html>

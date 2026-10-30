@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>场景速查表 · 深入 WebRTC</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+  <nav aria-label="导航">
+    <a class="tag" href="../lessons/0009-scenario-map.html">第 9 讲 · 场景地图</a>
+    <a class="tag" href="../lessons/0010-low-latency-inverted.html">第 10 讲 · 反着配</a>
+    <a class="tag" href="../reference/0001-glossary.html">概念速查表</a>
+  </nav>
+
+  <p class="kicker">深入 WebRTC · 速查表</p>
+  <h1>场景速查表</h1>
+  <p class="lede">九类常见场景的默认配置。用法：先看「三步定位」，再按组跳到你那一条。所有数值是<strong>起点</strong>，不是最优解——必须在你自己的网络与终端上压测过再定。</p>
+
+  <h2>三步定位</h2>
+
+  <ol class="flow">
+    <li><strong>问延迟</strong>：迟到多少毫秒，这业务就废了？≤150 ms 是对话级，≤500 ms 是交互级，2–5 秒是广播级。</li>
+    <li><strong>问对称</strong>：人人收发，还是只有少数人发？非对称基本等于广播型。</li>
+    <li><strong>问终端</strong>：浏览器，还是自家客户端？自家客户端可以不用整套 WebRTC。</li>
+  </ol>
+
+  <h2>对话型 · 人人收发，150 ms 级</h2>
+
+  <div class="card">
+    <p class="card-title">1 对 1 客服 / 在线问诊</p>
+    <p><strong>拓扑</strong> P2P 优先，TURN 兜底　<strong>上行</strong> 1 路　<strong>缓冲</strong> 40–100 ms</p>
+    <p><strong>抗丢包</strong> NACK + PLC　<strong>带宽不足</strong> 降分辨率保帧率</p>
+    <p><strong>要害</strong> 要录制就从 SFU 落地（P2P 无法在服务端落盘），因此多数合规场景反而不该纯 P2P；按 20% 中继率做成本上限。</p>
+  </div>
+
+  <div class="card">
+    <p class="card-title">多人会议（3–30 人）</p>
+    <p><strong>拓扑</strong> SFU + simulcast　<strong>上行</strong> 每人 1 路（simulcast 则 2–3 层）</p>
+    <p><strong>缓冲</strong> 60–200 ms 自适应　<strong>抗丢包</strong> NACK 为主，弱网加 FEC</p>
+    <p><strong>要害</strong> 出口随人数平方增长；人数上限要按出口带宽与 pps 双重卡。simulcast 层数不是越多越好，上行会被放大。</p>
+  </div>
+
+  <div class="card">
+    <p class="card-title">实时语音 AI（对话式助手）</p>
+    <p><strong>拓扑</strong> 直连服务端（无需 SFU）　<strong>上行</strong> 单路音频</p>
+    <p><strong>缓冲</strong> 压到最低（20–50 ms）　<strong>编码</strong> Opus，20–40 kbps 即可用</p>
+    <p><strong>要害</strong> 只有音频，延迟预算比视频更紧；「打断」要求上行与下行双向都低延迟，不能只优化下行。断句与静音检测在服务端做，别指望客户端。</p>
+  </div>
+
+  <div class="card">
+    <p class="card-title">远程医疗会诊（多端 + 合规）</p>
+    <p><strong>拓扑</strong> SFU（必须能服务端录制）　<strong>加密</strong> DTLS-SRTP；如需防服务器则加 SFrame</p>
+    <p><strong>要害</strong> 「端到端加密」与「服务端录制/审计」天然冲突，必须先定哪个是硬需求；多数医疗合规要求可审计，于是记录是必需的，E2EE 反而放最后。</p>
+  </div>
+
+  <h2>广播型 · 少数人发，秒级可接受</h2>
+
+  <div class="card">
+    <p class="card-title">大班课 / 互动直播（百人级）</p>
+    <p><strong>拓扑</strong> SFU　<strong>上行</strong> 只有主播（+ 少数连麦）</p>
+    <p><strong>缓冲</strong> 200–500 ms　<strong>抗丢包</strong> FEC + 选择性重传</p>
+    <p><strong>要害</strong> 学生端的下行是成本主体；连麦人数是隐藏变量，每加一个连麦者就多一份全房间转发。</p>
+  </div>
+
+  <div class="card">
+    <p class="card-title">万人级直播分发</p>
+    <p><strong>拓扑</strong> 混合：主播/连麦走 WebRTC，观众走 LL-HLS 或 LL-DASH</p>
+    <p><strong>延迟</strong> 观众侧 2–5 秒（LL-HLS 的现实区间）</p>
+    <p><strong>要害</strong> 纯 SFU 直连每个观众在这个量级不经济；观众侧延迟要写进产品设计（弹幕、抽奖、竞猜都要按这个延迟校准）。</p>
+  </div>
+
+  <div class="card">
+    <p class="card-title">安防摄像头 / 智能门铃</p>
+    <p><strong>拓扑</strong> 设备 → SFU → 观看端（或 WHEP 拉流）　<strong>上行</strong> 1 路</p>
+    <p><strong>缓冲</strong> 500 ms 以上无妨　<strong>要害</strong> 长期在线，必须处理 NAT 映射超时与重连；弱网与低功耗是主要约束，别指望设备侧做复杂自适应。</p>
+  </div>
+
+  <h2>保真型 · 人人收发，但一下都不能等</h2>
+
+  <div class="card">
+    <p class="card-title">云游戏</p>
+    <p><strong>拓扑</strong> 单 SFU 就近部署（延迟由地理决定）　<strong>预算</strong> 总 100 ms，网络 ≤80 ms</p>
+    <p><strong>抗丢包</strong> FEC；重传基本无用　<strong>缓冲</strong> 1–2 帧（16–33 ms）</p>
+    <p><strong>带宽不足</strong> 保帧完整 &gt; 保分辨率 &gt; 降帧率</p>
+    <p><strong>要点</strong> 关键帧用 intra-refresh 摊平，避免周期性码率尖峰；输入走 DataChannel 不可靠无序、传绝对状态。</p>
+    <p><strong>要害</strong> 商业实现多用私有 UDP 协议（如 Parsec 的 BUD）或 RTP，<strong>WebRTC 的独特价值是「浏览器里能直接跑」</strong>。原生客户端未必划算。</p>
+  </div>
+
+  <div class="card">
+    <p class="card-title">远程桌面 / 远程操控（含机械臂、无人机）</p>
+    <p><strong>拓扑</strong> 直连或就近 SFU，禁用绕路中继　<strong>预算</strong> 端到端 ≤100 ms</p>
+    <p><strong>优先</strong> 文字清晰度（分辨率）与延迟稳定性</p>
+    <p><strong>要害</strong> 控制回路要做预测补偿，所以看的是 RTT 的 P95/P99 与抖动，不是平均值——稳定 60 ms 优于「平时 20 ms、偶尔 150 ms」。拥塞控制要调保守，避免自己制造排队。</p>
+  </div>
+
+  <h2>无媒体 · 只用数据通道</h2>
+
+  <div class="card">
+    <p class="card-title">协同白板 / 文件传输 / 游戏状态同步</p>
+    <p><strong>配置</strong> <code>RTCDataChannel</code>，按需选三档语义</p>
+    <p><strong>可靠有序</strong> 默认，适合文件与文本　<strong>部分可靠</strong> <code>maxRetransmits</code> / <code>maxPacketLifeTime</code>　<strong>不可靠无序</strong> 适合高频状态</p>
+    <p><strong>要害</strong> 如果只有数据需求，<strong>先问能不能直接 WebSocket</strong>——不为一条通道引入 ICE/DTLS/SDP 全套，通常是净亏损。DataChannel 的价值在于「已经有一条媒体链路，顺带传数据」。</p>
+  </div>
+
+  <h2>三条通用提醒</h2>
+
+  <p><strong>一、所有「推荐参数」都隐含一个前提。</strong> 前九讲的最佳实践大多假设「可以用等待换质量」。前提一变，参数就要反过来——云游戏就是活例子。</p>
+
+  <p><strong>二、先算成本，再选架构。</strong> 中继比例、出口带宽、观众规模这三个数一旦定了，架构基本就没得选了。第 8 讲给了公式。</p>
+
+  <p><strong>三、上线第一天就埋三个点。</strong> 本次会话是否走了 relay、<code>qualityLimitationReason</code> 的分布、RTT 与丢包的 P95。没有这三个数，上面所有判断都只能靠猜。</p>
+
+  <p class="foot">
+    <strong>相关：</strong><a href="../lessons/0009-scenario-map.html">第 9 讲 · 场景地图</a> ·
+    <a href="../lessons/0010-low-latency-inverted.html">第 10 讲 · 反着配</a> ·
+    <a href="../lessons/0008-topology-and-cost.html">第 8 讲 · 架构选型与那道账单</a> ·
+    <a href="../reference/0002-debug-ladder.html">排障阶梯</a> ·
+    <a href="../reference/0001-glossary.html">概念速查表</a><br />
+    <strong>数值口径说明：</strong>本表的延迟与缓冲区间是工程实践的起点值，不是测量结论。唯一有公开一手测量的是中继比例（22% / 9%，callstats.io，2015–2016），其余请在你的环境里实测后替换。
+  </p>
+
+</body>
+</html>

@@ -40,6 +40,10 @@
   用于：协商为什么是两次状态交换而不是填表。
 - [RFC 9725 — WHIP（WebRTC-HTTP Ingestion Protocol）](https://www.rfc-editor.org/rfc/rfc9725.html)
   2025-03 发布，Standards Track。用于：广播 / 直播场景的标准化推流信令长什么样（一次 HTTP POST 换 SDP）。
+- [RFC 8216 — HTTP Live Streaming](https://www.rfc-editor.org/rfc/rfc8216.html) ／ [Apple HLS 文档](https://developer.apple.com/documentation/http-live-streaming)
+  用于：为什么广播级延迟卡在 2–5 秒下不来——答案在分段与播放列表这套机制里，不在播放器参数里。想理解「WebRTC 与 LL-HLS 的边界在哪」，读这两份比读任何博客都直接。
+- [A Study on Delay and Traffic Reduction for Cloud Gaming Systems（大阪大学博士论文）](https://ir.library.osaka-u.ac.jp/repo/ouka/all/96225/34144_Dissertation.pdf)
+  用于：云游戏的延迟预算分解。我引的「总 100 ms 临界 / 其中约 20 ms 是播放与处理 / 网络侧不超过 80 ms」出自它对 Choy 等人研究的复述与实验框架。也提到 Parsec 自研 UDP 协议（BUD）这条旁证。
 
 ### 真实测量与工程经验
 
@@ -73,5 +77,6 @@
 ## Gaps
 
 - **缺一份近年的公开中继占比测量。** 现有流传的 8%–22% 区间几乎都能追溯到 2015–2016 年的 callstats 数据。本课因此只给「量级」判断，并要求自己上线后自测中继率。
+- **第 9、10 讲的延迟与缓冲区间，没有对应的一手测量。** 它们是工程实践共识（云游戏 100 ms 临界有学术支撑，但「缓冲压到 1–2 帧」「FEC 优于 NACK」这类结论缺少公开对照实验）。这两讲里凡属实践共识的地方都已显式标注，请当方向而非数值。
 - 缺中文的高质量一手资料。中文圈的 WebRTC 文章大量互相转抄，且常把「四种 NAT 类型」当成事实——这与 RFC 4787 的建模方式冲突。
 - 缺可离线运行的完整 demo 工程。本课的动手部分依赖本机能跑 Docker；纯手机阅读时只能读，不能做。
