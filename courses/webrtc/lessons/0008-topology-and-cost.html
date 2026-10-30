@@ -60,12 +60,6 @@
   <figure class="figure">
     <svg viewBox="0 0 680 262" role="img">
       <title>三种拓扑的连接数对比：5 个用户时，Mesh 有 10 条两两相连的路径，SFU 与 MCU 各只有 5 条指向服务端的路径</title>
-      <defs>
-        <marker id="arrow-ink" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-          <path d="M2 1L8 5L2 9" fill="none" style="stroke:var(--muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
-        </marker>
-      </defs>
-
       <text class="t-accent" x="100" y="36" font-size="12" text-anchor="middle">Mesh</text>
       <text class="t-muted" x="100" y="52" font-size="9.5" text-anchor="middle">两两直连</text>
 
@@ -153,7 +147,7 @@
 
   <h2>中继的成本模型：一份内容，两跳的钱</h2>
 
-  <p>回到账单。ICE 把 relay 候选的优先级定成 0，只有直连全失败才会用到中继，这容易让人以为中继是罕见事故——恰恰相反，<a href="https://webrtchacks.com/usage-stats/">webrtcHacks 那篇基于 callstats.io 的观测</a>（2015-01 至 2016-02，数十亿分钟）是：<strong>22% 的会议需要某种形式的 TURN 中继，9% 需要 TCP</strong>。</p>
+  <p>回到账单。ICE 把 relay 候选的优先级定成 0，只有直连全失败才会用到中继，这容易让人以为中继是罕见事故——恰恰相反，<a href="https://webrtchacks.com/usage-stats/">webrtcHacks 那篇基于 callstats.io 的观测</a>（2015-01 至 2016-02，数十亿分钟）给出的是：<strong>22% 的会议需要某种形式的 TURN 中继，9% 需要 TCP</strong>。</p>
 
   <p>注意年份：十年前的测量，样本是当时的网络环境，只能当<strong>量级参考</strong>。正确做法是上线第一天就把「本次会话是否走了 relay 候选」打进埋点，一个月后用自己的数字替换这个 22%。</p>
 
@@ -164,10 +158,10 @@
       <title>媒体路径：说话人上行到 SFU，SFU 出口到 TURN，TURN 出口到观众；两段出口各计一次费</title>
       <defs>
         <marker id="arrow-mute" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-          <path d="M2 1L8 5L2 9" fill="none" style="stroke:var(--muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
         </marker>
         <marker id="arrow-accent" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-          <path d="M2 1L8 5L2 9" fill="none" style="stroke:var(--accent)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
         </marker>
       </defs>
 
@@ -213,7 +207,7 @@
   = 中继流数 × 每路码率(Mbps) × 每天小时数 × 3600 × 30 ÷ 8 ÷ 1000 × 2
      └ 并发中继的媒体流    └ R      └ 4        └ 秒     └ 天  └ bit→Byte └ MB→GB └ 两跳</code></pre>
 
-  <p>「中继流数」要数清楚：1 对 1 通话若需中继，<strong>两个方向都过 TURN</strong>，是 2 条流不是 1 条。按「会话数」算会少一半，这里最容易错。</p>
+  <p>「中继流数」要数清楚：只要一端落在中继后面，这个端点位的<strong>收与发都得过 TURN</strong>——下行是「进中继再出中继」，上行同样如此，所以是 2 条流，不是 1 条。按「会话数」算会少一半，这里最容易错。</p>
 
   <p><strong>算例。</strong> 假设峰值 100 路并发 1 对 1 通话，其中 20% 需要中继；每路视频下行 800 kbps；每天有效通话 4 小时；出口单价<strong>假设</strong> 0.5 元/GB（这个价格是我编的假设值，换成你自己的账单）。</p>
 
@@ -238,7 +232,7 @@
 
   <h2>容量估算：别用平均码率估峰值</h2>
 
-  <p>容量估算要算三样东西，顺序不能反。</p>
+  <p>容量估算要算三样，顺序不能反。</p>
 
   <p><strong>一、出口带宽。</strong> 公式是「下行路数 × 码率」。10 人房间、每人订阅 9 路、每路 500 kbps，出口就是 10 × 9 × 500 kbps = 45 Mbps。<strong>这是按房间算的</strong>：出口随 N(N−1) 增长，是平方级而非线性，所以瓶颈往往不是「总人数」，而是「最大的那个房间」。再叠上中继的翻倍，一台 1 Gbps 出口的机器能装下的房间数比你以为的少。</p>
 
