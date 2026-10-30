@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 8 讲 · 架构选型与那道账单</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+  <nav aria-label="讲义导航">
+    <a class="tag" href="../lessons/0007-congestion-control.html">← 第 7 讲 · 糊一下是算出来的</a>
+    <a class="tag" href="../lessons/0001-not-a-protocol.html">回到第 1 讲</a>
+    <a class="tag" href="../reference/0001-glossary.html">概念速查表</a>
+  </nav>
+
+  <p class="kicker">深入 WebRTC · 第 8 讲</p>
+  <h1>架构选型与那道账单</h1>
+  <p class="lede">一句话目标：读完这一讲，你能在 Mesh / SFU / MCU 之间做出有理由的选择，能用一条算式估出自己那台服务器的月流量，并在上线前知道该盯哪几个数字。</p>
+
+  <h2>引子：软件免费，系统不免费</h2>
+
+  <p>你把 LiveKit 跑在一台 4 核 8G 的 VPS 上。软件一分钱没花——mediasoup 是 ISC，LiveKit 是 Apache 2.0，Pion 是 MIT，Janus 是 GPLv3，都能商用，也都不收授权费。这么复杂的东西白给，你甚至有点感动。</p>
+
+  <p>第一个月，你盯着机器的账单，那个数字是固定的，你能接受。第二个月你才注意到另一行：<strong>出口流量</strong>。它不固定，它随使用量涨，而且没有上限。</p>
+
+  <p>停一下。<strong>开源的 SFU 给你的是一段程序，不是一台机器，更不是一条带宽。</strong> 它省掉的只有「转发逻辑自己写」这一项；省不掉的是「同一份画面要在一秒内被复制到 N 个方向」这个物理动作——而那件事是按 GB 计价的。</p>
+
+  <p>所以这一讲不谈 API，谈三件事：<strong>选哪条路、这条路要花多少钱、上线之后靠什么知道钱花得对不对。</strong> 这是全课最后一讲，落点在决策和运维。</p>
+
+  <h2>三种拓扑，三种「拿什么换什么」</h2>
+
+  <p>先给结论再给算术：所谓拓扑选型，本质上是在选<strong>把成本压在哪一方身上</strong>。</p>
+
+  <ul>
+    <li><strong>Mesh（全网状）</strong>：把成本压在每个参与者的上行带宽和 CPU 上，服务端成本为零。</li>
+    <li><strong>SFU（选择性转发）</strong>：把成本压在服务器的<strong>出口带宽</strong>上，客户端只上行一路。</li>
+    <li><strong>MCU（多点控制单元）</strong>：把成本压在服务器的 <strong>CPU</strong> 上，换来出口带宽的大幅下降。</li>
+  </ul>
+
+  <p>这三句就能解释 SFU 为什么成了事实标准：在这三种资源里，<strong>服务器的出口带宽最容易用钱买到、也最容易横向扩容</strong>，而用户手机的上行和 CPU，你一分钱也买不到。</p>
+
+  <h3>把 R 记作一路视频的码率</h3>
+
+  <p>设房间里有 N 个人，每路视频码率 R，三种拓扑每人要发多少、收多少可以直接写出来：</p>
+
+  <table>
+    <thead>
+      <tr><th>拓扑</th><th>每人上行</th><th>每人下行</th><th>服务端在做什么</th><th>合理规模</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Mesh</td><td>(N−1) × R</td><td>(N−1) × R</td><td>什么都不做</td><td>3–5 人，最多 6 人</td></tr>
+      <tr><td>SFU</td><td>1 × R</td><td>(N−1) × R</td><td>查表、改头、转发，<strong>不解码</strong></td><td>几十到几百人</td></tr>
+      <tr><td>MCU</td><td>1 × R</td><td>1 × R</td><td>解码 N 路 → 合成 → 重新编码</td><td>受 CPU 限制，通常十几人</td></tr>
+    </tbody>
+  </table>
+
+  <p>代入 R = 500 kbps 看一眼 Mesh 的实际形状：5 个人时每人上行 4 × 500 kbps = <strong>2 Mbps</strong>，这只算了视频，还没算音频和重传。8 个人时变成 7 × 500 kbps = <strong>3.5 Mbps 的持续上行</strong>——已经压在很多家用宽带的上行标称值附近；手机更糟，7 个编码器加 7 个解码器同时跑，先烫，再掉帧。所以「Mesh 撑到 8 人」不是勉强可行，是不可行。</p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 680 262" role="img">
+      <title>三种拓扑的连接数对比：5 个用户时，Mesh 有 10 条两两相连的路径，SFU 与 MCU 各只有 5 条指向服务端的路径</title>
+      <defs>
+        <marker id="arrow-ink" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+        </marker>
+      </defs>
+
+      <text class="t-accent" x="100" y="36" font-size="12" text-anchor="middle">Mesh</text>
+      <text class="t-muted" x="100" y="52" font-size="9.5" text-anchor="middle">两两直连</text>
+
+      <path class="s-muted" fill="none" stroke-width="1" d="M100 101 L151.4 138.3" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M100 101 L131.7 198.7" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M100 101 L68.3 198.7" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M100 101 L48.7 138.3" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M151.4 138.3 L131.7 198.7" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M151.4 138.3 L68.3 198.7" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M151.4 138.3 L48.7 138.3" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M131.7 198.7 L68.3 198.7" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M131.7 198.7 L48.7 138.3" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M68.3 198.7 L48.7 138.3" />
+
+      <circle class="f-bg s-accent" cx="100" cy="101" r="8" stroke-width="1.2" />
+      <circle class="f-bg s-accent" cx="151.4" cy="138.3" r="8" stroke-width="1.2" />
+      <circle class="f-bg s-accent" cx="131.7" cy="198.7" r="8" stroke-width="1.2" />
+      <circle class="f-bg s-accent" cx="68.3" cy="198.7" r="8" stroke-width="1.2" />
+      <circle class="f-bg s-accent" cx="48.7" cy="138.3" r="8" stroke-width="1.2" />
+      <text class="t-muted" x="100" y="228" font-size="9.5" text-anchor="middle">10 条连接 · 每人 4 路上行</text>
+
+      <text class="t-accent" x="340" y="36" font-size="12" text-anchor="middle">SFU</text>
+      <text class="t-muted" x="340" y="52" font-size="9.5" text-anchor="middle">各发一条，服务器转发</text>
+
+      <path class="s-accent" fill="none" stroke-width="1.2" d="M340 142 L340 101" />
+      <path class="s-accent" fill="none" stroke-width="1.2" d="M340 142 L391.4 138.3" />
+      <path class="s-accent" fill="none" stroke-width="1.2" d="M340 142 L371.7 198.7" />
+      <path class="s-accent" fill="none" stroke-width="1.2" d="M340 142 L308.3 198.7" />
+      <path class="s-accent" fill="none" stroke-width="1.2" d="M340 142 L288.7 138.3" />
+
+      <circle class="f-bg s-accent" cx="340" cy="101" r="8" stroke-width="1.2" />
+      <circle class="f-bg s-accent" cx="391.4" cy="138.3" r="8" stroke-width="1.2" />
+      <circle class="f-bg s-accent" cx="371.7" cy="198.7" r="8" stroke-width="1.2" />
+      <circle class="f-bg s-accent" cx="308.3" cy="198.7" r="8" stroke-width="1.2" />
+      <circle class="f-bg s-accent" cx="288.7" cy="138.3" r="8" stroke-width="1.2" />
+      <rect class="f-bg s-accent" x="318" y="142" width="44" height="26" rx="6" stroke-width="1.2" />
+      <text class="t-accent" x="340" y="159" font-size="10" text-anchor="middle">SFU</text>
+      <text class="t-muted" x="340" y="228" font-size="9.5" text-anchor="middle">5 条连接 · 每人 1 路上行</text>
+
+      <text class="t-accent" x="578" y="36" font-size="12" text-anchor="middle">MCU</text>
+      <text class="t-muted" x="578" y="52" font-size="9.5" text-anchor="middle">服务器合成一路</text>
+
+      <path class="s-accent" fill="none" stroke-width="1.2" d="M578 142 L578 101" />
+      <path class="s-accent" fill="none" stroke-width="1.2" d="M578 142 L629.4 138.3" />
+      <path class="s-accent" fill="none" stroke-width="1.2" d="M578 142 L609.7 198.7" />
+      <path class="s-accent" fill="none" stroke-width="1.2" d="M578 142 L546.3 198.7" />
+      <path class="s-accent" fill="none" stroke-width="1.2" d="M578 142 L526.7 138.3" />
+
+      <circle class="f-bg s-accent" cx="578" cy="101" r="8" stroke-width="1.2" />
+      <circle class="f-bg s-accent" cx="629.4" cy="138.3" r="8" stroke-width="1.2" />
+      <circle class="f-bg s-accent" cx="609.7" cy="198.7" r="8" stroke-width="1.2" />
+      <circle class="f-bg s-accent" cx="546.3" cy="198.7" r="8" stroke-width="1.2" />
+      <circle class="f-bg s-accent" cx="526.7" cy="138.3" r="8" stroke-width="1.2" />
+      <rect class="f-wash s-accent" x="552" y="142" width="52" height="26" rx="6" stroke-width="1.2" />
+      <text class="t-accent" x="578" y="159" font-size="9.5" text-anchor="middle">MCU 解/编</text>
+      <text class="t-muted" x="578" y="228" font-size="9.5" text-anchor="middle">5 条连接 · 每人 1 路下行</text>
+    </svg>
+    <figcaption>读法：<strong>看线，不看框。</strong> Mesh 的线数按 N(N−1)/2 增长——5 人 10 条、8 人 28 条、20 人 190 条，线越多，每个端点要同时维护的编码器越多。SFU 与 MCU 都是 N 条线（星形），连接数一样，差别全在中间那个方块：SFU 只转发，MCU 要解码再合成。<strong>所以「SFU 和 MCU 都省连接数」是对的，但省下来的东西不一样。</strong></figcaption>
+  </figure>
+
+  <p>现在做一个容易被忽略的加法。全网总流量，Mesh 是 N 个人各发 (N−1) 路，合计 N(N−1)×R；SFU 是每个人发 1 路进来、服务器把 (N−1) 路发出去给每个人，合计也是 N(N−1)×R。<strong>两者一模一样。</strong></p>
+
+  <p>这是 SFU 最容易被误解的地方：<strong>它没有减少一个字节，只是把流量从「每个客户端的上行」搬到「服务器的出口」。</strong> 价值在于：客户端的上行你没法扩容（那是用户的 4G 和家庭宽带），服务器的出口你却可以加钱、加机器、就近部署。10 人、500 kbps 算一遍：Mesh 每人上下各 4.5 Mbps；SFU 每人只上行 0.5 Mbps，但服务器要出口 45 Mbps。<strong>同一份 45 Mbps，换了一个付款人。</strong></p>
+
+  <p>MCU 是另一笔交换：出口从 45 Mbps 压到 10 × 0.5 = 5 Mbps，代价是服务器要解码 10 路、合成、再编码 10 路。转发一个包只是查表改头，转码是每秒几十帧的像素运算——两者不在一个量级。所以 MCU 只在三种场合值得考虑：<strong>必须录制留档</strong>（反正要解码）、<strong>对端是极弱终端</strong>、<strong>出口贵到离谱而 CPU 便宜</strong>。除此之外，选 SFU。</p>
+
+  <h3>再往上：级联与就近接入</h3>
+
+  <p>一台 SFU 撑不住时，第一反应不该是换更大的机器，而是<strong>级联（cascading）</strong>：用户按地域分到几台边缘 SFU，边缘之间互连，每台只管自己那一片的转发。出口带宽被摊到多台机器、多个机房，延迟也因「先就近、再骨干」而降下来。代价是房间状态要在多台之间同步，跨机房那一段自己会成为瓶颈和单点。级联不是「更大的 SFU」，是「一组 SFU 组成的同一个房间」，运维难度差很远。</p>
+
+  <h2>Simulcast 与 SVC：让 SFU 不必转码</h2>
+
+  <p>上一节说 SFU「只转发不解码」，前提是：<strong>发过来的总有某一层是接收者刚好能用的。</strong> 如果只有一层 1500 kbps，而某个观众只有 300 kbps 下行，SFU 要么原样转发把他压垮，要么转码把 CPU 压垮。</p>
+
+  <p><a href="https://www.rfc-editor.org/rfc/rfc8853.html">RFC 8853</a> 的解法是 <strong>simulcast</strong>：发送端同时编出几路不同分辨率的流，在 SDP 里声明对应关系，SFU 对每个订阅者<strong>挑一层</strong>转发。挑层是纯转发、不解码，服务端 CPU 几乎不随人数增长；观众网络变差时，只是从高层切到低层。</p>
+
+  <p>代价落在上行。三层码率若是 150 / 500 / 1500 kbps，发送端上行就是 150 + 500 + 1500 = <strong>2150 kbps</strong>，比单层 500 kbps 高出四倍多。这是一笔很明确的交换：</p>
+
+  <blockquote>
+    <p><strong>simulcast 把「服务端的 CPU 账单」换成了「每个客户端的上行账单」。</strong></p>
+    <p><cite>—— 而客户端的上行是用户自己付的，服务端的上行是你付的。这笔交换在经济上成立，这就是 SFU 能成为事实标准的原因。</cite></p>
+  </blockquote>
+
+  <p>SVC 是同一目标的另一条路：层内嵌在一条码流里，丢掉增强层即可，<strong>上行只发一次</strong>，不像 simulcast 那样成倍放大；代价是编码效率略低、支持面窄得多。工程结论是：<strong>先用 simulcast，SVC 是省上行的优化项，不是必需品。</strong></p>
+
+  <h2>中继的成本模型：一份内容，两跳的钱</h2>
+
+  <p>回到账单。ICE 把 relay 候选的优先级定成 0，只有直连全失败才会用到中继，这容易让人以为中继是罕见事故——恰恰相反，<a href="https://webrtchacks.com/usage-stats/">webrtcHacks 那篇基于 callstats.io 的观测</a>（2015-01 至 2016-02，数十亿分钟）是：<strong>22% 的会议需要某种形式的 TURN 中继，9% 需要 TCP</strong>。</p>
+
+  <p>注意年份：十年前的测量，样本是当时的网络环境，只能当<strong>量级参考</strong>。正确做法是上线第一天就把「本次会话是否走了 relay 候选」打进埋点，一个月后用自己的数字替换这个 22%。</p>
+
+  <p>中继贵，不是因为 TURN 收授权费（它不收），而是它让同一份媒体在链路上被搬了两次：SFU→TURN，TURN→观众。有的厂商入向出向都算，有的只算出向但两跳都算，<strong>结果一样：同一份内容至少被计费两遍。</strong></p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 680 250" role="img">
+      <title>媒体路径：说话人上行到 SFU，SFU 出口到 TURN，TURN 出口到观众；两段出口各计一次费</title>
+      <defs>
+        <marker id="arrow-mute" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+        </marker>
+        <marker id="arrow-accent" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+        </marker>
+      </defs>
+
+      <rect class="f-bg s-rule" x="26" y="78" width="96" height="46" rx="8" />
+      <text x="74" y="98" font-size="10.5" text-anchor="middle">说话人 A</text>
+      <text class="t-muted" x="74" y="113" font-size="9" text-anchor="middle">上行 1 路</text>
+
+      <rect class="f-bg s-accent" x="196" y="78" width="96" height="46" rx="8" />
+      <text class="t-accent" x="244" y="98" font-size="10.5" text-anchor="middle">SFU</text>
+      <text class="t-muted" x="244" y="113" font-size="9" text-anchor="middle">选层转发，不解码</text>
+
+      <rect class="f-wash s-accent" x="366" y="78" width="96" height="46" rx="8" />
+      <text class="t-accent" x="414" y="98" font-size="10.5" text-anchor="middle">TURN</text>
+      <text class="t-muted" x="414" y="113" font-size="9" text-anchor="middle">中继，不改内容</text>
+
+      <rect class="f-bg s-rule" x="536" y="78" width="96" height="46" rx="8" />
+      <text x="584" y="98" font-size="10.5" text-anchor="middle">观众 B</text>
+      <text class="t-muted" x="584" y="113" font-size="9" text-anchor="middle">收到 1 路</text>
+
+      <text class="t-muted" x="159" y="62" font-size="9" text-anchor="middle">1 路媒体</text>
+
+      <path class="s-muted" fill="none" stroke-width="1.4" d="M122 101 L194 101" marker-end="url(#arrow-mute)" />
+      <path class="s-accent" fill="none" stroke-width="1.6" d="M292 101 L364 101" marker-end="url(#arrow-accent)" />
+      <path class="s-accent" fill="none" stroke-width="1.6" d="M462 101 L534 101" marker-end="url(#arrow-accent)" />
+
+      <path class="s-accent" fill="none" stroke-width="1" d="M292 146 L292 156 L364 156 L364 146" />
+      <text class="t-accent" x="328" y="174" font-size="9" text-anchor="middle">① 第一跳：SFU 出口</text>
+
+      <path class="s-accent" fill="none" stroke-width="1" d="M462 146 L462 156 L534 156 L534 146" />
+      <text class="t-accent" x="498" y="174" font-size="9" text-anchor="middle">② 第二跳：TURN 出口</text>
+
+      <text class="t-accent" x="340" y="206" font-size="11" text-anchor="middle">同一份媒体，两跳都要付钱 → 中继流量 ×2</text>
+      <text class="t-muted" x="340" y="226" font-size="9" text-anchor="middle">观众 B 在对称型 NAT 后面，所以这一段不得已绕了 TURN</text>
+    </svg>
+    <figcaption>读法：<strong>媒体没有变多，路变长了。</strong> A 只上行了一路，SFU 也只转发了一路，但这一路在链路上被搬了两次：SFU→TURN、TURN→B。按出口流量计费的账本上，这两段各记一笔。<strong>中继的单价和直连一样，贵的是它出现的频率乘以二。</strong></figcaption>
+  </figure>
+
+  <h3>一条能直接套用的算式</h3>
+
+  <p>把上面的路径写成公式，只数「经过 TURN 的那部分流量」：</p>
+
+  <pre><code>每月中继流量(GB)
+  = 中继流数 × 每路码率(Mbps) × 每天小时数 × 3600 × 30 ÷ 8 ÷ 1000 × 2
+     └ 并发中继的媒体流    └ R      └ 4        └ 秒     └ 天  └ bit→Byte └ MB→GB └ 两跳</code></pre>
+
+  <p>「中继流数」要数清楚：1 对 1 通话若需中继，<strong>两个方向都过 TURN</strong>，是 2 条流不是 1 条。按「会话数」算会少一半，这是最容易错的地方。</p>
+
+  <p><strong>算例。</strong> 假设峰值 100 路并发 1 对 1 通话，其中 20% 需要中继；每路视频下行 800 kbps；每天有效通话 4 小时；出口单价<strong>假设</strong> 0.5 元/GB（这个价格是我编的假设值，换成你自己的账单）。</p>
+
+  <ol class="flow">
+    <li><strong>中继会话数</strong>：100 × 20% = 20 场。</li>
+    <li><strong>中继流数</strong>：每场 2 个方向都过 TURN，20 × 2 = 40 条流。</li>
+    <li><strong>每条流每秒字节</strong>：800 kbps ÷ 8 = 100 kB/s。</li>
+    <li><strong>每条流每天</strong>：100 kB/s × 4 × 3600 s = 1,440,000 kB = <strong>1.44 GB</strong>。</li>
+    <li><strong>40 条流每天</strong>：1.44 × 40 = <strong>57.6 GB</strong>。</li>
+    <li><strong>乘两跳</strong>：57.6 × 2 = <strong>115.2 GB/天</strong>。</li>
+    <li><strong>乘 30 天</strong>：115.2 × 30 = <strong>3456 GB ≈ 3.46 TB/月</strong>。</li>
+    <li><strong>乘单价</strong>：3456 × 0.5 ≈ <strong>1730 元/月</strong>。</li>
+  </ol>
+
+  <p>两个中间结论可以复算。<strong>第一</strong>，不经 TURN 时这批流只出一次，1728 GB，约 <strong>864 元</strong>——中继正好把它翻倍。<strong>第二</strong>，这 3.46 TB 只是最贵的那 20%；另外 80% 的直连观众，SFU 一样要出口，钱一分没少。所以中继率要单独盯：它涨一个百分点，账单就多一个可预测的台阶。</p>
+
+  <h3>一个架构层面的洞察</h3>
+
+  <p>一端是<strong>公网 SFU</strong> 时，NAT 问题会大幅简化。原因不神秘：服务器那侧是<strong>可预测的</strong>——固定公网地址、固定端口、自己不在 NAT 后面。客户端先发一个包，NAT 就为它开了洞，服务器回到源地址即可。这不是打洞，就是「客户端主动发起」这件最普通的事。</p>
+
+  <p>剩下的麻烦只有一类：<strong>只允许 TLS/443 出网的企业网络</strong>。它把 UDP 全掐掉，只放行看起来像 HTTPS 的流量。这时 TURN over TLS（把中继跑在 443 的 TLS 上）才有价值——不为穿 NAT，为穿<strong>策略</strong>。它救的不是家用宽带，是写字楼。</p>
+
+  <h2>容量估算：别用平均码率估峰值</h2>
+
+  <p>容量估算要算三样东西，顺序不能反。</p>
+
+  <p><strong>一、出口带宽。</strong> 公式是「下行路数 × 码率」。10 人房间、每人订阅 9 路、每路 500 kbps，出口就是 10 × 9 × 500 kbps = 45 Mbps。<strong>这是按房间算的</strong>：出口随 N(N−1) 增长，是平方级而非线性，所以瓶颈往往不是「总人数」，而是「最大的那个房间」。再叠上中继的翻倍，一台 1 Gbps 出口的机器能装下的房间数比你以为的少。</p>
+
+  <p><strong>二、包处理能力（pps）。</strong> 它常常先于带宽成为瓶颈。一路 500 kbps 按 1200 字节载荷算，每秒约 52 个包（500,000 ÷ 8 ÷ 1200 ≈ 52），1000 路订阅就是 <strong>5.2 万 pps</strong>；每包还要加 40 字节头（IPv4 20 + UDP 8 + RTP 12），约占 3% 开销。带宽够而 pps 不够的机器，表现是「带宽没跑满却开始丢包、抖动上升」——转发是逐包处理的，CPU 花在「每个包看一眼」上，不是花在字节上。</p>
+
+  <p><strong>三、峰值，不是均值。</strong> 用平均码率估容量是最常见的错误。三个因素会把瞬间值推高：关键帧（一个 I 帧可能是 P 帧的好几倍）、simulcast 的多层同时上行、以及「开会头 10 秒所有人一起发关键帧」的同步效应。<strong>做法是给均值乘一个安全系数</strong>——系数要自己压测出来。</p>
+
+  <h2>可观测性：getStats() 里该看哪几个</h2>
+
+  <p>上线之后，画质投诉会以「很糊」「卡」的形式到达，而两者成因完全不同。好在判断依据都在 <code>getStats()</code> 里，指标名在 <a href="https://www.w3.org/TR/webrtc/">W3C 规范</a>里有定义。</p>
+
+  <table>
+    <thead>
+      <tr><th>报告类型</th><th>字段</th><th>它回答什么</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>candidate-pair</code></td>
+        <td><code>currentRoundTripTime</code><br /><code>availableOutgoingBitrate</code><br /><code>bytesSent</code> / <code>bytesReceived</code></td>
+        <td>这条路现在有多快、有多远；出口带宽的估计值就在这里，也是拥塞控制真正相信的数字</td>
+      </tr>
+      <tr>
+        <td><code>inbound-rtp</code></td>
+        <td><code>jitter</code><br /><code>packetsLost</code><br /><code>freezeCount</code><br /><code>frameWidth</code> / <code>frameHeight</code><br /><code>framesPerSecond</code></td>
+        <td>我收到的到底怎么样。分辨率掉了没有、卡住过几次、抖得厉害不厉害</td>
+      </tr>
+      <tr>
+        <td><code>outbound-rtp</code></td>
+        <td><code>qualityLimitationReason</code><br /><code>qualityLimitationDurations</code></td>
+        <td>我发出去的为什么变差了。取值是 <strong>none / bandwidth / cpu / other</strong></td>
+      </tr>
+      <tr>
+        <td><code>remote-inbound-rtp</code></td>
+        <td><code>fractionLost</code><br /><code>roundTripTime</code></td>
+        <td>对端告诉我它那边丢了多大比例、往返多久——这是 RTCP 带回来的，不是本地测的</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p><code>qualityLimitationReason</code> 是性价比最高的一个字段：它把「为什么糊」变成选择题——<strong>bandwidth</strong> 是网络不够，该降层或降码率；<strong>cpu</strong> 是编码器跑不动，该降分辨率，跟网络无关，加带宽也没用；<strong>none</strong> 是根本没受限，问题在采集端或显示端。</p>
+
+  <p>浏览器内置的 <code>chrome://webrtc-internals</code> 把这些指标直接画成曲线，还会记下每次 <code>setLocalDescription</code>、每次 ICE 状态变化、每个候选对的出现与消亡。<strong>它是排障第一站，不是最后一站</strong>：先看曲线，再决定要不要写代码取数。</p>
+
+  <h2>上线检查表</h2>
+
+  <ol class="flow">
+    <li><strong>页面在 HTTPS 下。</strong> 这不是建议：非安全上下文里 <code>getUserMedia</code> 根本不存在，摄像头拿不到。<code>localhost</code> 是唯一例外，别拿它当验收环境。</li>
+    <li><strong>TURN 有 443/TCP，并且配了 TLS 回退。</strong> 只为对付那种「只放行 443」的企业网络——它挡的不是 NAT，是策略。</li>
+    <li><strong>TURN 用临时凭据，不用长期用户名密码。</strong> 长期凭据泄漏后任何人都能拿你的服务器当免费代理；临时凭据带过期时间，泄漏窗口有界。</li>
+    <li><strong><code>iceConnectionState</code> 变成 <code>disconnected</code> / <code>failed</code> 时有自动 ICE restart。</strong> 不是弹提示让用户刷新，而是自己重收候选、重新协商。切 Wi-Fi 与 4G 时这是常态。</li>
+    <li><strong>多网卡与切网有处理。</strong> 手机从 Wi-Fi 走到街上那一刻，旧候选全废；不重启 ICE 的话，表现就是「一直在转圈」。</li>
+    <li><strong>MTU 与分片有数。</strong> 隧道、VPN 与部分移动网络会把可用 MTU 压到 1400 以下；RTP 包一旦被 IP 分片，丢一片等于丢整包。</li>
+    <li><strong>房间人数有上限，超限有降级策略。</strong> 上限按「最大房间的出口带宽」倒推，不是按总注册用户拍脑袋。降级可以是关摄像头、只留音频、或强制切到低层。</li>
+    <li><strong>埋点记录中继比例与 <code>qualityLimitationReason</code> 分布。</strong> 这两个指标直接对应账单和投诉；没有它们，你只能等账单告诉你答案。</li>
+    <li><strong>埋点记录 ICE 失败率与建连耗时。</strong> 失败率抬头通常意味着某一类网络出了问题，越早发现越好定位。</li>
+    <li><strong>先用真实的企业网络测一遍，再发布。</strong> 家里和办公室里各测一次，结果会差很多；而你的用户大多在后者。</li>
+  </ol>
+
+  <h2>收尾</h2>
+
+  <p>回头看这八讲，路径很直：从「它不是协议」出发，经过协商、连通、穿越、加密、容错、自适应，最后落到选型和账单。每讲的「为什么这么麻烦」，答案都回到开头那张表——<strong>对抗不可见、对抗不可信、对抗时间</strong>。</p>
+
+  <p>所以这门课的最后一句话，也是最好记的一句：<strong>WebRTC 的复杂度不在 API，而在它必须同时对抗不可见、不可信和时间。</strong> API 你两天就能背下来；这三件事，你得花很久才能学会不去跟它们较劲。</p>
+
+  <div class="quiz" aria-label="回顾练习">
+    <span class="card-title">点选项，立刻看解析</span>
+
+    <div class="q">
+      <p class="stem">1. 相比 Mesh，SFU 真正改变了什么？</p>
+      <button type="button" class="opt">把全网总带宽需求降到了原来的几分之一</button>
+      <button type="button" class="opt" data-correct="true">让每人只上行一路，并把总流量搬到服务端出口</button>
+      <button type="button" class="opt">在服务端把多路画面合成为一路再分发下去</button>
+      <button type="button" class="opt">省掉了 ICE 探测与 DTLS 握手的建连开销</button>
+      <p class="fb" hidden data-explain="Mesh 与 SFU 的全网总流量都是 N(N−1)×R，一个字节都没少。SFU 改变的是「谁付这份流量」：从每个客户端的上行，搬到服务器的出口。后者可以加钱、加机器扩容，前者你买不到。合成一路再分发是 MCU 干的事。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">2. 中继段为什么会让账单翻倍？</p>
+      <button type="button" class="opt">因为 TURN 要对每一路媒体重新编码一次</button>
+      <button type="button" class="opt">因为 TURN 同时承担信令转发与媒体转发</button>
+      <button type="button" class="opt" data-correct="true">因为同一份媒体进 TURN 与出 TURN 各计一次</button>
+      <button type="button" class="opt">因为 UDP 丢包重传会让每个包都发两遍</button>
+      <p class="fb" hidden data-explain="TURN 只转发不解码，也不做重传放大。贵的原因是路径变长：媒体先被搬到 TURN，再从 TURN 搬到对端，两跳都发生在链路上。按出口计费的口径下这就是两次记账；按入出双向计费的厂商只会更贵，不会更便宜。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">3. 看到 <code>qualityLimitationReason</code> 是 <code>cpu</code>，说明什么？</p>
+      <button type="button" class="opt">上行带宽不足，编码器被迫降低了分辨率</button>
+      <button type="button" class="opt">接收端丢帧过多，服务端主动降了一层</button>
+      <button type="button" class="opt">浏览器还没采到足够的统计样本</button>
+      <button type="button" class="opt" data-correct="true">本机编码算力不足，加带宽也不会变好</button>
+      <p class="fb" hidden data-explain="这个字段只在 outbound-rtp 里，说的是「我这边的编码为什么降质」。cpu 表示受限来自算力而非网络，此时扩容带宽毫无意义，该降分辨率、降帧率或换更省的编码档位。带宽受限会报 bandwidth，完全没受限则是 none。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">4. 一端是公网 SFU 时，NAT 为什么不再是主要矛盾？</p>
+      <button type="button" class="opt">因为 SFU 会替客户端完成全部候选收集工作</button>
+      <button type="button" class="opt" data-correct="true">因为服务器地址可预测，客户端先发包即可打通</button>
+      <button type="button" class="opt">因为公网服务器不再需要用 STUN 做地址反射</button>
+      <button type="button" class="opt">因为 DTLS 握手会顺带把 UDP 通路一起打开</button>
+      <p class="fb" hidden data-explain="服务器有固定公网地址和端口、自己不在 NAT 后面，客户端先发一个包出去就建立了映射，服务器回到源地址即可。真正剩下的麻烦是「只放行 443」的企业策略，那是防火墙规则问题，需要用 TURN over TLS 去穿，而不是打洞技巧。"></p>
+    </div>
+  </div>
+
+  <p class="ask">哪里没说清？<strong>回头直接问你的老师</strong>（那个正在运行本工作区的 agent）。它知道你的目标，可以就任何一句追问下去、举更多例子。</p>
+
+  <p class="foot">
+    <strong>推荐一手资料：</strong>
+    <a href="https://webrtchacks.com/usage-stats/" target="_blank" rel="noopener">webrtcHacks: The Big Churn — learning from real usage stats</a>
+    —— 本讲 22% / 9% 的出处（callstats.io，2015-01 至 2016-02）。值得读的理由不是数字本身，而是它的<strong>样本口径</strong>：什么算「一次会议」、什么算「需要中继」，这些定义决定了数字能不能搬到你的场景里。读完你会更愿意相信自己的埋点。<br />
+    动手看实现：<a href="https://github.com/versatica/mediasoup" target="_blank" rel="noopener">mediasoup</a>
+    （配 <a href="https://mediasoup.org/documentation/v3/" target="_blank" rel="noopener">v3 文档</a>）
+    —— 它的 Router / Transport / Producer / Consumer 四层模型，正好把「谁上行、谁订阅、谁挑层」讲成了代码；读懂 <code>consume()</code> 里那几个 <code>rtpParameters</code>，simulcast 的选层就不再是抽象概念。想直接上线而不想拼装，可以看 <a href="https://github.com/livekit/livekit" target="_blank" rel="noopener">LiveKit</a>；想读最少代码搞清协议，看 <a href="https://github.com/pion/webrtc" target="_blank" rel="noopener">Pion</a>。<br />
+    相关：<a href="../lessons/0007-congestion-control.html">第 7 讲 · 糊一下是算出来的</a> ·
+    <a href="../lessons/0001-not-a-protocol.html">第 1 讲 · 它不是协议，是一套强制约定</a> ·
+    <a href="../reference/0001-glossary.html">概念速查表</a> ·
+    <a href="../MISSION.md">使命</a> ·
+    <a href="../RESOURCES.md">资源清单</a>
+  </p>
+
+<script>
+(function () {
+  var questions = document.querySelectorAll('.quiz .q');
+  for (var i = 0; i < questions.length; i++) {
+    (function (q) {
+      var opts = q.querySelectorAll('.opt');
+      var fb = q.querySelector('.fb');
+      for (var j = 0; j < opts.length; j++) {
+        (function (opt) {
+          opt.addEventListener('click', function () {
+            if (q.dataset.answered === '1') return;
+            q.dataset.answered = '1';
+            for (var k = 0; k < opts.length; k++) {
+              opts[k].disabled = true;
+              if (opts[k].dataset.correct === 'true') opts[k].classList.add('correct');
+            }
+            var ok = opt.dataset.correct === 'true';
+            if (!ok) opt.classList.add('wrong');
+            fb.innerHTML = (ok ? '<b>✓ 对。 </b>' : '<b>✗ 再想一下。 </b>') + fb.dataset.explain;
+            fb.hidden = false;
+          });
+        })(opts[j]);
+      }
+    })(questions[i]);
+  }
+})();
+</script>
+</body>
+</html>

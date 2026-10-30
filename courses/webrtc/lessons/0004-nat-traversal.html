@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 4 讲 · NAT 的真实行为</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+  <nav aria-label="讲义导航">
+    <a class="tag" href="../lessons/0003-ice-candidates.html">← 第 3 讲 · 候选、检查与提名</a>
+    <a class="tag" href="../lessons/0005-dtls-srtp.html">第 5 讲 · 谁在替你保密 →</a>
+    <a class="tag" href="../reference/0001-glossary.html">概念速查表</a>
+  </nav>
+
+  <p class="kicker">深入 WebRTC · 第 4 讲</p>
+  <h1>NAT 的真实行为</h1>
+  <p class="lede">一句话目标：读完这一讲，你能不再用「四种 NAT 类型」做判断，而是用「映射行为 × 过滤行为」两组正交属性，推出某一对网络能不能打洞、以及为什么必须中继——顺便把中继的钱算清楚。</p>
+
+  <h2>引子：那个被传了二十年的四分类</h2>
+
+  <p>你大概见过这张图：Full Cone、Restricted Cone、Port Restricted Cone、Symmetric。四个名字，配四个示意图，出现在无数博客和面试题里。它甚至有个名字叫「STUN 的 NAT 类型」。</p>
+
+  <p>问题是：<strong>RFC 4787（BCP 127）明确弃用了这套术语</strong>，理由是它「不足以描述真实 NAT 的行为」。当年写 STUN 的人用这四个词做了一组粗糙的分档，后来成为共识，再后来成为教条——而真正做穿透的人早就不用它了。</p>
+
+  <p>为什么它不够用？因为它把两件<strong>互相独立</strong>的事压在了一个标签里：NAT 给一个内网连接<strong>分配什么样的外部端口</strong>（映射），以及它<strong>放行谁发来的包</strong>（过滤）。这两件事可以任意组合，组合出 9 种，不是一个四选一。</p>
+
+  <h2>两组正交属性</h2>
+
+  <p><strong>映射行为</strong>回答：同一个内网 IP:端口，发往不同外部目标时，NAT 会不会复用同一个对外端口？</p>
+
+  <ul>
+    <li><strong>Endpoint-Independent Mapping（EIM，端点无关）</strong>：发往任何目标都复用同一映射。这是最理想的一档。</li>
+    <li><strong>Address-Dependent Mapping（ADM，地址相关）</strong>：发往同一个外部 IP 才复用，换 IP 就换端口。</li>
+    <li><strong>Address and Port-Dependent Mapping（APDM，地址和端口相关）</strong>：换目标端口也换映射。俗称的「对称型 NAT」基本指这一档。</li>
+  </ul>
+
+  <p><strong>过滤行为</strong>回答：外面的包能不能进来？</p>
+
+  <ul>
+    <li><strong>Endpoint-Independent Filtering（EIF）</strong>：只要内网曾发出过任何包，任何外部来源都能进来（发给这个映射）。这就是老话里的「全锥」。</li>
+    <li><strong>Address-Dependent Filtering（ADF）</strong>：必须曾向那个外部 IP 发过包。</li>
+    <li><strong>Address and Port-Dependent Filtering（APDF）</strong>：必须曾向那个外部 IP:端口 发过包。</li>
+  </ul>
+
+  <p>RFC 4787 对映射的要求是 REQ-1「<strong>必须</strong>采用端点无关映射」，对过滤则按用途给了两档建议（要应用透明性选 EIF，要更严格选 ADF）。也就是说：<strong>理想世界里打洞应该总是可行</strong>。现实里做不到，于是有了各种将就。</p>
+
+  <h2>打洞到底在打什么</h2>
+
+  <p>先纠正一个说法：<strong>打洞不是「穿透」NAT，而是「利用 NAT 已经建立的状态」。</strong> NAT 从来不允许外部主动进来；它只做一件事——记住「内网谁曾经发往哪里」，然后允许那个目标的回包通过。所以你能利用的只有一件事：<strong>让内网先发一包出去</strong>。</p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 460 286" role="img">
+      <title>端点无关映射与地址端口相关映射的对比：同一个内网端口对外呈现几个端口</title>
+      <defs>
+        <marker id="ar4a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+        </marker>
+      </defs>
+
+      <text class="t-accent" x="16" y="28" font-size="11">端点无关映射（EIM）：只开一个口</text>
+      <rect class="f-bg s-rule" x="16" y="44" width="92" height="34" rx="6" />
+      <text class="t-muted" x="26" y="65" font-size="10">内网 :5000</text>
+      <rect class="f-bg s-accent" x="152" y="44" width="60" height="34" rx="6" />
+      <text class="t-accent" x="162" y="65" font-size="10">:41000</text>
+      <rect class="f-bg s-rule" x="300" y="34" width="144" height="26" rx="5" />
+      <text class="t-muted" x="310" y="51" font-size="9">目标 A · STUN 203.0.113.9</text>
+      <rect class="f-bg s-rule" x="300" y="66" width="144" height="26" rx="5" />
+      <text class="t-muted" x="310" y="83" font-size="9">目标 B · 对端 198.51.100.9</text>
+      <path class="s-muted" fill="none" stroke-width="1" d="M108 61 L148 61" marker-end="url(#ar4a)" />
+      <path class="s-accent" fill="none" stroke-width="1" d="M212 55 L296 47" marker-end="url(#ar4a)" />
+      <path class="s-accent" fill="none" stroke-width="1" d="M212 67 L296 79" marker-end="url(#ar4a)" />
+      <text class="t-muted" x="152" y="96" font-size="9">同一个端口</text>
+
+      <line class="s-rule" x1="16" y1="124" x2="444" y2="124" stroke-width="1" />
+
+      <text class="t-accent" x="16" y="150" font-size="11">地址端口相关映射（APDM，俗称对称型）：每个目标一个口</text>
+      <rect class="f-bg s-rule" x="16" y="166" width="92" height="34" rx="6" />
+      <text class="t-muted" x="26" y="187" font-size="10">内网 :5000</text>
+      <rect class="f-bg s-accent" x="152" y="160" width="60" height="26" rx="6" />
+      <text class="t-accent" x="162" y="178" font-size="10">:41000</text>
+      <rect class="f-bg s-accent" x="152" y="196" width="60" height="26" rx="6" />
+      <text class="t-accent" x="162" y="214" font-size="10">:41001</text>
+      <rect class="f-bg s-rule" x="300" y="150" width="144" height="26" rx="5" />
+      <text class="t-muted" x="310" y="167" font-size="9">目标 A · STUN 203.0.113.9</text>
+      <rect class="f-bg s-rule" x="300" y="192" width="144" height="26" rx="5" />
+      <text class="t-muted" x="310" y="209" font-size="9">目标 B · 对端 198.51.100.9</text>
+      <path class="s-muted" fill="none" stroke-width="1" d="M108 183 L148 173" marker-end="url(#ar4a)" />
+      <path class="s-accent" fill="none" stroke-width="1" d="M212 172 L296 163" marker-end="url(#ar4a)" />
+      <path class="s-accent" fill="none" stroke-width="1" d="M212 209 L296 205" marker-end="url(#ar4a)" />
+
+      <text class="t-muted" x="16" y="252" font-size="10">后果：对端从 STUN 得知的是 :41000，</text>
+      <text class="t-muted" x="16" y="268" font-size="10">但真正发给它时走的是 :41001 —— 地址是废的。</text>
+    </svg>
+    <figcaption>读法：<strong>STUN 只是「问一次 NAT：我从你这里出去时叫什么」。</strong> 在 EIM 下这个答案对所有目标都成立，于是对端拿着这个地址能精准回包；在 APDM 下这个答案只对<strong>问的那一个目标</strong>成立，一旦要联系别人，端口就变了。这一条就解释了对称型 NAT 为什么必然让打洞失败——<strong>不是包过不去，而是对方拿到的地址从一开始就错了</strong>。</figcaption>
+  </figure>
+
+  <h2>为什么必须「两边同时往外打」</h2>
+
+  <p>就算映射行为是理想的 EIM，还有过滤这一关。如果两端的过滤都是 APDF（必须曾向该 IP:端口 发过包），那么<strong>任何一方单独发出的第一个探测包都会被丢弃</strong>——它到达时，接收侧的 NAT 里还没有通往发送方的表项。</p>
+
+  <p>但注意，这一包并非全无用处：<strong>它在发送侧打开了门</strong>。于是接下来发生的事情很有意思：</p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 460 218" role="img">
+      <title>两个方向的探测包：先发的那个被丢，但为对方开了门</title>
+      <defs>
+        <marker id="ar4b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+        </marker>
+        <marker id="ar4c" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+        </marker>
+      </defs>
+
+      <text class="t-accent" x="56" y="22" font-size="12">A</text>
+      <text class="t-accent" x="388" y="22" font-size="12">B</text>
+      <line class="s-rule" x1="64" y1="34" x2="64" y2="196" stroke-width="1" />
+      <line class="s-rule" x1="396" y1="34" x2="396" y2="196" stroke-width="1" />
+
+      <path class="s-accent" fill="none" stroke-width="1.2" d="M64 62 L376 62" marker-end="url(#ar4b)" />
+      <text class="t-muted" x="200" y="55" font-size="9">① 第一个包到了，但 B 侧还没表项</text>
+      <text class="t-muted" x="382" y="76" font-size="11">✗</text>
+
+      <path class="s-accent" fill="none" stroke-width="1.2" d="M396 104 L84 104" marker-end="url(#ar4a)" />
+      <text class="t-muted" x="196" y="97" font-size="9">② 回程命中 A 已经打开的门</text>
+      <text class="t-muted" x="52" y="118" font-size="11">✓</text>
+
+      <path class="s-accent" fill="none" stroke-width="1.2" d="M64 146 L376 146" marker-end="url(#ar4b)" />
+      <text class="t-muted" x="196" y="139" font-size="9">③ 现在 B 侧也有表项了</text>
+      <text class="t-muted" x="382" y="160" font-size="11">✓</text>
+
+      <text class="t-muted" x="16" y="186" font-size="10">先发的一侧注定失败一次。所以探测必须反复重试，而不是发一次就放弃。</text>
+    </svg>
+    <figcaption>读法：<strong>打洞的实质是「两个人同时推一扇只能从里面开的门」。</strong> ①的包被丢掉，但它把 A 这边的门顶开了；②的回包因此能进去，同时把 B 这边的门也顶开；③才真正双向通。这也解释了一个常见现象：<strong>打洞成功往往在一两秒之后，而不是立刻</strong>——那正是重试与退避在起作用。同理，如果你在 ICE 超时后就放弃、重新建一个 PeerConnection，等于把刚顶开的门又关上。</figcaption>
+  </figure>
+
+  <h2>组合推演：什么时候必然要中继</h2>
+
+  <p>把两组属性合起来看，结论就很清楚了（下表按「映射行为」为主轴，因为它是决定性的）：</p>
+
+  <table>
+    <thead>
+      <tr><th>组合</th><th>能打洞吗</th><th>为什么</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>EIM + EIF（宽松）</td><td>能，且快</td><td>对端拿到的地址永远有效，回包也不需要先出站</td></tr>
+      <tr><td>EIM + ADF / APDF（常见家用路由）</td><td>能，但需双向探测</td><td>地址有效，只要两边都往外打一次就通</td></tr>
+      <tr><td>一侧 ADM / APDM（「对称型」）</td><td>通常不能</td><td>STUN 给出的端口与实际发往对方时用的端口不同，地址失效</td></tr>
+      <tr><td>两侧都是 APDM（常见于运营商 CGNAT、部分企业网）</td><td>不能</td><td>双方拿到的地址互相都是废的，只能中继</td></tr>
+      <tr><td>UDP 被完全封禁</td><td>不能</td><td>连 STUN 都出不去，只能 TURN over TCP/TLS</td></tr>
+    </tbody>
+  </table>
+
+  <p>这里有个反直觉的推论：<strong>「对称型 NAT」之所以是问题，不是因为它更「安全」，而是因为它让 NAT 变成了一台「每个目标一个端口的端口地址转换器」。</strong> 打洞依赖的正是「一个端口对所有目标通用」这个副作用。所以运营商上 CGNAT（大量用户共享少量公网地址）时，中继率会明显上升——这不是配置问题，是架构后果。</p>
+
+  <h2>两个常被忽略的现实细节</h2>
+
+  <p><strong>映射会过期。</strong> RFC 4787 的 REQ-5 要求 NAT 的 UDP 映射超时<strong>不少于 2 分钟</strong>，但那是「要求」，很多设备（尤其是运营商侧与移动网络）的实际值更短。一旦映射被回收，即使两端都还活着，路径也会失效——表现出来就是「通话到第 3 分钟突然断了」。所以 WebRTC 需要周期性发 keepalive（STUN Binding 或空包）来维持映射。这也是 <code>disconnected</code> 状态存在的原因：它先给你一个恢复窗口。</p>
+
+  <p><strong>同屋两个人也可能连不上。</strong> 两端在同一个 NAT 后面互连，需要 NAT 支持 hairpinning（把内网到内网的包绕出去再绕回来）。RFC 4787 的 REQ-9 要求支持，现实中不少家用路由器实现得不完整或有 bug。于是出现一个很尴尬的现象：两个人在同一个 Wi-Fi 下通话，反而比跨城通话更容易失败。这时 host 候选会失效、srflx 会绕回失败，最后落到 relay。</p>
+
+  <h2>把中继的钱算清楚</h2>
+
+  <p>中继贵在哪？贵在<strong>它是双向的</strong>：同一份媒体进 TURN 一次、出 TURN 一次，两段都算你的出口流量。而它又是「一定通」的那条路，所以用量的下限由你的用户网络结构决定，不由你的代码决定。</p>
+
+  <p>给一个可以直接套的算式（中继侧只计出口方向）：</p>
+
+  <pre><code>每路中继月流量 = 下行码率 ÷ 8 × 每日秒数 × 30
+             = 0.8 Mbps ÷ 8 × 14 400 s × 30
+             = 100 kB/s × 14 400 × 30
+             ≈ 43.2 GB</code></pre>
+
+  <p>按 100 个并发连接、其中 20% 走中继（即 20 路）、出口单价假设 0.5 元/GB：</p>
+
+  <pre><code>20 路 × 43.2 GB = 864 GB/月
+864 × 0.5 ≈ 432 元/月</code></pre>
+
+  <p>如果计费口径是进+出双向（很多云厂商的出方向已经含了转发，但自建机房常按双向算网卡流量），这个数字大致翻倍到八百多元。注意几个可以自己替换的假设：<strong>并发数、中继比例、码率、单价</strong>。其中<strong>中继比例是最不确定的一项</strong>——公开可见的最好测量仍然来自 callstats.io 对上百个服务的观测（2015-01 至 2016-02）：<strong>22% 的会议需要某种 TURN 中继，9% 需要 TCP</strong>。这组数据已经十年了，只能当中继率的量级参考；你自己的真实比例必须上线后自己埋点测。</p>
+
+  <blockquote>
+    <p>一句给自托管者的话：<strong>开源的媒体服务器免费，但「让所有人都能连上」这件事不免费。</strong> 预算里漏掉中继，等于假设用户全都在理想网络里——而企业客户恰好是最愿意付钱、也最容易连不上的那批人。</p>
+  </blockquote>
+
+  <h2>所以真正该做的优化</h2>
+
+  <ol class="flow">
+    <li><strong>先试直连，别默认中继。</strong> ICE 已经替你做了这件事——前提是你确实配置了 STUN。只配 TURN 不配 STUN，等于让所有流量都付费。</li>
+    <li><strong>中继只为需要的会话开启。</strong> 用临时凭据（TTL 有限），而不是给全站一个长期密码；这既省带宽也降风险。</li>
+    <li><strong>降低「必须中继」的那部分码率。</strong> 中继用户的媒体同样受拥塞控制约束（第 7 讲），把码率上限调低，成本的降幅是线性的。</li>
+    <li><strong>能上 SFU 就别硬做 P2P。</strong> 一端是公网服务器时，NAT 问题大幅退化——服务器那一侧是可预测的，客户端先发包、服务器回到源地址即可。真正剩下的麻烦只有「只放 443」的企业网络，这时 TURN over TLS 才真正有价值（第 8 讲细算）。</li>
+    <li><strong>埋点记录中继比例。</strong> 这是唯一能让你把上面那笔账从「猜」变成「算」的动作。</li>
+  </ol>
+
+  <div class="quiz" aria-label="回顾练习">
+    <span class="card-title">点选项，立刻看解析</span>
+
+    <div class="q">
+      <p class="stem">1. RFC 4787 为什么弃用了「四种 NAT 类型」的说法？</p>
+      <button type="button" class="opt">四种类型在现实中已被厂商全部淘汰</button>
+      <button type="button" class="opt" data-correct="true">它把映射与过滤两组独立属性混成一个</button>
+      <button type="button" class="opt">它只适用于 TCP 而不适用于 UDP</button>
+      <button type="button" class="opt">它无法描述 IPv6 环境下的地址转换</button>
+      <p class="fb" hidden data-explain="映射行为（对外端口怎么分配）与过滤行为（放行谁发来的包）是两组正交属性，各自三档，组合出九种。老的四分类把两件事压进一个标签，于是既说不清「为什么这个组合能通」，也预测不了新设备的行为。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">2. 打洞之所以可能，本质上依赖 NAT 的哪个副作用？</p>
+      <button type="button" class="opt">NAT 会自动为内网设备开放端口</button>
+      <button type="button" class="opt" data-correct="true">出站后留下表项并放行对应回包</button>
+      <button type="button" class="opt">NAT 会把内网地址直接告诉外网</button>
+      <button type="button" class="opt">NAT 之间能够协商出一条转发路径</button>
+      <p class="fb" hidden data-explain="NAT 从不允许外部主动进来，它只记住「内网谁发往哪里」，然后放行那个目标的回包。所谓打洞，就是让内网先发一包出去，把这个表项建起来，再让对端的包命中它。所以「穿透」这个词是误导——你利用的是已有状态。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">3. 对称型 NAT 让打洞失败，直接原因是什么？</p>
+      <button type="button" class="opt">它会主动丢弃所有来自外网的 UDP 包</button>
+      <button type="button" class="opt" data-correct="true">对端拿到的映射端口与实际不符</button>
+      <button type="button" class="opt">它不支持 STUN 协议所需的报文格式</button>
+      <button type="button" class="opt">它给每个内网设备只分配一个固定端口</button>
+      <p class="fb" hidden data-explain="它按「目标地址+端口」分配映射，于是问 STUN 得到的端口只对 STUN 那个目标有效。当你要联系对端时，NAT 换了一个新端口，对端手里那个地址从一开始就是错的——包根本到不了正确的门。关键在「地址失效」，而不是「包被拦」。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">4. 通话进行到第三分钟突然断了，最该先怀疑什么？</p>
+      <button type="button" class="opt">双方的编解码器在中期重新协商失败</button>
+      <button type="button" class="opt" data-correct="true">NAT 映射超时后被回收，路径失效</button>
+      <button type="button" class="opt">DTLS 证书在三分钟时自动过期</button>
+      <button type="button" class="opt">拥塞控制把码率降到了零以下</button>
+      <p class="fb" hidden data-explain="UDP 映射有生命周期，RFC 4787 要求不少于 2 分钟，但很多设备实际更短。映射一旦被回收，即使两端还活着路径也没了，表现为「莫名其妙断线」。所以需要周期性 keepalive 维持映射，以及 ICE restart 来重建 Path。"></p>
+    </div>
+  </div>
+
+  <p class="ask">哪里没说清？<strong>回头直接问你的老师</strong>（那个正在运行本工作区的 agent）。它知道你的目标，可以就任何一句追问下去、举更多例子。</p>
+
+  <p class="foot">
+    <strong>推荐一手资料：</strong>
+    <a href="https://www.rfc-editor.org/rfc/rfc4787.html" target="_blank" rel="noopener">RFC 4787 / BCP 127 — NAT Behavioral Requirements for Unicast UDP</a>
+    —— 只读第 4 节（映射行为）与第 5 节（过滤行为），两节加起来不到十页。它是这一讲所有结论的出处，也是你以后判断「某个网络能不能打洞」时唯一需要的尺子。特别留意 REQ-1（必须端点无关映射）、REQ-5（映射超时不低于 2 分钟）、REQ-9（必须支持 hairpinning）。<br />
+    另见 <a href="https://webrtchacks.com/usage-stats/" target="_blank" rel="noopener">webrtcHacks: The Big Churn — learning from real usage stats</a>
+    —— 本讲 22% / 9% 那组数字的原始出处，注意它是 2015–2016 年的观测，只能当量级。<br />
+    相关：<a href="../lessons/0003-ice-candidates.html">第 3 讲 · 候选、检查与提名</a> ·
+    <a href="../lessons/0008-topology-and-cost.html">第 8 讲 · 架构选型与那道账单</a> ·
+    <a href="../reference/0001-glossary.html">概念速查表</a>
+  </p>
+
+<script>
+(function () {
+  var questions = document.querySelectorAll('.quiz .q');
+  for (var i = 0; i < questions.length; i++) {
+    (function (q) {
+      var opts = q.querySelectorAll('.opt');
+      var fb = q.querySelector('.fb');
+      for (var j = 0; j < opts.length; j++) {
+        (function (opt) {
+          opt.addEventListener('click', function () {
+            if (q.dataset.answered === '1') return;
+            q.dataset.answered = '1';
+            for (var k = 0; k < opts.length; k++) {
+              opts[k].disabled = true;
+              if (opts[k].dataset.correct === 'true') opts[k].classList.add('correct');
+            }
+            var ok = opt.dataset.correct === 'true';
+            if (!ok) opt.classList.add('wrong');
+            fb.innerHTML = (ok ? '<b>✓ 对。 </b>' : '<b>✗ 再想一下。 </b>') + fb.dataset.explain;
+            fb.hidden = false;
+          });
+        })(opts[j]);
+      }
+    })(questions[i]);
+  }
+})();
+</script>
+</body>
+</html>

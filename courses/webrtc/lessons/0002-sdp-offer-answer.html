@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 2 讲 · 协商是一台状态机</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+  <nav aria-label="讲义导航">
+    <a class="tag" href="../lessons/0001-not-a-protocol.html">← 第 1 讲 · 它不是协议，是一套强制约定</a>
+    <a class="tag" href="../lessons/0003-ice-candidates.html">第 3 讲 · 候选、检查与提名 →</a>
+    <a class="tag" href="../reference/0001-glossary.html">概念速查表</a>
+  </nav>
+
+  <p class="kicker">深入 WebRTC · 第 2 讲</p>
+  <h1>协商是一台状态机</h1>
+  <p class="lede">一句话目标：读完这一讲，你能一眼挑出 SDP 里真正决定「通不通」的那几行，能判断一次改动要不要重新协商，并且明白为什么「手改 SDP」几乎总是错的那一步。</p>
+
+  <h2>引子：两个人都没说谎</h2>
+
+  <p>客服坐席 A 和客户 B 通话。音频正常，A 说「我这边有画面」，B 说「我看不到你」。两边都没撒谎，日志也没报错：<code>iceConnectionState</code> 与 <code>connectionState</code> 都是 <code>connected</code>。</p>
+
+  <p>把 B 端的 SDP 抓下来，视频那段写着 <code>a=inactive</code>；再看 A 端的 <code>getStats()</code>，<code>inbound-rtp</code> 里视频的 <code>bytesReceived</code> 三分钟没动过。</p>
+
+  <p>真相是：<strong>A 看到的不是实时画面，而是重新协商前 <code>&lt;video&gt;</code> 里残留的最后一帧。</strong> 播放器不会因为远端停发就擦成黑屏，它只是停在那里——一个冻结帧足以让排查方向彻底跑偏。</p>
+
+  <p>那个 <code>inactive</code> 来自 A 端点的「关闭摄像头」：<code>transceiver.direction = 'inactive'</code>，再发一次新 offer。这一步是对的。错在重新打开时只把 <code>track.enabled</code> 设回了 <code>true</code>，方向没改回来。</p>
+
+  <p>意义不在这个 bug，而在于：<strong>SDP 不是描述「我有什么」的配置，是两端刚签下的临时合同。</strong> 合同写了 <code>inactive</code>，浏览器就一个字节也不发，无论 <code>track.enabled</code> 是什么。想改合同，只能重签。</p>
+
+  <p>这一讲讲三件事：合同长什么样、签字走几步、哪些改动必须重签。</p>
+
+  <h2>SDP 是一份文本合同</h2>
+
+  <p>格式原始得有点可爱：纯文本，一行一条，每行 <code>&lt;type&gt;=&lt;value&gt;</code>，<code>type</code> 是一个小写字母。层级只有两层：<strong>第一个 <code>m=</code> 之前是会话级，之后是媒体级</strong>，媒体级继承并覆盖同名属性。所以 <code>a=ice-ufrag</code> 出现两次不奇怪——会话级那份给整条传输，媒体级那份给单条流。</p>
+
+  <h3><code>m=</code> 这一行是位置语言</h3>
+
+  <p>整份 SDP 信息密度最高的就是 <code>m=</code>，它按位置解析，五个位置各有含义：</p>
+
+  <table>
+    <thead>
+      <tr><th>位置</th><th>含义</th><th>读它时该想到什么</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>m=</code></td><td>标记：下面开始描述一条媒体流</td><td>它是分界线，不是数据</td></tr>
+      <tr><td>媒体类型</td><td><code>audio</code> / <code>video</code> / <code>application</code></td><td><code>application</code> 就是 DataChannel</td></tr>
+      <tr><td>端口</td><td>这条流的端口</td><td>offer 里常写 9，因为它不重要；<strong>写 0 表示这条流被拒绝</strong></td></tr>
+      <tr><td>传输协议</td><td>如 <code>UDP/TLS/RTP/SAVPF</code></td><td><code>TLS</code> 就是 DTLS，<code>SAVPF</code> 是带反馈的 SRTP profile——加密被写死在语法里</td></tr>
+      <tr><td>载荷类型列表</td><td>如 <code>111 96 0 8</code></td><td>只是号码，要靠 <code>a=rtpmap</code> 翻译成「什么编码、多少采样率」</td></tr>
+    </tbody>
+  </table>
+
+  <p>还有第六个隐含字段：<strong>它在整个会话里的次序</strong>。在 <code>a=mid</code> 出现之前，两端就是靠第几条 <code>m=</code> 对号入座的。这个历史包袱到 BUNDLE 那节会回来找你。</p>
+
+  <p>至于 <code>v=</code> <code>s=</code> <code>t=</code>，几乎永远不用看。<code>o=</code> 的版本号有点用：它变了，说明对端重新生成了一份会话描述。</p>
+
+  <h3>两百行里，只有八组属性真正影响连通</h3>
+
+  <p>一份典型的 Chrome offer 有一百多行，去掉噪音后真正决定「能不能通、通成什么样」的只有这些。<strong>记住这八行，读 SDP 的速度会立刻上一个台阶。</strong></p>
+
+  <table>
+    <thead>
+      <tr><th>属性</th><th>它决定什么</th><th>改错了的现象</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>a=ice-ufrag</code> / <code>a=ice-pwd</code></td><td>这条传输的凭证</td><td>对端不知道新的，检查全被拒，永远 <code>failed</code></td></tr>
+      <tr><td><code>a=candidate</code></td><td>一条可达地址</td><td>少一条就少一条路；手写的多半是死的</td></tr>
+      <tr><td><code>a=fingerprint</code></td><td>DTLS 证书指纹，用来绑身份</td><td>与实际证书不符，握手失败，媒体全黑</td></tr>
+      <tr><td><code>a=setup</code></td><td>谁发起 DTLS 握手（<code>actpass</code> / <code>active</code> / <code>passive</code>）</td><td>两端都写 <code>active</code>，各等对方，握手卡住</td></tr>
+      <tr><td><code>a=mid</code></td><td>这条 <code>m=</code> 在 BUNDLE 组里的名字</td><td>与 <code>group:BUNDLE</code> 对不上，整组协商失败</td></tr>
+      <tr><td><code>a=sendrecv</code> 等方向属性</td><td>这条流谁发、谁收</td><td>单向黑屏，而且常表现为「有画面但不动」</td></tr>
+      <tr><td><code>a=rtpmap</code> / <code>a=fmtp</code></td><td>号码到编码的映射与参数</td><td>不知道收到的是什么，或参数不符直接丢</td></tr>
+      <tr><td><code>a=rtcp-fb</code></td><td>反馈能力：NACK、PLI、码率控制</td><td>丢了不重传、糊了不请求关键帧</td></tr>
+    </tbody>
+  </table>
+
+  <p>一个最小的例子，注意它有多短：</p>
+
+  <pre><code>v=0
+o=- 4611731400430051336 2 IN IP4 127.0.0.1
+s=-
+t=0 0
+a=group:BUNDLE 0 1
+
+m=audio 9 UDP/TLS/RTP/SAVPF 111
+c=IN IP4 0.0.0.0
+a=mid:0
+a=sendrecv
+a=rtcp-mux
+a=rtpmap:111 opus/48000/2
+a=ice-ufrag:8hV2
+a=ice-pwd:k9Qm3rTz1sLpXc
+a=fingerprint:sha-256 4A:5E:1C:...
+a=setup:actpass
+
+m=video 9 UDP/TLS/RTP/SAVPF 96
+c=IN IP4 0.0.0.0
+a=mid:1
+a=recvonly
+a=rtcp-mux
+a=rtpmap:96 VP8/90000</code></pre>
+
+  <p>端口写 <code>9</code>，因为它在 offer 里没有意义——真正的端口要到 ICE 之后才有。<code>a=recvonly</code> 与 <code>a=sendrecv</code> 同时出现也不奇怪：方向是按流算的，不是按人算的。</p>
+
+  <h2>为什么必须交换两次</h2>
+
+  <p>RFC 3264 定义了 offer/answer 模型，核心是一条<strong>不对称</strong>规则：</p>
+
+  <blockquote>
+    <p><strong>offer 是「我能这样」，answer 是「那就这样」。answer 只能收窄，不能扩张。</strong></p>
+    <p><cite>—— 应答方不能新增 <code>m=</code> 段，不能启用 offer 没提到的载荷类型，不能把 <code>sendonly</code> 变成 <code>sendrecv</code>。</cite></p>
+  </blockquote>
+
+  <p>为什么这么死板？因为它保证了一件事：<strong>交换结束那一刻，两端对「谈成了什么」的理解必然一致。</strong> 否则 answer 可以塞进 offer 没有的东西，发起方还得再问一轮，协商永远不收敛。</p>
+
+  <p>「收窄」有两种形态：减少（offer 提三种编码，answer 挑一种）和拒绝。注意后者——<strong>拒绝一条流的方式是把端口写成 <code>0</code>，不是把它删掉。</strong></p>
+
+  <h3>setLocalDescription 不是「设个变量」</h3>
+
+  <ul>
+    <li><strong><code>setLocalDescription()</code> 之后才开始收集候选</strong>，不是 <code>createOffer()</code> 的时候。这解释了两类经典 bug：offer 发出去时里面还没有候选；以为删个 candidate 就能刷新，其实要重新协商。</li>
+    <li><strong><code>setRemoteDescription()</code> 会凭空造出 transceiver。</strong> 对方 offer 里有几条 <code>m=</code>，你这边就多几个 transceiver，方向由「对方写的」与「本地已有的」取交集。</li>
+    <li><strong>两者都改 <code>signalingState</code></strong>，而它决定你下一步<em>允许</em>做什么。状态不对，方法直接抛 <code>InvalidStateError</code>，不会悄悄失败。</li>
+  </ul>
+
+  <p>候选也不必等 SDP 齐了再发：Trickle ICE（RFC 8838）允许先发 SDP、候选边收边补，这是建立时间能压到亚秒的原因。ICE 本身是 RFC 8445，属于<a href="../lessons/0003-ice-candidates.html">第 3 讲</a>。</p>
+
+  <h3>三个状态，两端各一台</h3>
+
+  <p>JSEP 把协商压成一台只有三个状态的小机器。规范是 RFC 9429（2024-04 发布，<strong>废止 RFC 8829</strong>——网上大量教程还写着 8829）。</p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 620 400" role="img">
+      <title>offer/answer 的三态：发起方与应答方各维护一台对偶的状态机</title>
+      <defs>
+        <marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+        </marker>
+        <marker id="arr2a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+        </marker>
+      </defs>
+
+      <rect class="f-bg s-accent" x="60" y="30" width="180" height="44" rx="8" />
+      <text class="t-accent" x="150" y="50" font-size="13" text-anchor="middle">stable</text>
+      <text class="t-muted" x="150" y="65" font-size="9" text-anchor="middle">空闲，可以发新 offer</text>
+
+      <rect class="f-bg s-rule" x="60" y="170" width="180" height="44" rx="8" />
+      <text x="150" y="190" font-size="11" text-anchor="middle">have-local-offer</text>
+      <text class="t-muted" x="150" y="205" font-size="9" text-anchor="middle">我发了，等 answer</text>
+
+      <rect class="f-bg s-accent" x="60" y="310" width="180" height="44" rx="8" />
+      <text class="t-accent" x="150" y="330" font-size="13" text-anchor="middle">stable</text>
+      <text class="t-muted" x="150" y="345" font-size="9" text-anchor="middle">谈成了</text>
+
+      <path class="s-muted" fill="none" stroke-width="1.2" d="M150 76 L150 166" marker-end="url(#arr2)" />
+      <text x="162" y="112" font-size="9">createOffer()</text>
+      <text class="t-muted" x="162" y="124" font-size="9">setLocal(offer)</text>
+
+      <path class="s-muted" fill="none" stroke-width="1.2" d="M150 216 L150 306" marker-end="url(#arr2)" />
+      <text x="162" y="252" font-size="9">setRemote(answer)</text>
+      <text class="t-muted" x="162" y="264" font-size="9">等价于「接受」</text>
+
+      <rect class="f-bg s-accent" x="380" y="30" width="180" height="44" rx="8" />
+      <text class="t-accent" x="470" y="50" font-size="13" text-anchor="middle">stable</text>
+      <text class="t-muted" x="470" y="65" font-size="9" text-anchor="middle">空闲，可以发新 offer</text>
+
+      <rect class="f-bg s-rule" x="380" y="170" width="180" height="44" rx="8" />
+      <text x="470" y="190" font-size="11" text-anchor="middle">have-remote-offer</text>
+      <text class="t-muted" x="470" y="205" font-size="9" text-anchor="middle">收到 offer，等我还价</text>
+
+      <rect class="f-bg s-accent" x="380" y="310" width="180" height="44" rx="8" />
+      <text class="t-accent" x="470" y="330" font-size="13" text-anchor="middle">stable</text>
+      <text class="t-muted" x="470" y="345" font-size="9" text-anchor="middle">谈成了</text>
+
+      <path class="s-muted" fill="none" stroke-width="1.2" d="M470 76 L470 166" marker-end="url(#arr2)" />
+      <text x="352" y="112" font-size="9" text-anchor="end">setRemote(offer)</text>
+      <text class="t-muted" x="352" y="124" font-size="9" text-anchor="end">不能直接改用</text>
+
+      <path class="s-muted" fill="none" stroke-width="1.2" d="M470 216 L470 306" marker-end="url(#arr2)" />
+      <text x="352" y="252" font-size="9" text-anchor="end">createAnswer()</text>
+      <text class="t-muted" x="352" y="264" font-size="9" text-anchor="end">setLocal(answer)</text>
+
+      <path class="s-accent" fill="none" stroke-width="1.2" stroke-dasharray="4 3" d="M242 196 L376 196" marker-end="url(#arr2a)" />
+      <text class="t-accent" x="309" y="188" font-size="9" text-anchor="middle">rollback</text>
+      <text class="t-muted" x="309" y="212" font-size="8" text-anchor="middle">glare 时吃掉自己的 offer</text>
+
+      <text class="t-muted" x="150" y="382" font-size="10" text-anchor="middle">发起方 A</text>
+      <text class="t-muted" x="470" y="382" font-size="10" text-anchor="middle">应答方 B</text>
+    </svg>
+    <figcaption>读法：<strong>这是两台机器，不是一台。</strong> A 走左边一列，B 走右边一列，中间的虚线只在「两人同时开口」时才发生。三条要点：① 只有 <code>stable</code> 能发出新 offer，另两态 <code>setLocalDescription</code> 会抛异常；② 回到 <code>stable</code> 的那一步由<strong>不同的人</strong>完成；③ 中间两态不是错误状态，卡在那里只说明对面那一步没到。</figcaption>
+  </figure>
+
+  <p>最该记住的是：<strong><code>have-local-offer</code> 和 <code>have-remote-offer</code> 都是合法状态，不是卡死。</strong> 线上看到 <code>signalingState</code> 停在这两个值，说明你在等对面——多半是信令丢了，该查 WebSocket，不是查编解码。</p>
+
+  <h3>glare：两个人同时开口</h3>
+
+  <p>A 和 B 同时点了「开始共享屏幕」，两边同时 <code>createOffer</code>，这就是 glare。两边都进 <code>have-local-offer</code>，然后各自收到对方的 offer——此时调 <code>setRemoteDescription(offer)</code>，规范要求先做一次<strong>隐式回滚</strong>：撤掉本地那个还没被接受的 offer，退回 <code>stable</code>，再套用对方的。</p>
+
+  <p>但如果两边都回滚、都接受，就会互相顶掉、来回震荡。所以必须有一端「有礼」：<strong>有礼的回滚并接受，无礼的直接无视撞车的 offer。</strong> 前提是有一个两端能算出同样结果的确定性规则——通常是比较 peer id 字符串，谁小谁有礼。</p>
+
+  <pre><code>// perfect negotiation 的骨架：只留判断逻辑，省略信令细节
+let polite = false;   // 两端必须得出相反结论，规则要确定性
+let makingOffer = false;
+let ignoreOffer = false;
+
+pc.onnegotiationneeded = async () =&gt; {
+  try {
+    makingOffer = true;
+    await pc.setLocalDescription();        // 无参版：内部替你 createOffer
+    signal.send(pc.localDescription);
+  } finally {
+    makingOffer = false;
+  }
+};
+
+async function onDescription(description) {
+  const collision = description.type === 'offer' &amp;&amp;
+    (makingOffer || pc.signalingState !== 'stable');
+
+  ignoreOffer = !polite &amp;&amp; collision;
+  if (ignoreOffer) return;                 // 无礼方：装作没看见
+
+  await pc.setRemoteDescription(description);   // 有礼方：这里隐含 rollback
+  if (description.type === 'offer') {
+    await pc.setLocalDescription();        // 内部替你 createAnswer
+    signal.send(pc.localDescription);
+  }
+}</code></pre>
+
+  <p>这里最容易错的不是技术，是<strong>逻辑</strong>：两端算出同一个 <code>polite</code> 值。都 <code>polite</code> 就互相顶，都无礼就互相无视——后者的现场表现是「两边都显示正在连接，谁也连不上，日志一片安静」。</p>
+
+  <h2>BUNDLE：三个 m=，一条传输</h2>
+
+  <p>2000 年代的模型是一条流一条传输：音频一条、视频一条，各自做 ICE、各自握手、各占端口。放到 NAT 后面就是三次打洞、三个映射、三倍失败概率。</p>
+
+  <p>今天默认合并。<code>a=group:BUNDLE 0 1 2</code> 声明这三条归一组，每条 <code>m=</code> 用 <code>a=mid</code> 拿一个名字，整组共用一条传输。</p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 620 340" role="img">
+      <title>一条 BUNDLE 传输承载三个 m= 段：mid 是绑定的钥匙</title>
+      <defs>
+        <marker id="arr2c" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+        </marker>
+      </defs>
+
+      <rect class="f-wash s-accent" x="24" y="20" width="270" height="30" rx="15" />
+      <text class="t-accent" x="38" y="39" font-size="10" font-family="monospace">a=group:BUNDLE 0 1 2</text>
+
+      <rect class="f-bg s-rule" x="24" y="64" width="270" height="64" rx="8" />
+      <text x="36" y="84" font-size="9.5" font-family="monospace">m=audio 50000 UDP/TLS/RTP/SAVPF 111</text>
+      <text class="t-muted" x="36" y="100" font-size="8.5" font-family="monospace">a=mid:0  a=sendrecv  a=rtcp-mux</text>
+      <text class="t-muted" x="36" y="115" font-size="8.5" font-family="monospace">a=rtpmap:111 opus/48000/2</text>
+
+      <rect class="f-bg s-rule" x="24" y="140" width="270" height="64" rx="8" />
+      <text x="36" y="160" font-size="9.5" font-family="monospace">m=video 50000 UDP/TLS/RTP/SAVPF 96</text>
+      <text class="t-muted" x="36" y="176" font-size="8.5" font-family="monospace">a=mid:1  a=sendrecv  a=rtcp-mux</text>
+      <text class="t-muted" x="36" y="191" font-size="8.5" font-family="monospace">a=rtpmap:96 VP8/90000</text>
+
+      <rect class="f-bg s-rule" x="24" y="216" width="270" height="64" rx="8" />
+      <text x="36" y="236" font-size="9.5" font-family="monospace">m=application 50000 UDP/DTLS/SCTP</text>
+      <text class="t-muted" x="36" y="252" font-size="8.5" font-family="monospace">a=mid:2  a=sctp-port:5000</text>
+      <text class="t-muted" x="36" y="267" font-size="8.5" font-family="monospace">（这一条是 DataChannel）</text>
+
+      <path class="s-accent" fill="none" stroke-width="1.2" d="M296 96 L392 118" marker-end="url(#arr2c)" />
+      <path class="s-accent" fill="none" stroke-width="1.2" d="M296 172 L392 160" marker-end="url(#arr2c)" />
+      <path class="s-accent" fill="none" stroke-width="1.2" d="M296 248 L392 202" marker-end="url(#arr2c)" />
+
+      <rect class="f-bg s-accent" x="396" y="96" width="200" height="130" rx="8" />
+      <text class="t-accent" x="408" y="118" font-size="11">一条传输，一个端口</text>
+      <text class="t-muted" x="408" y="138" font-size="8.5" font-family="monospace">ice-ufrag: 8hV2（一条）</text>
+      <text class="t-muted" x="408" y="152" font-size="8.5" font-family="monospace">ice-pwd: k9Qm…（一条）</text>
+      <text class="t-muted" x="408" y="166" font-size="8.5" font-family="monospace">fingerprint: sha-256…（一份）</text>
+      <text class="t-muted" x="408" y="180" font-size="8.5" font-family="monospace">setup: actpass</text>
+      <text class="t-muted" x="408" y="194" font-size="8.5" font-family="monospace">端口 50000，DTLS 只握一次</text>
+      <text class="t-muted" x="408" y="212" font-size="8.5">三份合同，一条链路</text>
+
+      <text class="t-muted" x="24" y="306" font-size="9">合并的收益可量化：三次连通性检查 → 一次，三次 DTLS 握手 → 一次，三个 NAT 映射 → 一个。</text>
+    </svg>
+    <figcaption>读法：<strong>左边三块是「合同」，右边那个框是「链路」。</strong> 三个 <code>m=</code> 共用同一组 <code>ice-ufrag</code>、<code>ice-pwd</code>、<code>fingerprint</code>，所以只需一次打洞、一次握手。中间的箭头由 <code>a=mid</code> 决定归属——<strong>箭头一旦对错，媒体就会跑到错误的合同上去</strong>，而 ICE 看起来一切正常。</figcaption>
+  </figure>
+
+  <p>代价是耦合：<strong>一条传输挂了，挂在上面的所有 <code>m=</code> 一起挂。</strong> 所以「音频好好的、视频没了」通常不是传输层的问题——传输层要挂就是全挂。<code>a=rtcp-mux</code> 则是另一层合并：RTCP 也走同一端口，一条流只占一个端口而不是两个，这个数字在 TURN 上是要花钱的。</p>
+
+  <h2>为什么手改 SDP 几乎总是错的</h2>
+
+  <p>「munge SDP」= 拿到 <code>createOffer()</code> 的结果，用字符串替换改几行，再喂给 <code>setLocalDescription</code>。它流行是因为历史上确实解决过问题，但有四种后果，一种比一种难查。</p>
+
+  <p><strong>一、改动只在「这一次发出的字节」里生效。</strong> 浏览器以本地状态为准——transceiver 集合、sender 的 track、transport 的候选与密钥。下次 <code>setLocalDescription</code> 会从本地状态重新生成，你的改动全消失。现象于是变成「改了有用，过一会儿又不行」。</p>
+
+  <p><strong>二、删 <code>m=</code> 行是单方面毁约。</strong> 合同里没有「这条不存在了」这种条款，要拒绝只能把端口写 <code>0</code>。整行删掉，对端拿到的是一份它没预期的合同——最好的情况是报错，最坏是按次序错位匹配。</p>
+
+  <p><strong>三、调 <code>m=</code> 顺序会打乱 mid 绑定。</strong> 很多人为了让视频排前面，手工对调两段 <code>m=</code>，却没改 <code>a=mid</code> 和 <code>group:BUNDLE</code>。结果视频顶着 <code>mid:0</code> 的名字被塞进本该承载音频的传输上——<strong>ICE 说连接正常，媒体说不出话。</strong></p>
+
+  <p><strong>四、改方向等于替对端签字。</strong> 在 answer 里把 <code>recvonly</code> 改成 <code>sendrecv</code>，你写了「我要发」，但对方从没同意收；而本地 transceiver 还是 <code>recvonly</code>，本地也不发。<strong>合同上写着发，本地不发，谁都没错，就是没画面。</strong></p>
+
+  <p>正确的做法只有一条：<strong>用 API 表达意图，让浏览器去写 SDP。</strong> 加流用 <code>addTrack</code> / <code>addTransceiver</code>，改方向改 <code>transceiver.direction</code>，换源用 <code>sender.replaceTrack</code>，限编码用 <code>setCodecPreferences</code>，调码率用 <code>setParameters</code>——需要协商时它们会自己触发协商。</p>
+
+  <h2>方向：四态，以及「加了 track 没画面」</h2>
+
+  <p>方向只有四个值，最常见的误解是它「谁写谁算」。<strong>实际是两端各写一边，取交集。</strong></p>
+
+  <table>
+    <thead>
+      <tr><th>方向</th><th>含义</th><th>典型场景</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>sendrecv</code></td><td>我发也收</td><td>默认值，双向通话</td></tr>
+      <tr><td><code>sendonly</code></td><td>只发不收</td><td>推流、共享屏幕的主播端</td></tr>
+      <tr><td><code>recvonly</code></td><td>只收不发</td><td>观众、只看预览的坐席</td></tr>
+      <tr><td><code>inactive</code></td><td>不发不收，但这条流还在</td><td>临时关摄像头，不想重新协商</td></tr>
+    </tbody>
+  </table>
+
+  <p><code>inactive</code> 与 <code>stop()</code> 是两件事，混淆会造成不可逆故障：前者可逆，<code>m=</code>、<code>mid</code>、传输都还在，随时能改回来；后者把这条 transceiver 永久作废，<code>m=</code> 变成端口 <code>0</code>，之后再 <code>addTrack</code> 只会新建一条 <code>m=</code>，<strong>而新 <code>m=</code> 必须重新协商</strong>。</p>
+
+  <p>回到引子：<code>direction = 'inactive'</code> 没错，错在重新打开时只改了 <code>track.enabled</code>。三者区别值得单独记一行：</p>
+
+  <pre><code>track.enabled = false                // 仍在发，发黑帧。不协商，对端仍"收到"
+transceiver.direction = 'inactive'   // 不再发。要重新协商才生效
+transceiver.stop()                   // 永久废弃这条 m=。不可逆</code></pre>
+
+  <p>「我加了 track，对面还是没画面」，按这个顺序查，三步之内能定位：</p>
+
+  <ol class="flow">
+    <li><strong>看对端那条 <code>m=</code> 的方向。</strong> answer 里若是 <code>inactive</code> 或 <code>recvonly</code>，问题不在你这儿——对方压根没打算收。</li>
+    <li><strong>看本地 sender 有没有真绑上 track。</strong> <code>getSenders()</code> 里逐个看 <code>sender.track</code> 是否为 <code>null</code>、<code>track.readyState</code> 是不是 <code>live</code>。设备被别处抢走时 track 会变 <code>ended</code>，页面毫无提示。</li>
+    <li><strong>看有没有真的在发。</strong> <code>outbound-rtp</code> 的 <code>bytesSent</code> 涨不涨——这一步能一刀切开「没发」与「发了但对面没收到」。</li>
+  </ol>
+
+  <h2>决策清单：什么时候必须重新协商</h2>
+
+  <p>判断标准只有一句：<strong>这次改动是否改变了合同条款？</strong> 改了就得重签，没改就不用。</p>
+
+  <ol class="flow">
+    <li><strong>改变流的数量或方向 → 必须重新协商。</strong> 加一路屏幕共享、把 <code>sendrecv</code> 改成 <code>sendonly</code>、恢复一条 <code>inactive</code> 的流，都是改条款。</li>
+    <li><strong>只改编码参数 → 不需要。</strong> 码率上限、帧率、分辨率、请求关键帧，都走 <code>setParameters()</code>。合同一个字没改。</li>
+    <li><strong>只换媒体源、不换类型 → 不需要。</strong> <code>replaceTrack()</code> 换摄像头、从摄像头切到屏幕共享（都是 video），<code>mid</code> 与编码都不变。这是最被低估的一招。</li>
+    <li><strong>换网络路径 → 需要 ICE restart，不是新协商。</strong> <code>m=</code> 一条不加，但 <code>ice-ufrag</code> / <code>ice-pwd</code> 要换新，所以仍要走一遍 offer/answer。</li>
+  </ol>
+
+  <p>反过来用还能得到一个判据：<strong>「通着通着不动了」先怀疑 ICE；「一开始就没通过」先怀疑方向。</strong> 两者的时间特征完全不同，而人往往一上来就怀疑编码。</p>
+
+  <h2>可带走的判断力</h2>
+
+  <p><strong>第一，SDP 是结果，不是输入。</strong> 它是浏览器按本地状态生成的快照：读它为了诊断，写它为了闯祸。</p>
+
+  <p><strong>第二，协商是两台状态机对齐，不是一次函数调用。</strong> 任何「卡住」先问「我这台在哪一态、对面那台在哪一态」，答案通常在信令层，不在媒体层。</p>
+
+  <p><strong>第三，<code>m=</code> 的顺序和 <code>mid</code> 是绑定关系，不是排版。</strong> 记住这一点，你就不会去做「把视频调到前面」这种看起来无害的操作。</p>
+
+  <p>下一讲进 ICE：合同签好了，可两端还不知道对方在哪。</p>
+
+  <div class="quiz" aria-label="回顾练习">
+    <span class="card-title">点选项，立刻看解析</span>
+
+    <div class="q">
+      <p class="stem">1. 收到 <code>a=sendonly</code> 的 offer，answer 的方向可以是？</p>
+      <button type="button" class="opt">sendonly，或者 sendrecv 都行</button>
+      <button type="button" class="opt">两种方向都可以自由选择</button>
+      <button type="button" class="opt" data-correct="true">recvonly，或者 inactive 都行</button>
+      <button type="button" class="opt">必须回 sendrecv 保持对称</button>
+      <p class="fb" hidden data-explain="offer 说「我只发」，应答方就不可能回「我也只发」——那等于单方面宣布要往一条你没打算收的流里发东西。RFC 3264 规定 answer 只能收窄不能扩张，合法回应只有 recvonly 和 inactive。这也是单向黑屏最常见的来源：一端想发，另一端从没答应收。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">2. 关于 JSEP 的文档版本，哪一句是对的？</p>
+      <button type="button" class="opt">8829 仍是现行版，9429 只是草案</button>
+      <button type="button" class="opt" data-correct="true">9429 于 2024 年发布，并废止 8829</button>
+      <button type="button" class="opt">两份文档并行有效，看浏览器版本挑</button>
+      <button type="button" class="opt">JSEP 已被 W3C 收编，不再有 RFC 编号</button>
+      <p class="fb" hidden data-explain="JSEP 的现行标准是 RFC 9429，2024 年 4 月发布，明确废止了 RFC 8829。大量教程、博客、甚至库的注释还写着 8829——读到就按旧版处理，别拿它去核对新行为。浏览器实现这一侧的最终依据，是 W3C 的 WebRTC 推荐标准。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">3. 下面哪件事不需要重新协商就能生效？</p>
+      <button type="button" class="opt">给对方新增一路屏幕共享的流</button>
+      <button type="button" class="opt">把某条流从 sendrecv 改成 sendonly</button>
+      <button type="button" class="opt">让两端重新收集一遍 ICE 候选</button>
+      <button type="button" class="opt" data-correct="true">用 replaceTrack 换一个摄像头</button>
+      <p class="fb" hidden data-explain="replaceTrack 只换 sender 送进编码器的源，mid、编码、方向全不变，合同一个字没改，所以不协商也不闪。新增流、改方向都动了条款，必须发新 offer。至于「重新收集候选」，那不是普通协商而是 ICE restart：m= 不加，但 ufrag/pwd 要换，仍得走一遍 offer/answer。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">4. 手改 SDP 最阴的后果是哪一条？</p>
+      <button type="button" class="opt" data-correct="true">只改了发出去的那份，本地状态没变</button>
+      <button type="button" class="opt">浏览器会当场抛出语法错误</button>
+      <button type="button" class="opt">对端一定拒绝，协商直接失败</button>
+      <button type="button" class="opt">加密失效，媒体会退化成明文</button>
+      <p class="fb" hidden data-explain="浏览器以本地状态为准：transceiver 集合、sender 绑的 track、transport 的候选与密钥。你改的是「即将发出去的字符串」，下次 setLocalDescription 会从本地状态重新生成并覆盖它。于是现象变成「改了有用，过一会儿又不行」，而对端一直按你改过的合同行事——后续每次协商都在错的前提上跑。"></p>
+    </div>
+  </div>
+
+  <p class="ask">哪里没说清？<strong>回头直接问你的老师</strong>（那个正在运行本工作区的 agent）。特别是想不通「为什么 answer 不能扩」的时候，值得让它就 RFC 3264 那条不对称规则再推一遍。</p>
+
+  <p class="foot">
+    <strong>推荐一手资料：</strong>
+    <a href="https://www.rfc-editor.org/rfc/rfc9429.html" target="_blank" rel="noopener">RFC 9429 — JSEP</a>
+    —— 不用通读。读两处就够：一是它对 SDP 语义的约束（哪些 <code>a=</code> 行必须被尊重、哪些组合非法），二是 <code>setLocalDescription</code> / <code>setRemoteDescription</code> 处理流程那一章——那里解释了<strong>为什么规范坚持让 JS 显式调这两个方法</strong>。<br />
+    对照读 <a href="https://www.rfc-editor.org/rfc/rfc3264.html" target="_blank" rel="noopener">RFC 3264 — An Offer/Answer Model with SDP</a>
+    —— 重点读「Modifying the Session」那一章：重新协商时哪些能变、哪些必须保持，以及用端口 0 拒绝一条流的写法。这是「什么时候不需要协商」那张清单的法理来源。<br />
+    状态机的最终依据在 <a href="https://www.w3.org/TR/webrtc/" target="_blank" rel="noopener">W3C: WebRTC</a>
+    —— 现行推荐标准，2021-01-26 首发、2025-03-13 修订。查 <code>signalingState</code> 的定义、以及各方法在非法状态下抛什么异常，比任何博客可靠。<br />
+    背景见 <a href="https://www.rfc-editor.org/rfc/rfc8825.html" target="_blank" rel="noopener">RFC 8825</a> 第 3 节：信令被明确排除在标准之外——所以「SDP 怎么送到对面」永远是你自己的问题。<br />
+    相关：<a href="../lessons/0001-not-a-protocol.html">第 1 讲 · 它不是协议，是一套强制约定</a> ·
+    <a href="../lessons/0003-ice-candidates.html">第 3 讲 · 候选、检查与提名</a> ·
+    <a href="../reference/0001-glossary.html">概念速查表</a> ·
+    <a href="../MISSION.md">使命</a> ·
+    <a href="../RESOURCES.md">资源清单</a>
+  </p>
+
+<script>
+(function () {
+  var questions = document.querySelectorAll('.quiz .q');
+  for (var i = 0; i < questions.length; i++) {
+    (function (q) {
+      var opts = q.querySelectorAll('.opt');
+      var fb = q.querySelector('.fb');
+      for (var j = 0; j < opts.length; j++) {
+        (function (opt) {
+          opt.addEventListener('click', function () {
+            if (q.dataset.answered === '1') return;
+            q.dataset.answered = '1';
+            for (var k = 0; k < opts.length; k++) {
+              opts[k].disabled = true;
+              if (opts[k].dataset.correct === 'true') opts[k].classList.add('correct');
+            }
+            var ok = opt.dataset.correct === 'true';
+            if (!ok) opt.classList.add('wrong');
+            fb.innerHTML = (ok ? '<b>✓ 对。 </b>' : '<b>✗ 再想一下。 </b>') + fb.dataset.explain;
+            fb.hidden = false;
+          });
+        })(opts[j]);
+      }
+    })(questions[i]);
+  }
+})();
+</script>
+</body>
+</html>

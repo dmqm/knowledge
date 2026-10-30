@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>排障阶梯 · 深入 WebRTC</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+  <nav aria-label="导航">
+    <a class="tag" href="../lessons/0001-not-a-protocol.html">第 1 讲 · 它不是协议</a>
+    <a class="tag" href="../reference/0001-glossary.html">概念速查表</a>
+  </nav>
+
+  <p class="kicker">深入 WebRTC · 速查表</p>
+  <h1>排障阶梯</h1>
+  <p class="lede">按协议栈自下而上定位。核心纪律：<strong>每一层都必须拿到证据再往上走</strong>，不要因为「看起来像网络问题」就跳到改码率。</p>
+
+  <h2>为什么是阶梯，不是流程图</h2>
+
+  <p>WebRTC 的故障有一个强特性：<strong>下层不通，上层一定没有信号</strong>。所以从下往上查，每一步只有两种结果——通过，或者就在这里停住。反过来从上往下查（先看画质、先调编码）会在下层已经断掉的情况下得到一堆无意义的指标，然后误判。</p>
+
+  <p>这跟排查网络问题的方式完全一致：先确认 L1/L2 通不通，再看路由，最后才看应用。你已有的运维直觉可以直接迁移。</p>
+
+  <h2>第 0 层：前置条件</h2>
+
+  <table>
+    <thead>
+      <tr><th>检查项</th><th>为什么</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>页面在 HTTPS（或 localhost）下</td><td>否则 <code>getUserMedia</code> 直接被拒，连媒体都没有</td></tr>
+      <tr><td><code>getUserMedia</code> 的权限已授予</td><td>失败率里约 14% 归因于采集，其中过半是用户拒绝授权</td></tr>
+      <tr><td>设备没有被其它程序独占</td><td>会议软件、录屏工具会锁摄像头，表现为 track ended</td></tr>
+      <tr><td>两端时钟无异常</td><td>极端情况会影响 DTLS 证书校验与日志对齐</td></tr>
+    </tbody>
+  </table>
+
+  <h2>第 1 层：候选收集</h2>
+
+  <p><strong>看哪里：</strong><code>pc.onicecandidate</code> 收到的候选类型；或 <code>chrome://webrtc-internals</code> 里的 <code>icecandidate</code> 事件列表。</p>
+
+  <table>
+    <thead>
+      <tr><th>现象</th><th>判断</th><th>动作</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>只有 host，没有 srflx</td><td>STUN 没配或不可达</td><td>检查 <code>iceServers</code> 配置与 STUN 可达性（dig/curl 同一网络）</td></tr>
+      <tr><td>只有 host 与 srflx，没有 relay</td><td>TURN 未生效</td><td>检查 TURN 凭据（临时凭据过期是最常见原因），以及 TURN 的 3478/443 是否可达</td></tr>
+      <tr><td>完全没有候选</td><td>配置被完全忽略</td><td>确认 <code>iceServers</code> 写在构造参数里、且没被后续 <code>setConfiguration</code> 覆盖</td></tr>
+      <tr><td>候选很多但连接慢</td><td>候选过多拖慢收敛</td><td>减少网卡类型（如关闭 IPv6 或虚拟网卡），收敛反而更快</td></tr>
+    </tbody>
+  </table>
+
+  <h2>第 2 层：ICE 连通性</h2>
+
+  <p><strong>看哪里：</strong><code>pc.iceConnectionState</code> 与 <code>pc.getStats()</code> 里的 <code>candidate-pair</code>（尤其 <code>state</code> 为 <code>succeeded</code> 且 <code>nominated</code> 的那一对）。</p>
+
+  <table>
+    <thead>
+      <tr><th>现象</th><th>判断</th><th>动作</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>卡在 <code>checking</code> 不前进</td><td>探测发了但没有回包</td><td>看是否有 relay 候选；查对端是否收到候选（Trickle 通道是否实现）</td></tr>
+      <tr><td>直接 <code>failed</code></td><td>所有配对都失败</td><td>UDP 被封或两侧 NAT 都不配合；上 TURN over TCP/TLS 443</td></tr>
+      <tr><td><code>connected</code> 但很快 <code>disconnected</code></td><td>路径失效</td><td>映射超时或切网；启动 ICE restart，而不是重建 PeerConnection</td></tr>
+      <tr><td>选中了 relay，但你希望直连</td><td>直连配对失败</td><td>这是结论不是故障；若要优化，查 STUN 是否可用、NAT 是否对称</td></tr>
+    </tbody>
+  </table>
+
+  <h2>第 3 层：安全握手</h2>
+
+  <p><strong>看哪里：</strong><code>pc.connectionState</code>（含 DTLS）与 <code>pc.getStats()</code> 里的 <code>transport</code> 的 <code>dtlsState</code>。</p>
+
+  <p><strong>关键区分：</strong><code>iceConnectionState === 'connected'</code> 但 <code>connectionState</code> 仍不是 <code>connected</code>，说明<strong>路通了，但对面不认你</strong>。</p>
+
+  <table>
+    <thead>
+      <tr><th>现象</th><th>判断</th><th>动作</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>DTLS 一直不完成</td><td>证书指纹不匹配，或 SDP 被中间环节改过</td><td>核对两端 SDP 里的 <code>a=fingerprint</code> 是否与被改写的信令一致；禁止中间层重写 SDP</td></tr>
+      <tr><td>偶发握手失败</td><td>大包被丢（MTU / 分片）</td><td>检查 tunnel / VPN 的 MTU；确认没有设备丢弃分片 UDP</td></tr>
+      <tr><td><code>a=setup</code> 冲突</td><td>两侧都要求做主动方</td><td>不要手写 <code>setup</code>；让 offer 端用 <code>actpass</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>第 4 层：媒体与质量</h2>
+
+  <p><strong>看哪里：</strong><code>inbound-rtp</code> / <code>outbound-rtp</code> / <code>remote-inbound-rtp</code>。</p>
+
+  <table>
+    <thead>
+      <tr><th>指标</th><th>含义</th><th>怎么用</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>packetsLost</code> / <code>fractionLost</code></td><td>丢包数与丢包率</td><td>结合 RTT 判断是无线干扰还是链路拥塞</td></tr>
+      <tr><td><code>jitter</code></td><td>到达间隔抖动</td><td>抖动高但丢包低 → 缓冲与调度问题，不是带宽问题</td></tr>
+      <tr><td><code>currentRoundTripTime</code></td><td>候选对 RTT</td><td>中继路径会明显高于直连；用它验证「是不是绕路了」</td></tr>
+      <tr><td><code>availableOutgoingBitrate</code></td><td>估计可用上行</td><td>长期低于你设的 <code>maxBitrate</code> → 瓶颈在网络</td></tr>
+      <tr><td><code>qualityLimitationReason</code></td><td>编码受限原因</td><td>bandwidth / cpu / none / other，一步分开三种病因</td></tr>
+      <tr><td><code>freezeCount</code></td><td>卡顿次数</td><td>比「平均帧率」更接近用户体感</td></tr>
+      <tr><td><code>frameWidth</code> / <code>frameHeight</code></td><td>实际编码分辨率</td><td>降分辨率是算法的主动选择，用它确认「糊」到什么程度</td></tr>
+    </tbody>
+  </table>
+
+  <h2>五个典型画像</h2>
+
+  <ol class="flow">
+    <li><strong>「我家能用，客户公司不能用」</strong>——第 2 层。企业网封 UDP 或强制代理。处方：TURN over TCP/TLS 443，并确认 TURN 域名可达。</li>
+    <li><strong>「两个人在同一个办公室反而连不上」</strong>——第 2 层。hairpinning 失败。处方：允许走 relay，或让 SFU 兜底。</li>
+    <li><strong>「连上了但完全没画面，也没声音」</strong>——第 3 层或方向协商。先看 <code>connectionState</code>，再看 SDP 的 <code>direction</code> 是否为 <code>inactive</code>。</li>
+    <li><strong>「画面糊，声音正常」</strong>——第 4 层。看 <code>qualityLimitationReason</code>：bandwidth 就降码率/换层，cpu 就降分辨率/换硬件编码。</li>
+    <li><strong>「声音断续，视频正常」</strong>——不是拥塞。查音频采集设备被抢占（蓝牙耳机）、系统采样率、或抖动缓冲异常。</li>
+  </ol>
+
+  <h2>三条通用纪律</h2>
+
+  <p><strong>一、先记录再动手。</strong> 复现时立刻存一份 <code>getStats()</code> 快照与 <code>chrome://webrtc-internals</code> 的导出（它能把整条会话的曲线存下来）。事后靠记忆复盘几乎一定错。</p>
+
+  <p><strong>二、一次只改一个变量。</strong> WebRTC 的故障链很长，同时改三处会让你失去因果判断——尤其是「加了个 TURN 就好了」这种结论，很容易掩盖真正的原因（比如其实只是 STUN 域名解析失败）。</p>
+
+  <p><strong>三、区分「失败」与「降级」。</strong> 走了中继、码率降到 300 kbps、分辨率降到 360p——这些多数是<strong>系统在正常工作</strong>，不是 bug。真正要修的是「为什么必须降级」，而不是把降级逻辑关掉。</p>
+
+  <p class="foot">
+    <strong>配套资料：</strong>
+    <a href="https://www.w3.org/TR/webrtc/" target="_blank" rel="noopener">W3C WebRTC 规范</a>（<code>getStats()</code> 与各统计对象的字段定义是权威来源）·
+    <a href="https://webrtchacks.com/usage-stats/" target="_blank" rel="noopener">webrtcHacks 的真实失败率数据</a>（用来看「哪些故障最普遍」，注意年份）<br />
+    相关：<a href="../lessons/0003-ice-candidates.html">第 3 讲 · 候选、检查与提名</a> ·
+    <a href="../lessons/0005-dtls-srtp.html">第 5 讲 · 谁在替你保密</a> ·
+    <a href="../lessons/0007-congestion-control.html">第 7 讲 · 糊一下是算出来的</a> ·
+    <a href="../reference/0001-glossary.html">概念速查表</a>
+  </p>
+
+</body>
+</html>

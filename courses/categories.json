@@ -23,6 +23,10 @@
     {
       "name": "媒介与批判",
       "courses": ["amusing-ourselves-to-death", "disappearance-of-childhood", "technopoly"]
+    },
+    {
+      "name": "网络与协议",
+      "courses": ["webrtc"]
     }
   ]
 }

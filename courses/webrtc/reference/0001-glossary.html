@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>概念速查表 · 深入 WebRTC</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+  <nav aria-label="导航">
+    <a class="tag" href="../lessons/0001-not-a-protocol.html">第 1 讲 · 它不是协议</a>
+    <a class="tag" href="../reference/0002-debug-ladder.html">排障阶梯</a>
+  </nav>
+
+  <p class="kicker">深入 WebRTC · 速查表</p>
+  <h1>概念速查表</h1>
+  <p class="lede">本课的术语基准。所有讲义都按这里的用词与定义来说话；遇到同一个东西有多个叫法时，这里选定一个，其余标注为「别称」。</p>
+
+  <h2>协商</h2>
+
+  <dl class="glossary">
+    <dt>SDP</dt>
+    <dd>描述一次会话的文本格式：有哪些媒体、用什么编解码、怎么连、对端身份指纹是什么。它是<strong>状态描述</strong>，不是配置项。
+      <span class="alias">别称：session description</span></dd>
+
+    <dt>offer / answer</dt>
+    <dd>两次单向的 SDP 交换，构成一次协商。发起方给 offer，应答方给 answer，双方此后都受这份结果约束。</dd>
+
+    <dt>JSEP</dt>
+    <dd>把 offer/answer 的控制权完全交给 JavaScript 的机制（RFC 9429，2024-04，废止 RFC 8829）。所以浏览器不会「自动连上谁」。</dd>
+
+    <dt>renegotiation</dt>
+    <dd>已经连上之后再次发起 offer/answer，用于增删轨道或改方向。改编码参数通常不需要它。</dd>
+
+    <dt>glare</dt>
+    <dd>双方同时发 offer 造成的冲突。解法是让一方回滚（rollback）后重来，即 perfect negotiation 模式。</dd>
+
+    <dt>transceiver</dt>
+    <dd>一对「发送方向 + 接收方向」的抽象，比 track 更底层。方向取值为 sendrecv / sendonly / recvonly / inactive。</dd>
+
+    <dt>BUNDLE</dt>
+    <dd>把多个媒体描述复用同一条传输（同一个端口、一次 ICE、一次 DTLS）。靠 <code>a=mid</code> 与 <code>a=group:BUNDLE</code> 绑定，是「手改 SDP 会炸」的主要根源。</dd>
+  </dl>
+
+  <h2>连通与穿越</h2>
+
+  <dl class="glossary">
+    <dt>candidate（候选）</dt>
+    <dd>一个「别人可能用这个地址找到我」的猜测。类型分 host / srflx / prflx / relay 四种。</dd>
+
+    <dt>host 候选</dt>
+    <dd>设备自身网卡地址。同网段直连有效。浏览器常用 mDNS 形式（<code>xxxx.local</code>）隐藏内网 IP。</dd>
+
+    <dt>srflx 候选</dt>
+    <dd>通过 STUN 问出来的公网映射地址（server-reflexive）。</dd>
+
+    <dt>prflx 候选</dt>
+    <dd>探测过程中从「意料之外的源地址」临时学到的候选。不出现在任何 SDP 里。</dd>
+
+    <dt>relay 候选</dt>
+    <dd>TURN 服务器分配的中继地址。优先级建议值为 0，只在前述全部失败后被选中。</dd>
+
+    <dt>candidate pair / checklist</dt>
+    <dd>把本地候选与远端候选两两配对形成待测清单，按优先级从高到低逐个发起 STUN 探测。</dd>
+
+    <dt>nomination（提名）</dt>
+    <dd>选定某一对成功的候选作为正式路径。成功后其余配对可停止探测。</dd>
+
+    <dt>连通性检查</dt>
+    <dd>向配对目标发 STUN Binding 请求。必须<strong>双向</strong>都通才算成功——NAT 的过滤是不对称的。</dd>
+
+    <dt>Trickle ICE</dt>
+    <dd>边收集候选边发送，不等全部收齐（RFC 8838）。省下的是「等最慢那个候选」的时间。</dd>
+
+    <dt>ICE restart</dt>
+    <dd>用新的 ufrag/pwd 重新收集与探测，用于切网或映射失效。不是重建 PeerConnection。</dd>
+
+    <dt>映射行为（mapping）</dt>
+    <dd>NAT 给内网连接分配对外端口的规则：端点无关 / 地址相关 / 地址端口相关。决定「对端拿到的地址是否有效」。</dd>
+
+    <dt>过滤行为（filtering）</dt>
+    <dd>NAT 放行入站包的规则：端点无关 / 地址相关 / 地址端口相关。决定「必须多积极地往外打」。</dd>
+
+    <dt>对称型 NAT</dt>
+    <dd>俗称，大致对应「地址端口相关映射」。这个说法已被 RFC 4787 弃用，因为它把映射与过滤混成一件事。</dd>
+
+    <dt>hairpinning</dt>
+    <dd>同一 NAT 后的两端互连时，流量需要绕出再绕回。RFC 4787 要求支持，但现实中实现质量参差。</dd>
+
+    <dt>STUN</dt>
+    <dd>只回答「我从你这里出去时是什么地址」，不转发媒体。极轻量。</dd>
+
+    <dt>TURN</dt>
+    <dd>真正的媒体中继。一定会通，但进出都算你的出口流量，是最容易被低估的成本项。</dd>
+  </dl>
+
+  <h2>加密</h2>
+
+  <dl class="glossary">
+    <dt>DTLS</dt>
+    <dd>跑在 UDP 上的 TLS。要自己处理丢包、乱序、分片，代价是握手更慢更脆。</dd>
+
+    <dt>fingerprint</dt>
+    <dd>SDP 里携带的对端证书哈希（<code>a=fingerprint</code>）。握手时核对，于是信令被篡改会表现为握手失败，而不是静默的中间人。</dd>
+
+    <dt>DTLS-SRTP</dt>
+    <dd>用 DTLS 握手导出的密钥来加密 SRTP 媒体（RFC 5764）。WebRTC 强制要求（RFC 8827）。</dd>
+
+    <dt>SDES</dt>
+    <dd>把媒体密钥直接写在 SDP 里的老做法。WebRTC <strong>禁止</strong>使用——否则信令服务器就能解密媒体。</dd>
+
+    <dt>首字节多路复用</dt>
+    <dd>同一 UDP 端口上靠首字节区间区分协议：STUN 0–3、DTLS 20–63、RTP/RTCP 128–191（RFC 7983）。</dd>
+
+    <dt>SFrame / insertable streams</dt>
+    <dd>在 SRTP 之上再加一层的端到端加密方案。用于「不信任 SFU」的场景：能挡住服务器，挡不住被入侵的端点。</dd>
+  </dl>
+
+  <h2>媒体</h2>
+
+  <dl class="glossary">
+    <dt>RTP / RTCP</dt>
+    <dd>媒体传输（RTP）与它的控制通道（RTCP）。RTP 带序列号与时间戳；RTCP 回传报告、请求与反馈。</dd>
+
+    <dt>SSRC</dt>
+    <dd>一路 RTP 流的标识。BUNDLE 之后多条流共用一条传输，靠 SSRC 与 MID 扩展区分。</dd>
+
+    <dt>NACK</dt>
+    <dd>接收端请求重传特定序列号。有效但有 1 个 RTT 的延迟成本。</dd>
+
+    <dt>PLI / FIR</dt>
+    <dd>请求对方立刻编一个关键帧。用于「画面花了但流还在」的恢复。</dd>
+
+    <dt>FEC</dt>
+    <dd>前向纠错：用冗余包换延迟，适合高 RTT 场景。</dd>
+
+    <dt>RTX</dt>
+    <dd>重传走独立的形式（单独的 SSRC/PT），便于统计与优先级管理。</dd>
+
+    <dt>抖动缓冲（jitter buffer）</dt>
+    <dd>把乱序与抖动「吃掉」的等待队列。等得久则连续但延迟高，是延迟与流畅度之间的连续调节。</dd>
+
+    <dt>NetEQ</dt>
+    <dd>音频侧的自适应抖动缓冲，会用时间伸缩（加速/慢放）而不是简单丢帧来吸收抖动。</dd>
+
+    <dt>simulcast</dt>
+    <dd>同一路源同时编多个分辨率并发出去（RFC 8853）。让 SFU 可以「选层转发」而不必转码，代价是客户端上行被放大。</dd>
+
+    <dt>SVC</dt>
+    <dd>分层编码：一路流内部含多个可裁剪层。上行比 simulcast 省，但对编码器与互操作要求更高。</dd>
+  </dl>
+
+  <h2>自适应</h2>
+
+  <dl class="glossary">
+    <dt>GCC</dt>
+    <dd>libwebrtc 里那套基于延迟的拥塞控制（常被称为 Google Congestion Control）。不是某个 RFC，而是实现的集合：延迟梯度估计 + 过载检测 + 码率控制。</dd>
+
+    <dt>transport-cc / TWCC</dt>
+    <dd>逐包到达时间反馈机制。标准化的格式见 RFC 8888（CCFB）：序列号 + 13 位到达时间偏移（单位 1/1024 秒）+ ECN。</dd>
+
+    <dt>Pacer</dt>
+    <dd>把编码器产出的突发流量摊平成均匀发送。防止发送端自己撑爆队列、误判自己拥塞。</dd>
+
+    <dt>延迟梯度</dt>
+    <dd>包与包的到达间隔相对于发送间隔的变化趋势。队列在堆积时它为正，是「比丢包更早」的拥塞信号。</dd>
+
+    <dt>qualityLimitationReason</dt>
+    <dd><code>outbound-rtp</code> 里的字段：none / bandwidth / cpu / other。用它一步分开「带宽不够」「算力不够」「根本没受限」。</dd>
+
+    <dt>availableOutgoingBitrate</dt>
+    <dd><code>candidate-pair</code> 里估计出的可用上行带宽。与 <code>maxBitrate</code> 对比即可判断瓶颈在配置还是网络。</dd>
+  </dl>
+
+  <p class="foot">
+    <strong>怎么用这张表：</strong>读讲义时遇到不认识的名词回来查一次；写代码或看日志时按名字对齐字段。定义会随理解加深而修订——如果你发现某条与你实测不一致，那是这条定义该改了，告诉你的老师。<br />
+    相关：<a href="../reference/0002-debug-ladder.html">排障阶梯</a> ·
+    <a href="../lessons/0001-not-a-protocol.html">第 1 讲</a> ·
+    <a href="../MISSION.md">使命</a>
+  </p>
+
+</body>
+</html>

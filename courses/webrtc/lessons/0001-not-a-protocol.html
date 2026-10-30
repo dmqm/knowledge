@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 1 讲 · 它不是协议，是一套强制约定</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+  <nav aria-label="讲义导航">
+    <a class="tag" href="../lessons/0002-sdp-offer-answer.html">第 2 讲 · 协商是一台状态机 →</a>
+    <a class="tag" href="../reference/0001-glossary.html">概念速查表</a>
+  </nav>
+
+  <p class="kicker">深入 WebRTC · 第 1 讲</p>
+  <h1>它不是协议，是一套强制约定</h1>
+  <p class="lede">一句话目标：读完这一讲，你能说清 WebRTC 到底标准化了什么、故意没标准化什么，并从「三条约束」推出它为什么必须长成现在这个样子。</p>
+
+  <h2>引子：两个标签页通了，手机不通</h2>
+
+  <p>你在 VPS 上起了一个 mediasoup，本机开两个标签页互连——有声音，有画面，一切都对。第二天用手机 4G 再试，控制台只有一行：<code>iceConnectionState: failed</code>。你换了个 TURN 服务商，好了。你没改一行代码。</p>
+
+  <p>这件事值得停一下。它说明 WebRTC 的成败有一大半不取决于你写的代码，而取决于<strong>两端所处的网络愿不愿意让路</strong>。而它之所以这样设计，是因为它要解决的那三个约束，每一个都比「传输音视频」本身更硬。</p>
+
+  <h2>三个约束，推出全部设计</h2>
+
+  <p><strong>约束一：两端互相不可见。</strong> 你在家里 192.168.1.20 后面，对面在公司 10.0.0.8 后面，中间隔着一到两层 NAT。两边都没有一个稳定、可寻址、能对外宣告的公共身份。这不是配置问题，是 IPv4 地址耗尽之后的常态。</p>
+
+  <p><strong>约束二：没有共享的可信基础设施。</strong> 规范不能假设「你们公司有一台大家都信得过的服务器」。任何中间节点都可能是敌对的、被劫持的、或者干脆不存在。</p>
+
+  <p><strong>约束三：实时。</strong> 延迟预算是几百毫秒，不是几秒。人对「对话」的容忍度极低：ITU-T 对会话式音频的单向延迟目标是 150 ms 以内、视频 200 ms 以内（换算成 RTT 约 300 / 400 ms）。超过这个量级，对话就会开始互相抢话。</p>
+
+  <p>把这三条分别翻译成设计决策，WebRTC 的形状就出来了：</p>
+
+  <table>
+    <thead>
+      <tr><th>约束</th><th>设计回应</th><th>代价</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>两端不可见</td><td>ICE 自己找路 + 借信令传递信息</td><td>连接建立慢、要探测、可能失败</td></tr>
+      <tr><td>无共享可信设施</td><td>强制加密；用 SDP 里的证书指纹绑定身份</td><td>握手多一个 RTT；密钥管理变复杂</td></tr>
+      <tr><td>实时</td><td>UDP 承载 + 自己做拥塞控制 + 丢弃而非重传</td><td>会丢帧、会糊、会自适应降质</td></tr>
+    </tbody>
+  </table>
+
+  <p>这三条不是背景知识，是<strong>判据</strong>。后面每一讲遇到「为什么要这么麻烦」的时候，答案几乎都能回到这张表：要么是在对抗不可见，要么是在对抗不可信，要么是在对抗时间。</p>
+
+  <h2>第一原则：迟到的包，等价于丢失的包</h2>
+
+  <p>为什么不用 WebSocket 传音视频？WebSocket 是 TCP，而 TCP 的「可靠」在实时场景里是<strong>负资产</strong>。</p>
+
+  <p>TCP 保证有序交付。于是只要有一个包丢了，后面所有已经到达的包都必须压在接收缓冲区里等着——这就是队头阻塞（head-of-line blocking）。一次重传最短也要一个 RTT；如果链路开始丢包，TCP 还会同时收缩拥塞窗口，把发送速率也一起降下来。结果是：<strong>网络稍微抖一下，画面就停住，然后突然快进</strong>。这不是「稍微差一点」，而是从可用变成不可用。</p>
+
+  <p>视频本身对丢包是有容忍度的：丢一帧，画面糊一下、或者轻微卡顿 33 毫秒，人几乎察觉不到。但对延迟毫无容忍度：晚到 500 毫秒的一帧，在通话里就是废帧——它已经错过了该显示的时刻。</p>
+
+  <blockquote>
+    <p><strong>实时媒体的第一原则：迟到的包，等价于丢失的包。</strong></p>
+    <p><cite>—— 这句话能推出后面几乎所有机制：为什么用 UDP、为什么要抖动缓冲、为什么要 NACK 而不是重传、为什么要主动降码率。</cite></p>
+  </blockquote>
+
+  <p>所以 WebRTC 的做法是：<strong>换到 UDP，然后在应用层重新实现它真正需要的那部分可靠性</strong>。不是全量重传，而是选择性重传（NACK 只补关键包）、前向纠错（FEC 用冗余换延迟）、丢包隐藏（PLC 用算法猜）。这三样东西在<a href="../lessons/0006-rtp-packets.html">第 6 讲</a>会展开。</p>
+
+  <h2>它没有发明协议，它规定了协议的组合方式</h2>
+
+  <p>这是最容易误解的一点。WebRTC 不是一个新协议，RFC 8825 里它是「一组协议的<em>用法</em>」。找路用的是 2005 年就有的 ICE，加密用的是 DTLS-SRTP，传媒体用的是 RTP，传数据用的是 SCTP——全是别的工作组早就做完的东西。</p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 460 292" role="img">
+      <title>WebRTC 协议栈：四个已有协议叠在同一条 UDP 五元组上</title>
+      <defs>
+        <marker id="ar1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+        </marker>
+      </defs>
+
+      <rect class="f-bg s-accent" x="40" y="52" width="180" height="38" rx="7" />
+      <text class="t-accent" x="52" y="69" font-size="12">SRTP ← RTP</text>
+      <text class="t-muted" x="52" y="83" font-size="10">媒体：音频 / 视频</text>
+
+      <rect class="f-bg s-accent" x="240" y="52" width="180" height="38" rx="7" />
+      <text class="t-accent" x="252" y="69" font-size="12">SCTP ← DataChannel</text>
+      <text class="t-muted" x="252" y="83" font-size="10">任意数据，可选可靠性</text>
+
+      <rect class="f-bg s-rule" x="40" y="112" width="380" height="38" rx="7" />
+      <text x="52" y="129" font-size="12">DTLS 1.2 / 1.3</text>
+      <text class="t-muted" x="52" y="143" font-size="10">握手、身份校验、导出媒体密钥</text>
+
+      <rect class="f-bg s-rule" x="40" y="172" width="380" height="38" rx="7" />
+      <text x="52" y="189" font-size="12">ICE + STUN（可选 TURN）</text>
+      <text class="t-muted" x="52" y="203" font-size="10">先证明这条路能通，再谈别的</text>
+
+      <rect class="f-bg s-rule" x="40" y="232" width="380" height="38" rx="7" />
+      <text x="52" y="249" font-size="12">UDP · 一条五元组</text>
+      <text class="t-muted" x="52" y="263" font-size="10">所有上层协议共用同一条链路</text>
+
+      <path class="s-muted" fill="none" stroke-width="1" d="M230 232 L230 212" marker-end="url(#ar1)" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M230 172 L230 152" marker-end="url(#ar1)" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M230 112 L230 100 L130 100 L130 92" marker-end="url(#ar1)" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M230 112 L230 100 L350 100 L350 92" marker-end="url(#ar1)" />
+    </svg>
+    <figcaption>读法：<strong>从下往上，每一层都在为上一层提供一个「前提」。</strong> UDP 提供「一条尽力而为的管道」；ICE 提供「这条管道真的通往对端」；DTLS 提供「对面是谁、密钥是什么」；到最上面才轮到「传媒体」还是「传数据」。所以<strong>连不上永远先怀疑下半层</strong>，而不是去调编解码参数。</figcaption>
+  </figure>
+
+  <p>把这条栈记住，排障顺序就自然出来了：<strong>先看有没有 UDP 通路，再看候选对有没有成功，再看 DTLS 有没有握上手，最后才轮到码率与画质。</strong> 绝大多数「音视频不通」的问题都死在前三层，但九成的调试时间被花在第四层。</p>
+
+  <h3>真正新增的东西只有两样</h3>
+
+  <p>一是<strong>一层 JavaScript API</strong>（<code>RTCPeerConnection</code> 等），让浏览器内部那套 C++ 实现变得可编程。二是<strong>一组「必须这样做」的强制约束</strong>——而这里最硬的其实是一堆<strong>禁止项</strong>。</p>
+
+  <p>RFC 8827 把话说得很直白：所有媒体通道<strong>必须</strong>经 SRTP/SRTCP 保护，<strong>禁止</strong>明文 RTP；<strong>必须</strong>为每个媒体通道提供 DTLS-SRTP；<strong>禁止</strong>使用 SDP security descriptions（SDES，即把密钥直接写在 SDP 里）；<strong>禁止</strong>协商 NULL 加密；<strong>禁止</strong>实现 DTLS 重协商与 TLS False Start。此外，每次通话都要生成新的密钥对（不可链接性），不同 origin 使用不同密钥对。</p>
+
+  <p>为什么禁得这么狠？因为这些约束的服务对象不是「开发者」，而是<strong>「不小心的开发者」和「他遇到的攻击者」</strong>。一条链路只要允许「为了省事走明文」，就一定会有人在生产环境走明文。所以规范干脆把省事的路堵死。</p>
+
+  <h2>控制面与数据面被彻底切开</h2>
+
+  <p>RFC 8825 第 3 节把「客户端到服务器的信令怎么走」明确列为<strong>不在本协议族范围内</strong>。这不是偷懒，是刻意的：不同应用要用不同的信令（SIP、XMPP、WebSocket、或者你自己发明的任何东西），硬要标准化只会变成谁都不满意。</p>
+
+  <p>于是有了 WebRTC 最反直觉的一条：<strong><code>RTCPeerConnection</code> 不知道对方在哪里，也不负责把任何东西送到对方那里。</strong> 它只负责两件事——把「我支持什么、我怎么被联系到」写进 SDP，以及在你把对方的 SDP 喂进来之后，照着去做。</p>
+
+  <pre><code>// 协商 = 你自己搬运 SDP。浏览器不负责送达。
+const offer = await pc.createOffer();
+await pc.setLocalDescription(offer);   // 这一刻才开始收集候选地址
+signal.send(JSON.stringify(pc.localDescription));
+
+// 对端
+await pc.setRemoteDescription(offer);
+await pc.setLocalDescription(await pc.createAnswer());
+signal.send(JSON.stringify(pc.localDescription));</code></pre>
+
+  <p>看到那个注释了吗——<strong>候选地址是在 <code>setLocalDescription</code> 之后才开始收集的</strong>，不是 <code>createOffer</code> 的时候。这一个细节解释了两类常见 bug：一是「offer 发出去时 SDP 里还没有候选」，二是「以为改了 candidate 就能刷新，其实要重新协商」。</p>
+
+  <p>这个空白一直存在到 2025 年 3 月——<a href="https://www.rfc-editor.org/rfc/rfc9725.html">RFC 9725（WHIP）</a> 才为「推流到媒体服务器」这一个特定场景补上了标准化的 HTTP 信令：一次 POST 换 SDP，然后用 PATCH 补 ICE。但它只覆盖推流，不覆盖通话。</p>
+
+  <h2>「P2P」是目标，不是保证</h2>
+
+  <p>WebRTC 的名字让人以为它总能点对点。事实是：<strong>直连是它优先尝试的路径，不是它承诺的结果。</strong> 这一点藏在 ICE 的候选优先级里：host 类型建议 126、server-reflexive（公网映射）100、relay（中继）0。中继不是 1，是 <strong>0</strong>——只有当所有优先级更高的配对都探测失败，中继才会被选中。</p>
+
+  <p>但优先级低不等于罕见。callstats.io 对上百个 WebRTC 服务的观测（2015-01 至 2016-02，数十亿分钟）显示：<strong>22% 的会议需要某种形式的 TURN 中继</strong>，<strong>9% 需要 TCP</strong>；而会话建立失败率是 <strong>12%</strong>，这些失败里 <strong>85% 来自无法穿透 NAT / 防火墙</strong>。注意年份——它只能当量级用，别当成今天的精确值，更别直接写进商业计划。但它足够支撑一个工程判断：<strong>中继是常态成本，不是边缘情况。</strong></p>
+
+  <p>还有一层更现实的变化：今天大多数产品根本不点对点。客户端把媒体发给服务端的 SFU（选择性转发单元），由它转发给其他人。这时候「P2P」这个词已经名不副实——<strong>你的对端是一台有公网地址的服务器</strong>，NAT 问题因此大幅简化。<a href="../lessons/0008-topology-and-cost.html">第 8 讲</a>会专门算这笔账。</p>
+
+  <h2>这条线要走到哪里</h2>
+
+  <p>后面七讲是一条单向的路，每一讲都在回答上一讲留下的问题：</p>
+
+  <ol class="flow">
+    <li><strong>协商</strong>——SDP 与 offer/answer：为什么它是状态机而不是配置表，为什么「改 SDP」是个危险动作（<a href="../lessons/0002-sdp-offer-answer.html">第 2 讲</a>）。</li>
+    <li><strong>连通</strong>——ICE 的候选、检查与提名：那个 <code>failed</code> 到底卡在哪一步（<a href="../lessons/0003-ice-candidates.html">第 3 讲</a>）。</li>
+    <li><strong>穿越</strong>——NAT 的真实行为：为什么「四种 NAT 类型」这个流行说法是过时的，以及中继成本怎么估（<a href="../lessons/0004-nat-traversal.html">第 4 讲</a>）。</li>
+    <li><strong>加密</strong>——DTLS-SRTP：为什么信令服务器看得到 SDP 却看不到你的画面（<a href="../lessons/0005-dtls-srtp.html">第 5 讲</a>）。</li>
+    <li><strong>容错</strong>——RTP 打包、NACK、抖动缓冲：丢包之后到底发生了什么（<a href="../lessons/0006-rtp-packets.html">第 6 讲</a>）。</li>
+    <li><strong>自适应</strong>——拥塞控制：为什么「糊一下」是算法主动做出的选择（<a href="../lessons/0007-congestion-control.html">第 7 讲</a>）。</li>
+    <li><strong>决策</strong>——拓扑、容量、可观测性：上线前该检查什么（<a href="../lessons/0008-topology-and-cost.html">第 8 讲</a>）。</li>
+  </ol>
+
+  <div class="quiz" aria-label="回顾练习">
+    <span class="card-title">点选项，立刻看解析</span>
+
+    <div class="q">
+      <p class="stem">1. 用 WebSocket（TCP）传实时音视频，最致命的问题是什么？</p>
+      <button type="button" class="opt">带宽开销比 UDP 大很多</button>
+      <button type="button" class="opt" data-correct="true">丢包会阻塞后续包并放大延迟</button>
+      <button type="button" class="opt">浏览器不允许在 TCP 上跑编码</button>
+      <button type="button" class="opt">TCP 无法穿透大多数类型的 NAT</button>
+      <p class="fb" hidden data-explain="TCP 保证有序交付，一个包丢了，后面已到达的包必须等着——队头阻塞。一次重传至少一个 RTT，链路丢包时拥塞窗口还会收缩。于是画质问题变成延迟问题，而对通话来说延迟是致命的：迟到的包等价于丢失的包。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">2. 关于信令服务器能看到什么，哪一句是对的？</p>
+      <button type="button" class="opt">能看到 SDP，也能解密并转发媒体</button>
+      <button type="button" class="opt">看不到 SDP，只能看到候选地址</button>
+      <button type="button" class="opt" data-correct="true">能看到 SDP，但拿不到媒体密钥</button>
+      <button type="button" class="opt">连 SDP 也看不到，只负责计时计费</button>
+      <p class="fb" hidden data-explain="SDP 是明文经过信令的，所以它看得到媒体类型、编解码、候选地址和证书指纹。但媒体密钥是在两端由 DTLS 握手现场导出的，规范还禁止 JS 与信令侧接触密钥材料（RFC 8827）。所以它能「看到谁在跟谁通话」，看不到「谈了什么」。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">3. ICE 把 relay 候选的类型优先级定成 0，含义是什么？</p>
+      <button type="button" class="opt">中继路径质量差所以排在最后</button>
+      <button type="button" class="opt" data-correct="true">直连全部失败才会用中继</button>
+      <button type="button" class="opt">中继只能承载音频不承载视频</button>
+      <button type="button" class="opt">中继必须在 DTLS 之前先建立</button>
+      <p class="fb" hidden data-explain="优先级 0 是刻意设计：只有当所有 host 与 srflx 配对都探测失败，relay 配对才可能被提名。中继「一定通」，代价是绕路、加延迟、并且让服务端承担双向出口带宽。所以它是兜底，不是首选——但也不是罕见，实测约两成会议会用到。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">4. 「实时媒体的第一原则」在工程上对应哪一条做法？</p>
+      <button type="button" class="opt">尽可能提高分辨率以覆盖丢帧</button>
+      <button type="button" class="opt">所有丢包必须重传直到补全为止</button>
+      <button type="button" class="opt">把缓冲时间调大以吸收网络抖动</button>
+      <button type="button" class="opt" data-correct="true">宁可丢掉过期包也不延迟播放</button>
+      <p class="fb" hidden data-explain="迟到的包等价于丢失的包——它已经错过了该显示的时刻。所以 WebRTC 选择 UDP + 选择性重传 + 前向纠错 + 丢包隐藏，而不是无限重传。抖动缓冲确实要留，但它是「在延迟预算内吃掉抖动」，不是「用延迟换完整」。"></p>
+    </div>
+  </div>
+
+  <p class="ask">哪里没说清？<strong>回头直接问你的老师</strong>（那个正在运行本工作区的 agent）。它知道你的目标，可以就任何一句追问下去、举更多例子。</p>
+
+  <p class="foot">
+    <strong>推荐一手资料：</strong>
+    <a href="https://www.rfc-editor.org/rfc/rfc8825.html" target="_blank" rel="noopener">RFC 8825 — Overview: Real-Time Protocols for Browser-Based Applications</a>
+    —— 全文只有二十来页，第 3 节讲「哪些被标准化、哪些被故意留给应用」，是理解 WebRTC 边界最快的一篇；读完这一节，你就不会再问「WebRTC 用什么信令」这种问题了。<br />
+    另见 <a href="https://webrtchacks.com/usage-stats/" target="_blank" rel="noopener">webrtcHacks: The Big Churn — learning from real usage stats</a>
+    —— 本讲的 12% / 85% / 22% / 9% 全部出自这里（callstats.io，2015-01 至 2016-02），是少见的公开真实测量；读的时候留意它的年份与样本口径。<br />
+    相关：<a href="../lessons/0002-sdp-offer-answer.html">第 2 讲 · 协商是一台状态机</a> ·
+    <a href="../reference/0001-glossary.html">概念速查表</a> ·
+    <a href="../MISSION.md">使命</a> ·
+    <a href="../RESOURCES.md">资源清单</a>
+  </p>
+
+<script>
+(function () {
+  var questions = document.querySelectorAll('.quiz .q');
+  for (var i = 0; i < questions.length; i++) {
+    (function (q) {
+      var opts = q.querySelectorAll('.opt');
+      var fb = q.querySelector('.fb');
+      for (var j = 0; j < opts.length; j++) {
+        (function (opt) {
+          opt.addEventListener('click', function () {
+            if (q.dataset.answered === '1') return;
+            q.dataset.answered = '1';
+            for (var k = 0; k < opts.length; k++) {
+              opts[k].disabled = true;
+              if (opts[k].dataset.correct === 'true') opts[k].classList.add('correct');
+            }
+            var ok = opt.dataset.correct === 'true';
+            if (!ok) opt.classList.add('wrong');
+            fb.innerHTML = (ok ? '<b>✓ 对。 </b>' : '<b>✗ 再想一下。 </b>') + fb.dataset.explain;
+            fb.hidden = false;
+          });
+        })(opts[j]);
+      }
+    })(questions[i]);
+  }
+})();
+</script>
+</body>
+</html>

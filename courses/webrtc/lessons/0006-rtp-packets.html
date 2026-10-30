@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 6 讲 · 丢包之后发生了什么</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+  <nav aria-label="讲义导航">
+    <a class="tag" href="../lessons/0005-dtls-srtp.html">← 第 5 讲 · 谁在替你保密</a>
+    <a class="tag" href="../lessons/0007-congestion-control.html">第 7 讲 · 糊一下是算出来的 →</a>
+    <a class="tag" href="../reference/0001-glossary.html">概念速查表</a>
+  </nav>
+
+  <p class="kicker">深入 WebRTC · 第 6 讲</p>
+  <h1>丢包之后发生了什么</h1>
+  <p class="lede">一句话目标：读完这一讲，你能看着一条丢包曲线说清用户此刻看到的是「糊一下」还是「卡死了」，并且知道该先查哪一段。</p>
+
+  <h2>引子：2% 是一个骗人的数字</h2>
+
+  <p>监控面板上 <code>packetsLost</code> 停在 2%，你判断「网络还行」，转头去查前端渲染。用户打来电话：一直卡，每隔几秒画面停一下，还带花屏。</p>
+
+  <p>算一笔账。一帧 30 个包，丢包独立、概率 2%，整帧到齐是 0.98 的 30 次方，约 <strong>55%</strong>；换成 50 个包的关键帧只剩 <strong>36%</strong>。冲突就在这里：<strong>丢包率按包算，观感按帧算</strong>，中间差一到两个数量级。若打掉的正好是关键帧的起始分片，损失不是 33 毫秒，而是「直到下一个关键帧」。</p>
+
+  <p>所以这一讲不讲怎么修网络，只讲<strong>换算</strong>：怎么从包级指标推出帧级观感。起点是 RTP 头里那四个有用的字段。</p>
+
+  <h2>一个 RTP 包头里真正有用的四个字段</h2>
+
+  <p>固定头只有 12 字节，因为每个包都要带它。扣掉版本、填充、扩展这些管理位，承载语义的只有四样。</p>
+
+  <h3>序列号：16 位，每包加一</h3>
+
+  <p>接收端只看两件事：有没有空洞（丢了）、顺序对不对（乱序）。NACK 报的就是「我缺哪几个序列号」。</p>
+
+  <p>取值 0 到 65535。30 帧每秒、每帧 20 个包，约 110 秒绕一圈；码率高时一分钟就绕完。所以<strong>绝不能用「谁大谁新」比较</strong>，必须做模 65536 的差值：前半区算新，后半区算旧。直接比整数，回绕那一刻所有包都会被误判成乱序。</p>
+
+  <h3>时间戳：32 位，单位由采样率决定</h3>
+
+  <p>单位不是秒，是采样率：视频常见 90 kHz，Opus 48 kHz。「一秒」在两个流里对应的数字差近一倍，跨流比较毫无意义。</p>
+
+  <p>它表达「该在播放时间轴的哪一点出现」，不是发送时刻。推论有两个：同一帧的所有包<strong>共享同一时间戳</strong>，所以「时间戳变了」等于「换帧了」，这是 marker 丢失时的兜底；32 位、90 kHz 约 13 小时绕一圈，长会议必现，同样要模运算。</p>
+
+  <h3>SSRC：32 位，一路流一个</h3>
+
+  <p>随机流标识。音频一路、视频一路；RTX 重传又是一个；simulcast 三个分辨率三个。所以<strong>整条连接混算丢包率几乎没有意义</strong>：50 kbps 的音频会被 2 Mbps 的视频稀释。口径必须按 SSRC 分开。</p>
+
+  <h3>PT 与 marker：帧边界在哪</h3>
+
+  <p>PT 是 7 位、最多 128 个值，WebRTC 里由 SDP 动态映射，抓包不能凭编号猜编解码。marker 只有 1 bit，语义是「这一帧的最后一个包」，是接收端还原一帧的收尾信号。它丢了不致命——时间戳变化能兜底——但会让接收端多等一个包才敢交付。</p>
+
+  <blockquote>
+    <p><strong>四个字段，四种职责：序列号管缺不缺，时间戳管什么时候放，SSRC 管是哪一路，PT 与 marker 管帧在哪儿结束。</strong></p>
+    <p><cite>—— 后面所有机制都围着这四件事转。</cite></p>
+  </blockquote>
+
+  <h2>一帧要切成很多包</h2>
+
+  <p>RTP 只负责「一个包装一段字节」，分片由载荷格式规定——所以 RTP 本体与 H.264 载荷是两份文档（RFC 3550 与 RFC 6184）。</p>
+
+  <p>要切是因为 MTU。1500 减去 IP 头 20、UDP 头 8、RTP 头 12，再减 SRTP 的认证标签（常见 10 或 14 字节），剩 1440 上下。但工程上没人敢顶格：PPPoE、VXLAN、IPsec 还要再套一层，超了会被静默丢弃。实践里普遍压在 1200 字节左右。</p>
+
+  <p>于是关系定死了：<strong>帧越大包越多，而且是同时涌出的。</strong> P 帧几 KB、三五个包；I 帧几十到上百 KB、几十个包。这几十个包在编码器交付那一刻一起产生，几毫秒内压进网卡，瞬时速率是平均码率的几十倍。这正是 pacer 存在的理由——不是平均带宽不够，是产出太突发。</p>
+
+  <h3>两种分片风格</h3>
+
+  <p>H.264 用 FU-A：把 NAL 拆片，每片前加两个字节，一个说明「这是分片」，一个带起始位 S、结束位 E 和原始类型。看到 S=1 开始收，E=1 拼回整个 NAL。同一 NAL 的片共享时间戳、序列号连续，缺一片就拼不出来。</p>
+
+  <p>VP8 没有 NAL，而是在每个包前加变长的 payload descriptor，用标志位表示「这是帧的第一个包」（S 位）和分区号；帧边界靠 S 位加 marker 判断。风格不同，后果一样：<strong>数据摊在多个包里，缺一个这帧就残。</strong></p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 660 330" role="img">
+      <title>一帧被切成多个 RTP 包，丢掉其中一个分片，整帧无法重组</title>
+      <defs>
+        <marker id="ar6a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+        </marker>
+      </defs>
+
+      <text class="t-muted" x="16" y="34" font-size="10">发送侧：一帧 ≈ 60 KB，切成 6 个分片（真实场景通常几十个）</text>
+
+      <rect class="f-wash s-accent" x="40" y="44" width="96" height="36" rx="4" />
+      <rect class="f-wash s-accent" x="136" y="44" width="96" height="36" rx="4" />
+      <rect class="f-wash s-accent" x="232" y="44" width="96" height="36" rx="4" />
+      <rect class="f-wash s-accent" x="328" y="44" width="96" height="36" rx="4" />
+      <rect class="f-wash s-accent" x="424" y="44" width="96" height="36" rx="4" />
+      <rect class="f-wash s-accent" x="520" y="44" width="96" height="36" rx="4" />
+
+      <text class="t-accent" x="88" y="67" font-size="10" text-anchor="middle">分片 1</text>
+      <text class="t-accent" x="184" y="67" font-size="10" text-anchor="middle">分片 2</text>
+      <text class="t-accent" x="280" y="67" font-size="10" text-anchor="middle">分片 3</text>
+      <text class="t-accent" x="376" y="67" font-size="10" text-anchor="middle">分片 4</text>
+      <text class="t-accent" x="472" y="67" font-size="10" text-anchor="middle">分片 5</text>
+      <text class="t-accent" x="568" y="67" font-size="10" text-anchor="middle">分片 6</text>
+
+      <path class="s-muted" fill="none" stroke-width="1" d="M88 80 L88 102" marker-end="url(#ar6a)" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M184 80 L184 102" marker-end="url(#ar6a)" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M280 80 L280 102" marker-end="url(#ar6a)" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M376 80 L376 102" marker-end="url(#ar6a)" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M472 80 L472 102" marker-end="url(#ar6a)" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M568 80 L568 102" marker-end="url(#ar6a)" />
+
+      <rect class="f-surface s-rule" x="40" y="106" width="88" height="36" rx="4" />
+      <rect class="f-surface s-rule" x="136" y="106" width="88" height="36" rx="4" />
+      <rect class="f-bg s-muted" x="232" y="106" width="88" height="36" rx="4" stroke-dasharray="4 3" />
+      <rect class="f-surface s-rule" x="328" y="106" width="88" height="36" rx="4" />
+      <rect class="f-surface s-rule" x="424" y="106" width="88" height="36" rx="4" />
+      <rect class="f-surface s-rule" x="520" y="106" width="88" height="36" rx="4" />
+
+      <text x="84" y="122" font-size="9.5" text-anchor="middle">SN 101</text>
+      <text class="t-muted" x="84" y="134" font-size="8.5" text-anchor="middle">M=0</text>
+      <text x="180" y="122" font-size="9.5" text-anchor="middle">SN 102</text>
+      <text class="t-muted" x="180" y="134" font-size="8.5" text-anchor="middle">M=0</text>
+      <text class="t-muted" x="276" y="122" font-size="9.5" text-anchor="middle">SN 103</text>
+      <text class="t-muted" x="276" y="134" font-size="8.5" text-anchor="middle">未到达</text>
+      <text x="372" y="122" font-size="9.5" text-anchor="middle">SN 104</text>
+      <text class="t-muted" x="372" y="134" font-size="8.5" text-anchor="middle">M=0</text>
+      <text x="468" y="122" font-size="9.5" text-anchor="middle">SN 105</text>
+      <text class="t-muted" x="468" y="134" font-size="8.5" text-anchor="middle">M=0</text>
+      <text x="564" y="122" font-size="9.5" text-anchor="middle">SN 106</text>
+      <text class="t-muted" x="564" y="134" font-size="8.5" text-anchor="middle">M=1</text>
+
+      <path class="s-muted" fill="none" stroke-width="1" d="M84 142 L84 176" marker-end="url(#ar6a)" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M180 142 L180 176" marker-end="url(#ar6a)" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M372 142 L372 176" marker-end="url(#ar6a)" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M468 142 L468 176" marker-end="url(#ar6a)" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M564 142 L564 176" marker-end="url(#ar6a)" />
+
+      <rect class="f-surface s-rule" x="40" y="180" width="330" height="86" rx="8" />
+      <text class="t-muted" x="52" y="196" font-size="9.5">接收侧：按序列号往槽位里填</text>
+
+      <rect class="f-bg s-rule" x="52" y="204" width="42" height="30" rx="3" />
+      <rect class="f-bg s-rule" x="102" y="204" width="42" height="30" rx="3" />
+      <rect class="f-bg s-muted" x="152" y="204" width="42" height="30" rx="3" stroke-dasharray="3 3" />
+      <rect class="f-bg s-rule" x="202" y="204" width="42" height="30" rx="3" />
+      <rect class="f-bg s-rule" x="252" y="204" width="42" height="30" rx="3" />
+      <rect class="f-bg s-rule" x="302" y="204" width="42" height="30" rx="3" />
+
+      <text class="t-muted" x="73" y="223" font-size="8.5" text-anchor="middle">101</text>
+      <text class="t-muted" x="123" y="223" font-size="8.5" text-anchor="middle">102</text>
+      <text class="t-muted" x="173" y="223" font-size="8.5" text-anchor="middle">空洞</text>
+      <text class="t-muted" x="223" y="223" font-size="8.5" text-anchor="middle">104</text>
+      <text class="t-muted" x="273" y="223" font-size="8.5" text-anchor="middle">105</text>
+      <text class="t-muted" x="323" y="223" font-size="8.5" text-anchor="middle">106</text>
+
+      <text class="t-muted" x="52" y="254" font-size="9">marker 到了，但缺一片 → 攒不齐</text>
+
+      <path class="s-muted" fill="none" stroke-width="1" d="M370 223 L398 223" marker-end="url(#ar6a)" />
+
+      <rect class="f-bg s-accent" x="402" y="180" width="222" height="86" rx="8" />
+      <text class="t-accent" x="416" y="202" font-size="11">整帧不可解码 → 丢弃</text>
+      <text class="t-muted" x="416" y="220" font-size="9">若丢的是起始分片（S=1），连帧头都没有</text>
+      <text class="t-muted" x="416" y="235" font-size="9">后续 P 帧继续参考它 → 花屏蔓延</text>
+      <text class="t-muted" x="416" y="250" font-size="9">直到下一个关键帧到达才恢复</text>
+
+      <text class="t-muted" x="16" y="300" font-size="10">注意：这 6 个包是同一毫秒产生的。它们不是「均匀铺开」，是「一起砸下来」——这就是 pacer 要解决的问题。</text>
+    </svg>
+    <figcaption>读法：<strong>上半段是发送侧，下半段是接收侧。</strong> 中间少了一个包（SN 103），剩下的全到了，序列号连续、marker 也对——但这一帧依然是废的。RTP 只保证「包」的编号与时刻，不保证「帧」的完整；完整性得接收端自己攒，攒不齐就只能整帧丢弃。</figcaption>
+  </figure>
+
+  <h2>丢一个包，到底损失多少</h2>
+
+  <p>同样丢一个包，后果可以差三个数量级。<strong>丢普通帧的中间分片</strong>：这一帧废掉，但下一帧参考的是上一帧成功解码的画面，参考链没断。代价 33 毫秒，最多觉得画面跳了一下。</p>
+
+  <p><strong>丢关键帧的起始分片</strong>：起始片带着整帧的头信息，缺了整帧作废，而后面每一帧都在等它。解码器拿不到新参考，只能继续显示旧画面（看起来是「卡住」），或者输出残缺的块（看起来是「花屏」、绿块）。这种损伤不会自愈，必须等下一个关键帧。</p>
+
+  <p><strong>丢连续一小段突发</strong>：无线干扰、队列溢出、切换基站，造成的往往不是孤立单包，而是几十毫秒内连丢一串，同时打掉关键帧的多个分片和紧随的 P 帧。这时 NACK 也救不回来——缺的比原始数据还多。</p>
+
+  <p>换算公式就出来了：<strong>帧完好率约等于 (1 − 包丢包率) 的「每帧包数」次方。</strong> 它假设丢包独立，真实网络里丢包成簇，实际通常更糟。但方向足够清楚：每帧包数越多，同样的包丢包率对观感杀伤越强。这就是为什么 4K 比 720p 更怕丢包——不是像素多，是包多。</p>
+
+  <h2>三种补救，代价各不相同</h2>
+
+  <p>缺包只有三条路：补回来、提前备份、编一个替代品。三者花的资源完全不同，选错就是白花钱。</p>
+
+  <table>
+    <thead>
+      <tr><th>手段</th><th>做什么</th><th>花掉什么</th><th>什么时候划算</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>NACK 重传</td><td>报缺哪几个序列号，发送端补发</td><td>至少 1 个 RTT，加重传带宽</td><td>RTT 低、丢包稀疏</td></tr>
+      <tr><td>FEC 前向纠错</td><td>额外发冗余包，丢一个能算回来</td><td>带宽，不花时间</td><td>RTT 高、丢包随机</td></tr>
+      <tr><td>PLC 丢包隐藏</td><td>不补，用算法生成替代</td><td>CPU 与音质，零带宽</td><td>音频、小丢包</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>NACK</strong> 的关键是批量点名：RTCP 里的 NACK 是「起始序列号 + 16 位掩码」，一次能要一段里所有缺的包。它便宜精准，但受物理限制——报缺一个单程、重传一个单程，共一个 RTT。如果这超过了这一帧还能等的余量，补回来也是废包。所以 NACK 的有效性取决于 <strong>RTT 与缓冲深度之比</strong>，而不是丢包率本身。</p>
+
+  <p><strong>FEC</strong> 用带宽换时间：按比例多发冗余，丢了任一个就能反解。它不需要往返，适合高 RTT；代价是常态成本，一个包不丢也照发。实现上有 XOR 型和更灵活的行列式方案，后者能扛连续丢包，但计算与信令都更重。</p>
+
+  <p><strong>PLC</strong> 是最后的遮羞布。音频上很有效，人耳对 20 毫秒的波形替换几乎无感；视频上差得多，猜错就是鬼影，所以通常只做「重复上一帧」。它的价值在于零带宽、零延迟，是所有方案失效时的兜底。</p>
+
+  <p>还有一个工程补充：<strong>RTX</strong>。它不是第四种算法，而是给重传包单开一条流（独立 SSRC、独立 PT）。好处是统计干净，拥塞控制也能区分「补旧账」和「发新数据」，不至于越补越堵。</p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 660 360" role="img">
+      <title>NACK、FEC、PLC 三条补救路径，分别花掉时间、带宽与算法</title>
+      <defs>
+        <marker id="ar6b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+        </marker>
+      </defs>
+
+      <text class="t-muted" x="16" y="24" font-size="10">丢包被察觉之后只有三条路，每条路付出的东西不一样</text>
+
+      <rect class="f-bg s-accent" x="16" y="146" width="104" height="56" rx="8" />
+      <text class="t-accent" x="34" y="170" font-size="11">丢了一个包</text>
+      <text class="t-muted" x="30" y="188" font-size="9">序列号出现空洞</text>
+
+      <path class="s-muted" fill="none" stroke-width="1" d="M120 174 L146 174" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M146 69 L146 285" />
+
+      <path class="s-muted" fill="none" stroke-width="1" d="M146 69 L164 69" marker-end="url(#ar6b)" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M146 177 L164 177" marker-end="url(#ar6b)" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M146 285 L164 285" marker-end="url(#ar6b)" />
+
+      <rect class="f-surface s-rule" x="166" y="40" width="186" height="58" rx="8" />
+      <text x="180" y="64" font-size="11">NACK 选择性重传</text>
+      <text class="t-muted" x="180" y="81" font-size="9">点名要哪几个序列号</text>
+
+      <rect class="f-surface s-rule" x="166" y="148" width="186" height="58" rx="8" />
+      <text x="180" y="172" font-size="11">FEC 前向纠错</text>
+      <text class="t-muted" x="180" y="189" font-size="9">提前发冗余，现场反解</text>
+
+      <rect class="f-surface s-rule" x="166" y="256" width="186" height="58" rx="8" />
+      <text x="180" y="280" font-size="11">PLC 丢包隐藏</text>
+      <text class="t-muted" x="180" y="297" font-size="9">不补，生成一个替代品</text>
+
+      <path class="s-muted" fill="none" stroke-width="1" d="M352 69 L388 69" marker-end="url(#ar6b)" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M352 177 L388 177" marker-end="url(#ar6b)" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M352 285 L388 285" marker-end="url(#ar6b)" />
+
+      <rect class="f-bg s-rule" x="392" y="40" width="246" height="58" rx="8" />
+      <text class="t-accent" x="406" y="64" font-size="11">花掉：1 个 RTT</text>
+      <text class="t-muted" x="406" y="81" font-size="9">赶不上播放时刻就白补</text>
+
+      <rect class="f-bg s-rule" x="392" y="148" width="246" height="58" rx="8" />
+      <text class="t-accent" x="406" y="172" font-size="11">花掉：带宽</text>
+      <text class="t-muted" x="406" y="189" font-size="9">不丢包也照发，常态成本</text>
+
+      <rect class="f-bg s-rule" x="392" y="256" width="246" height="58" rx="8" />
+      <text class="t-accent" x="406" y="280" font-size="11">花掉：CPU 与音质</text>
+      <text class="t-muted" x="406" y="297" font-size="9">零带宽、零延迟，但靠猜</text>
+
+      <text class="t-muted" x="16" y="340" font-size="10">RTX：重传走独立 SSRC 与独立 PT，「补旧账」与「发新数据」在统计上分得开。</text>
+    </svg>
+    <figcaption>读法：<strong>三条路没有优劣，只有「你更缺什么」。</strong> RTT 低就敢等，NACK 最省带宽；RTT 高等不起，只能提前烧带宽做 FEC；两者都不行时，PLC 用算法换时间——它不修复数据，只修复观感。</figcaption>
+  </figure>
+
+  <h2>RTCP 是那条反向的控制通道</h2>
+
+  <p>上面所有补救都需要接收端说话。这条反向通道与 RTP 共用同一条五元组，靠首字节区分：STUN 落在 0–3、DTLS 落在 20–63、RTP 与 RTCP 落在 128–191（RFC 7983）。所以「一个端口跑所有协议」不是巧合，而是被一个字节的区间硬分出来的——这也解释了为什么某些设备改写了载荷首字节，会让整条连接诡异地断掉。</p>
+
+  <ul>
+    <li><strong>SR / RR。</strong> 周期汇报收到了多少、累计丢了多少、最高序列号、抖动估计。RR 还带「上次收到你 SR 的时间」和「我隔了多久才发这份报告」，一减就是 <strong>RTT</strong>——WebRTC 测 RTT 主要靠它，不需要额外探测。</li>
+    <li><strong>NACK。</strong> 走 RTPFB 通道，起始序列号加 16 位掩码，一次点名一段里缺的包。</li>
+    <li><strong>PLI / FIR。</strong> 都是「给我一个关键帧」。PLI 更轻，FIR 可带命令序号。参考链断了之后这是接收端唯一的自救手段：它修不了已丢的数据，只能请求重新开局。</li>
+    <li><strong>REMB。</strong> 接收端告诉发送端「我这条路上能收多少」。简单，但多流聚合时不够精细。</li>
+    <li><strong>TWCC。</strong> 逐包汇报到达时间，发送端因此能把「延迟在涨」归因到具体是哪几个包。第 7 讲的主角。</li>
+  </ul>
+
+  <p>这里有个版本问题要说清。WebRTC 最早用的是 <em>draft</em> 形态的 transport-cc，格式与后来的标准并不完全一致；2021 年的 RFC 8888（CCFB）把这类逐包反馈标准化：RTCP 包类型 205、反馈类型 11，逐包携带序列号、13 位到达时间偏移（单位 1/1024 秒）与 ECN 标记，反馈间隔可工作在 50–200 毫秒。别把两者当成同一个东西——<strong>思路同源，编码不同</strong>，抓包时要按实际协商的扩展去解析。</p>
+
+  <p>反馈间隔值得多想一秒：50 毫秒反应快，但占带宽也占 CPU；200 毫秒省资源，代价是反应慢。它本质上是控制回路的采样率，和抖动缓冲的深度是一对互相牵制的旋钮。</p>
+
+  <h2>抖动缓冲：等，是算出来的</h2>
+
+  <p>包会乱序也会晚到：路径上不同队列、pacer 故意拉开、无线调度不均匀。于是<strong>到达间隔不等于发送间隔</strong>，这就是抖动。要连续播放，就必须攒一段再放，用这段缓冲把抖动吸收掉。</p>
+
+  <p>缓冲太浅，晚到的包赶不上播放时刻，声音就断一下；太深，每句话都晚几百毫秒，对话变得像跨洋直播。所以缓冲深度不是配置项，是<strong>一个持续运行的估计器</strong>：观察最近到达延迟的分布，把水位定在「大多数包都赶得上」的位置，随网络变化不断调整。它做的事很朴素——<strong>在延迟与连续性之间连续做选择</strong>。</p>
+
+  <p>音频侧的实现叫 NetEQ，比「攒一攒再放」多做了一件事：<strong>时间伸缩</strong>。水位偏高就把音频加速几个百分点，不是丢帧，而是在基音周期级别做微小删除；水位偏低就轻微重复。操作在基音周期尺度上，音调不变、人耳听不出来，但时长被拉回来了。这就是为什么音频抖动时听起来「有点怪但不破」，而视频只能硬丢帧。</p>
+
+  <h2>一个可执行的判断</h2>
+
+  <p>把上面的东西压成一张表。前提仍然是：<strong>指标必须按 SSRC 分开看。</strong></p>
+
+  <table>
+    <thead>
+      <tr><th>指标</th><th>正常</th><th>要盯</th><th>说明什么</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>丢包率</td><td>&lt; 1%</td><td>1%–5% 关注，&gt; 5% 严重</td><td>按包算，要换算成帧</td></tr>
+      <tr><td>RTT</td><td>&lt; 100 ms</td><td>100–200 ms 可用，&gt; 300 ms 抢话</td><td>决定 NACK 还能不能用</td></tr>
+      <tr><td>抖动</td><td>&lt; 10 ms</td><td>10–30 ms 可吸收，&gt; 50 ms 加深缓冲</td><td>决定缓冲深度，即延迟</td></tr>
+    </tbody>
+  </table>
+
+  <p>组合判断比看单指标有用得多：</p>
+
+  <ul>
+    <li><strong>高丢包 + 低 RTT + 抖动正常。</strong> 本地链路：Wi-Fi 干扰、网线、家用路由器抢占。换 5G 或有线复测，丢包消失就说明问题在最后一公里。</li>
+    <li><strong>低丢包 + 高抖动。</strong> 包都到了但忽快忽慢。怀疑接收端的缓冲与调度：pacer 参数、标签页被节流、机器在抢 CPU。换网络没用。</li>
+    <li><strong>低丢包 + 高 RTT。</strong> 路太远，或被中继绕了一圈。先看 ICE 选中的是不是 relay，再看 TURN 部署在哪个区域。</li>
+    <li><strong>RTT 剧烈波动</strong>（同一分钟里 40 ms 跳到 300 ms）。路由变化、跨网互联，或者队列在堆积。若 RTT 随码率一起涨，那就是拥塞。</li>
+    <li><strong>三项同时缓慢恶化。</strong> 几乎可以确定是路径拥塞。改编码参数没用，得让拥塞控制降码率。</li>
+  </ul>
+
+  <p>最后一个观测口径的坑：<code>getStats()</code> 里的丢包是<strong>累计值</strong>，直接看只有一条只增不减的曲线，看起来永远在恶化。要算「这一分钟的丢包率」，必须取两次采样做差，并处理 SSRC 变化、重连归零。很多「丢包率 100%」的报警，其实是分母算错了。</p>
+
+  <h2>这些补救都要花带宽</h2>
+
+  <p>回头看：NACK 花重传流量和一个 RTT，FEC 花常态冗余，缓冲花延迟，PLC 花画质。没有一样是免费的。</p>
+
+  <p>而它们全都建立在一个前提上：<strong>发送端知道自己该发多快。</strong> 发得比链路能承受的多，丢包上升，所有补救一起超载，越补越堵；发得比能承受的少，本来可以不糊的画面糊了。这个「该发多快」不是拍脑袋定的，是一套基于到达时间与丢包信号的闭环估计——也就是下一讲：为什么「糊一下」不是故障，而是算法主动做出的选择。</p>
+
+  <div class="quiz" aria-label="回顾练习">
+    <span class="card-title">点选项，立刻看解析</span>
+
+    <div class="q">
+      <p class="stem">1. 监控显示包丢包率只有 2%，用户却说「一直卡」。最合理的解释是？</p>
+      <button type="button" class="opt">监控采样周期太长，漏掉了突发丢包</button>
+      <button type="button" class="opt" data-correct="true">一帧由几十个包组成，丢一个整帧就作废</button>
+      <button type="button" class="opt">2% 已经超过实时音视频的硬性容错上限</button>
+      <button type="button" class="opt">音频和视频共用一个计数，数字被平均</button>
+      <p class="fb" hidden data-explain="包级指标要换算成帧级才有观感意义：每帧 30 个包时，2% 丢包意味着约 45% 的帧残缺。若丢的是关键帧起始分片，损伤会持续到下一个关键帧。「共用计数」是统计口径问题，解释不了这个量级差。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">2. 关于 RTP 的时间戳，哪一句是对的？</p>
+      <button type="button" class="opt">它记录的是发送端发出这个包的绝对时刻</button>
+      <button type="button" class="opt">它是毫秒计数，所以音频视频可以直接比较</button>
+      <button type="button" class="opt">它每包递增，用途和序列号基本重合</button>
+      <button type="button" class="opt" data-correct="true">单位由采样率决定，同一帧的所有包相同</button>
+      <p class="fb" hidden data-explain="时间戳表达的是「该在播放时间轴的哪一点出现」，单位是采样率（视频 90 kHz、Opus 48 kHz），跨流不可比。同一帧的多个包共享同一时间戳，所以「时间戳变化」可以当帧边界的兜底判据。逐包递增的是序列号。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">3. 一条 RTT 约 400 ms 的跨洲链路上，NACK 为什么常常没用？</p>
+      <button type="button" class="opt" data-correct="true">重传往返太久，回来已错过播放时刻</button>
+      <button type="button" class="opt">跨洲链路不支持 RTCP 反馈包的反向传输</button>
+      <button type="button" class="opt">NACK 只能修补音频，不能修补视频分片</button>
+      <button type="button" class="opt">重传包会被 NAT 过滤，回不到接收端</button>
+      <p class="fb" hidden data-explain="NACK 至少要一个 RTT：报缺一个单程、重传回来再一个单程。这超过一帧还能等的余量时，补回来的就是废包——迟到的包等价于丢失的包。所以高 RTT 场景改用 FEC，用带宽换掉这次往返。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">4. RFC 8888 定义的逐包反馈，核心携带的是什么？</p>
+      <button type="button" class="opt">每个包的编码类型与分辨率切换点</button>
+      <button type="button" class="opt">每个包的加密套件与密钥轮换序号</button>
+      <button type="button" class="opt" data-correct="true">每个包的序列号与到达时间偏移</button>
+      <button type="button" class="opt">每个包的发送队列长度与丢包原因</button>
+      <p class="fb" hidden data-explain="CCFB 用 RTCP 包类型 205、反馈类型 11，逐包给出序列号、13 位到达时间偏移（1/1024 秒）与 ECN 标记，间隔可工作在 50–200 ms。发送端因此能把延迟增长归因到具体包。它与早期 draft 版 transport-cc 思路同源、编码不同。"></p>
+    </div>
+  </div>
+
+  <p class="ask">哪里没说清？<strong>回头直接问你的老师</strong>（那个正在运行本工作区的 agent）。它知道你的目标，可以就任何一句追问下去、举更多例子。</p>
+
+  <p class="foot">
+    <strong>推荐一手资料：</strong>
+    <a href="https://www.rfc-editor.org/rfc/rfc3550.html" target="_blank" rel="noopener">RFC 3550 — RTP</a>
+    —— 只读三处就够：第 5.1 节（固定头的每个字段，含序列号回绕的比较规则）、第 6.4.1 与 6.4.2 节（SR / RR 报了哪些数、RTT 怎么算出来）、附录 A.8（抖动估计的递推公式，其实就是一个指数滑动平均）。这三处读完，监控面板上那几列数字就都有出处了。<br />
+    <strong>接着读：</strong>
+    <a href="https://www.rfc-editor.org/rfc/rfc6184.html" target="_blank" rel="noopener">RFC 6184 — H.264 载荷</a>
+    第 5.8 节（FU-A 的字节布局，S/E 位在哪），以及
+    <a href="https://www.rfc-editor.org/rfc/rfc7741.html" target="_blank" rel="noopener">RFC 7741 — VP8 载荷</a>
+    第 4.2 节（payload descriptor 的各个标志位）。两者对照着看，「分片」就跟编解码无关了，只剩打包约定。<br />
+    <strong>反馈格式：</strong>
+    <a href="https://www.rfc-editor.org/rfc/rfc8888.html" target="_blank" rel="noopener">RFC 8888 — RTCP Feedback for Congestion Control</a>
+    第 3 节是包格式，第 4 节讲发送端怎么用它估计可用带宽，正好接上第 7 讲。<br />
+    相关：<a href="../lessons/0005-dtls-srtp.html">第 5 讲 · 谁在替你保密</a> ·
+    <a href="../lessons/0007-congestion-control.html">第 7 讲 · 糊一下是算出来的</a> ·
+    <a href="../reference/0001-glossary.html">概念速查表</a> ·
+    <a href="../MISSION.md">使命</a> ·
+    <a href="../RESOURCES.md">资源清单</a>
+  </p>
+
+<script>
+(function () {
+  var questions = document.querySelectorAll('.quiz .q');
+  for (var i = 0; i < questions.length; i++) {
+    (function (q) {
+      var opts = q.querySelectorAll('.opt');
+      var fb = q.querySelector('.fb');
+      for (var j = 0; j < opts.length; j++) {
+        (function (opt) {
+          opt.addEventListener('click', function () {
+            if (q.dataset.answered === '1') return;
+            q.dataset.answered = '1';
+            for (var k = 0; k < opts.length; k++) {
+              opts[k].disabled = true;
+              if (opts[k].dataset.correct === 'true') opts[k].classList.add('correct');
+            }
+            var ok = opt.dataset.correct === 'true';
+            if (!ok) opt.classList.add('wrong');
+            fb.innerHTML = (ok ? '<b>✓ 对。 </b>' : '<b>✗ 再想一下。 </b>') + fb.dataset.explain;
+            fb.hidden = false;
+          });
+        })(opts[j]);
+      }
+    })(questions[i]);
+  }
+})();
+</script>
+</body>
+</html>

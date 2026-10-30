@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 3 讲 · 候选、检查与提名</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+  <nav aria-label="讲义导航">
+    <a class="tag" href="../lessons/0002-sdp-offer-answer.html">← 第 2 讲 · 协商是一台状态机</a>
+    <a class="tag" href="../lessons/0004-nat-traversal.html">第 4 讲 · NAT 的真实行为 →</a>
+    <a class="tag" href="../reference/0001-glossary.html">概念速查表</a>
+  </nav>
+
+  <p class="kicker">深入 WebRTC · 第 3 讲</p>
+  <h1>候选、检查与提名</h1>
+  <p class="lede">一句话目标：读完这一讲，看到 <code>iceConnectionState</code> 卡在 <code>checking</code> 或落到 <code>failed</code> 时，你能列出「该看哪些候选、哪些配对被测过、为什么没成」，而不是盲目加一个 TURN 服务器碰运气。</p>
+
+  <h2>引子：六个状态，九成的人只看两个</h2>
+
+  <p>上一讲我们把 SDP 送过去了，两端都 <code>setRemoteDescription</code> 成功。接下来浏览器在做什么？<code>iceConnectionState</code> 会依次经过 <code>new</code> → <code>checking</code> → <code>connected</code> → <code>completed</code>，也可能掉到 <code>disconnected</code> 或 <code>failed</code>。</p>
+
+  <p>绝大多数人只关心 <code>connected</code> 和 <code>failed</code>。但排障真正需要的信息藏在中间：<strong>它收集到了哪些候选？测了哪些配对？哪个配对赢了？</strong> 这三件事决定了一次失败的连接是「收集阶段就没拿到可用地址」还是「拿到了但全被网络拒绝」——这两种病的处方完全不同。</p>
+
+  <h2>候选是什么：同一个自己，三种自我介绍</h2>
+
+  <p>ICE 的第一步是「穷举我可能被联系到的方式」。注意这个措辞：不是「我的地址」，而是「<strong>别人可能用哪个地址找到我</strong>」。因为处在 NAT 后面时，这两者根本不是一回事。</p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 460 252" role="img">
+      <title>三类候选的产生方式：本机网卡、STUN 服务器、TURN 服务器</title>
+      <defs>
+        <marker id="ar3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+        </marker>
+      </defs>
+
+      <rect class="f-bg s-accent" x="16" y="98" width="96" height="52" rx="7" />
+      <text class="t-accent" x="34" y="118" font-size="12">本机</text>
+      <text class="t-muted" x="28" y="135" font-size="10">192.168.1.20</text>
+
+      <rect class="f-bg s-rule" x="250" y="40" width="194" height="40" rx="7" />
+      <text x="262" y="56" font-size="11">host 候选</text>
+      <text class="t-muted" x="262" y="70" font-size="10">网卡地址，同网段直连时有用</text>
+
+      <rect class="f-bg s-rule" x="250" y="104" width="194" height="40" rx="7" />
+      <text x="262" y="120" font-size="11">srflx 候选</text>
+      <text class="t-muted" x="262" y="134" font-size="10">问 STUN「我外面长什么样」</text>
+
+      <rect class="f-bg s-rule" x="250" y="168" width="194" height="40" rx="7" />
+      <text x="262" y="184" font-size="11">relay 候选</text>
+      <text class="t-muted" x="262" y="198" font-size="10">向 TURN 申请一个转发地址</text>
+
+      <text class="t-muted" x="150" y="52" font-size="10">枚举网卡</text>
+      <text class="t-muted" x="150" y="116" font-size="10">STUN 服务器</text>
+      <text class="t-muted" x="150" y="180" font-size="10">TURN 服务器</text>
+
+      <path class="s-muted" fill="none" stroke-width="1" d="M112 112 L150 112 L150 66 L246 66" marker-end="url(#ar3)" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M112 124 L246 124" marker-end="url(#ar3)" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M112 136 L150 136 L150 178 L246 178" marker-end="url(#ar3)" />
+    </svg>
+    <figcaption>读法：<strong>三种候选不是三个地址，是三条「被找到」的路径。</strong> 每条路径的代价不同——host 免费但只在同网段有效；srflx 便宜但要求 NAT 行为配合；relay 一定能通，因为你已经付了钱让一台服务器替你转发。收集顺序与优先级无关，ICE 是<strong>并发收集、并发探测</strong>。</figcaption>
+  </figure>
+
+  <p>还有第四类，也是最容易被忽略的：<strong>peer-reflexive（prflx）</strong>。它不出现在任何一方发出的 SDP 里——而是在探测过程中，某方收到一个来自「意料之外地址」的合法 STUN 请求时，临时把这个源地址记为一个候选。它的存在解释了很多「SDP 里明明没有这个地址，为什么它连上了」的困惑，也解释了为什么<strong>单看 SDP 猜不出最终路径</strong>。</p>
+
+  <h3>host 候选为什么常常看起来「没用」</h3>
+
+  <p>你在 `chrome://webrtc-internals` 里会看到一堆形如 <code>a1b2c3d4-....local</code> 的 host 候选，而不是 <code>192.168.x.x</code>。这是浏览器的隐私设计：用 mDNS 把内网地址藏起来，只有同一局域网内的对端能解析出真实地址，网页脚本拿不到。所以「我看到很多 .local，是不是有问题」——不是，那通常是正常的。</p>
+
+  <h2>优先级：那个决定谁先被信任的 32 位数</h2>
+
+  <p>每个候选带一个 32 位优先级，RFC 8445 给的构造方式是<strong>三段拼接</strong>：</p>
+
+  <pre><code>priority = (2^24) × 类型偏好 + (2^8) × 本地偏好 + (256 − 组件 ID)</code></pre>
+
+  <p>类型偏好占最高的 8 位，所以<strong>它基本决定了一切排序</strong>。规范建议的取值是：</p>
+
+  <table>
+    <thead>
+      <tr><th>候选类型</th><th>建议优先级</th><th>什么时候胜出</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>host</td><td>126</td><td>两端在同一局域网或同一台机器</td></tr>
+      <tr><td>peer-reflexive</td><td>110</td><td>探测中意外发现的直连路径</td></tr>
+      <tr><td>server-reflexive</td><td>100</td><td>典型的「两边都在家用路由器后面」</td></tr>
+      <tr><td>relay</td><td>0</td><td>所有直连配对都失败之后</td></tr>
+    </tbody>
+  </table>
+
+  <p>注意 relay 是 <strong>0</strong>，不是 1。这不是「稍微差一点」，而是「除非别无选择」。但「优先级最低」绝不等于「罕见」——上一讲那组实测数据里，22% 的会议最终需要中继。优先级描述的是<strong>偏好</strong>，不是<strong>概率</strong>。这两件事被混淆，是很多容量规划出错的起点。</p>
+
+  <h2>配对与检查：真正决定成败的一步</h2>
+
+  <p>拿到双方的候选之后，ICE 会把它们两两配对，形成一个 checklist，然后<strong>按优先级从高到低逐个发起 STUN Binding 请求</strong>。这一步才是在回答「这条路到底通不通」。</p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 460 246" role="img">
+      <title>候选配对矩阵：九个配对里哪些被探测、哪一个最终胜出</title>
+      <text class="t-muted" x="120" y="34" font-size="10">B 的 host</text>
+      <text class="t-muted" x="192" y="34" font-size="10">B 的 srflx</text>
+      <text class="t-muted" x="264" y="34" font-size="10">B 的 relay</text>
+
+      <text class="t-muted" x="8" y="70" font-size="10">A 的 host</text>
+      <text class="t-muted" x="8" y="124" font-size="10">A 的 srflx</text>
+      <text class="t-muted" x="8" y="178" font-size="10">A 的 relay</text>
+
+      <rect class="f-rule" x="72" y="52" width="64" height="40" rx="5" />
+      <rect class="f-rule" x="144" y="52" width="64" height="40" rx="5" />
+      <rect class="f-rule" x="216" y="52" width="64" height="40" rx="5" />
+      <rect class="f-rule" x="72" y="100" width="64" height="40" rx="5" />
+      <rect class="f-wash" x="144" y="100" width="64" height="40" rx="5" />
+      <rect class="s-accent" fill="none" stroke-width="1.6" x="144" y="100" width="64" height="40" rx="5" />
+      <rect class="f-rule" x="216" y="100" width="64" height="40" rx="5" />
+      <rect class="f-rule" x="72" y="148" width="64" height="40" rx="5" />
+      <rect class="f-rule" x="144" y="148" width="64" height="40" rx="5" />
+      <rect class="f-rule" x="216" y="148" width="64" height="40" rx="5" />
+
+      <text class="t-muted" x="104" y="76" font-size="9" text-anchor="middle">✗ 不同网段</text>
+      <text class="t-muted" x="176" y="76" font-size="9" text-anchor="middle">✗ 超时</text>
+      <text class="t-muted" x="248" y="76" font-size="9" text-anchor="middle">✗ 超时</text>
+      <text class="t-muted" x="104" y="124" font-size="9" text-anchor="middle">✗ 超时</text>
+      <text class="t-accent" x="176" y="118" font-size="9" text-anchor="middle">✓ 双向通</text>
+      <text class="t-accent" x="176" y="132" font-size="9" text-anchor="middle">已提名</text>
+      <text class="t-muted" x="248" y="124" font-size="9" text-anchor="middle">✓ 但优先级低</text>
+      <text class="t-muted" x="104" y="172" font-size="9" text-anchor="middle">✓ 但优先级低</text>
+      <text class="t-muted" x="176" y="172" font-size="9" text-anchor="middle">✓ 但优先级低</text>
+      <text class="t-muted" x="248" y="172" font-size="9" text-anchor="middle">✓ 优先未测</text>
+
+      <text class="t-muted" x="304" y="80" font-size="10">先测高优先级</text>
+      <text class="t-muted" x="304" y="96" font-size="10">通了还要双向</text>
+      <text class="t-muted" x="304" y="112" font-size="10">通了才提名</text>
+      <text class="t-muted" x="304" y="128" font-size="10">其余可跳过</text>
+    </svg>
+    <figcaption>读法：<strong>3×3 只是示意，真实情况下候选可能有十几个、配对上百个。</strong> 关键在两点：一是「成功」要求<strong>双向</strong>都通（A 能打过去，B 也能打回来），因为 NAT 的过滤方向是不对称的；二是「通了」不等于「被用」——ICE 会沿着优先级往下测，直到拿到一个成功配对并<strong>提名</strong>，之后才会停止。图里那些「✓ 但优先级低」的格子，正是<strong>「明明能连，为什么不用那条」的答案</strong>。</figcaption>
+  </figure>
+
+  <p>这里有两个容易被忽略的细节，都直接影响排障判断：</p>
+
+  <p><strong>其一，foundation 相同的配对只测一次。</strong> 多个候选可能共享同一个 foundation（意思是「它们的底层网络路径其实一样」），ICE 会去重，避免重复探测。所以「测了 8 个配对」可能对应 30 个组合。</p>
+
+  <p><strong>其二，检查是有节奏的。</strong> 探测请求按优先级排程，还被一个往返时间估计（Ta 间隔）节流。这意味着<strong>候选越多，越可能拖慢收敛</strong>——一次性给 50 个候选并不比给 8 个更快。这是「收集要克制」的技术理由。</p>
+
+  <h2>Trickle ICE：为什么不能等收集完再发</h2>
+
+  <p>最早的 ICE 要求「候选收集全部完成后，才把 SDP 发出去」。代价是：TURN 分配往往是最慢的一步（要往返服务器、可能几百毫秒），整条链路都得等它。</p>
+
+  <p>Trickle ICE（RFC 8838）把它拆开：<strong>先把不含候选的 SDP 发出去，之后每收集到一个候选就补发一条</strong>，对方立刻就能开始探测。于是连接建立从「等最慢的那个」变成「前几个一到就开始测」。这就是为什么现代实现能在一秒内出画面——不是协议变快了，是<strong>流水线化</strong>了。</p>
+
+  <p>代价是信令要能承载「流式更新」，以及要处理「候选先到、SDP 后到」这种乱序情形。自己实现信令的人在这里踩坑最多：只发了一条 <code>offer</code>，没实现后续的 candidate 消息通道，结果就是「不报错，但经常连不上」。</p>
+
+  <h2>连不上时，按这个顺序看</h2>
+
+  <ol class="flow">
+    <li><strong>候选有没有收集到。</strong> 如果只有 host、没有 srflx 和 relay，说明 STUN/TURN 配置没生效或不可达——这时换网络策略没用，先修配置。</li>
+    <li><strong>有没有 relay 候选。</strong> 如果连 relay 都没有，那么在企业网络或对称 NAT 后面必然失败，且没有任何退路。</li>
+    <li><strong>配对有没有被测。</strong> 有候选但 checklist 是空的，通常是信令层没把候选送过去（Trickle 通道没实现）。</li>
+    <li><strong>测了但全失败。</strong> 这是真正的网络拒绝：UDP 被封、端口不通、或者两侧 NAT 都不配合。此时唯一的出路是 TURN（下一讲讲为什么）。</li>
+    <li><strong>曾经 connected 后来变 disconnected。</strong> 这不是建立失败，是路径失效（切网、NAT 映射超时）。需要 ICE restart，而不是重建整个 PeerConnection。</li>
+  </ol>
+
+  <p>还有一个语义上的区别值得记住：<code>iceConnectionState</code> 描述的是<strong>传输层</strong>的连通性，<code>connectionState</code> 描述的是<strong>整个 PeerConnection</strong>（含 DTLS）。所以「ICE connected 但没有画面」不是矛盾，而是卡在了下一层——这正是下一讲之后要讲的加密握手。</p>
+
+  <div class="quiz" aria-label="回顾练习">
+    <span class="card-title">点选项，立刻看解析</span>
+
+    <div class="q">
+      <p class="stem">1. 为什么 relay 候选的类型优先级被定成 0？</p>
+      <button type="button" class="opt">中继画质必然低于直连路径</button>
+      <button type="button" class="opt" data-correct="true">直连全部失败后才允许选中继</button>
+      <button type="button" class="opt">中继无法承载视频只承载音频</button>
+      <button type="button" class="opt">中继需要额外的加密握手步骤</button>
+      <p class="fb" hidden data-explain="优先级 0 意味着只要还有任何一个更高优先级的配对能通，中继就不会被提名。这是刻意的成本控制：中继要绕路、加延迟，还要让服务器承担双向出口带宽。但「优先级最低」不等于「用得少」——实测约两成会议会落到中继。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">2. 一个配对被判为「成功」，必须满足什么条件？</p>
+      <button type="button" class="opt">一方向另一方发出请求并收到响应</button>
+      <button type="button" class="opt" data-correct="true">两个方向都能收到对方发来的包</button>
+      <button type="button" class="opt">双方候选优先级完全相等才成立</button>
+      <button type="button" class="opt">双方都位于同一运营商网络之内</button>
+      <p class="fb" hidden data-explain="NAT 的过滤是不对称的：我发出去的包会打开一个出站映射，但不代表你从另一个地址发来的包也能进来。所以连通性检查要求双向都通，否则会出现「我这边显示已连接、对方完全收不到」的经典单通故障。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">3. Trickle ICE 真正省下的是什么？</p>
+      <button type="button" class="opt">省掉了 STUN 与 TURN 的往返时间</button>
+      <button type="button" class="opt" data-correct="true">不再等最慢的候选收集完才开工</button>
+      <button type="button" class="opt">减少了需要发送的 SDP 报文总长度</button>
+      <button type="button" class="opt">降低了中继服务器承担的转发流量</button>
+      <p class="fb" hidden data-explain="它把「收集完再发」改成「边收集边发」，于是前面几个候选一到就可以开始探测，不用等最慢的 TURN 分配。协议本身没有变快，省下的是流水线里的等待。代价是信令必须支持流式追加候选，并处理乱序到达。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">4. 有 host 和 srflx 候选，但 checklist 一个配对都没测，最可能是？</p>
+      <button type="button" class="opt">对方的 NAT 类型属于对称型 NAT</button>
+      <button type="button" class="opt" data-correct="true">候选根本没通过信令送到对方</button>
+      <button type="button" class="opt">双方的编解码器协商没有成功</button>
+      <button type="button" class="opt">DTLS 证书指纹校验失败了</button>
+      <p class="fb" hidden data-explain="ICE 的输入只有两样：自己的候选、对方的候选。如果本地收集正常却没有任何配对，说明对方的候选没到自己手上——典型原因是只发了 offer、没有实现后续的 candidate 消息通道（Trickle 通道缺失）。这种「不报错但经常连不上」最难查。"></p>
+    </div>
+  </div>
+
+  <p class="ask">哪里没说清？<strong>回头直接问你的老师</strong>（那个正在运行本工作区的 agent）。它知道你的目标，可以就任何一句追问下去、举更多例子。</p>
+
+  <p class="foot">
+    <strong>推荐一手资料：</strong>
+    <a href="https://www.rfc-editor.org/rfc/rfc8445.html" target="_blank" rel="noopener">RFC 8445 — Interactive Connectivity Establishment (ICE)</a>
+    —— 不必通读。按这个顺序看三处：第 5.1.2 节（候选与优先级怎么算，含那个 32 位公式）、第 6 节（配对与 checklist 的执行）、第 7 节（提名）。看完你会明白「为什么明明能连却用了中继」这类问题在规范里都有明确答案。<br />
+    接着读 <a href="https://www.rfc-editor.org/rfc/rfc8838.html" target="_blank" rel="noopener">RFC 8838 — Trickle ICE</a>
+    —— 只有十几页，讲清楚「为什么可以边收集边发」，以及 <code>end-of-candidates</code> 的确切语义。<br />
+    相关：<a href="../lessons/0002-sdp-offer-answer.html">第 2 讲 · 协商是一台状态机</a> ·
+    <a href="../lessons/0004-nat-traversal.html">第 4 讲 · NAT 的真实行为</a> ·
+    <a href="../reference/0001-glossary.html">概念速查表</a> ·
+    <a href="../reference/0002-debug-ladder.html">排障阶梯</a>
+  </p>
+
+<script>
+(function () {
+  var questions = document.querySelectorAll('.quiz .q');
+  for (var i = 0; i < questions.length; i++) {
+    (function (q) {
+      var opts = q.querySelectorAll('.opt');
+      var fb = q.querySelector('.fb');
+      for (var j = 0; j < opts.length; j++) {
+        (function (opt) {
+          opt.addEventListener('click', function () {
+            if (q.dataset.answered === '1') return;
+            q.dataset.answered = '1';
+            for (var k = 0; k < opts.length; k++) {
+              opts[k].disabled = true;
+              if (opts[k].dataset.correct === 'true') opts[k].classList.add('correct');
+            }
+            var ok = opt.dataset.correct === 'true';
+            if (!ok) opt.classList.add('wrong');
+            fb.innerHTML = (ok ? '<b>✓ 对。 </b>' : '<b>✗ 再想一下。 </b>') + fb.dataset.explain;
+            fb.hidden = false;
+          });
+        })(opts[j]);
+      }
+    })(questions[i]);
+  }
+})();
+</script>
+</body>
+</html>

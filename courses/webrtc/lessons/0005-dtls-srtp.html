@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 5 讲 · 谁在替你保密</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+  <nav aria-label="讲义导航">
+    <a class="tag" href="../lessons/0004-nat-traversal.html">← 第 4 讲 · NAT 的真实行为</a>
+    <a class="tag" href="../lessons/0006-rtp-packets.html">第 6 讲 · 丢包之后发生了什么 →</a>
+    <a class="tag" href="../reference/0001-glossary.html">概念速查表</a>
+  </nav>
+
+  <p class="kicker">深入 WebRTC · 第 5 讲</p>
+  <h1>谁在替你保密</h1>
+  <p class="lede">一句话目标：读完这一讲，你能把「能不能通」「对面是谁」「内容保不保密」拆成三个独立问题，分别说清 DTLS 与 SRTP 各证明了什么、证明不了什么，并在客户面前准确地画出「端到端」这条线停在哪里。</p>
+
+  <h2>引子：一个被混成一句话的三个问题</h2>
+
+  <p>安全评审会上，第一个问题几乎总是同一句：你们的通话加密了吗？问的人以为这是一个问题，其实里面装着三个彼此独立的问题——<strong>能不能通</strong>、<strong>对面是谁</strong>、<strong>内容保不保密</strong>。三件事由三段不同的机制回答，答案可以完全不同。</p>
+
+  <p>最常见的僵局是这样的：你说「加密了」，对方接着问「那你们的服务器能看到画面吗」，你说「能看到」，对方立刻认为你在撒谎。其实两句话都对——加密到某一条边界为止，而边界画在哪里是<strong>架构</strong>决定的，不是加密算法决定的。</p>
+
+  <p>把三件事混成一件，安全讨论就永远收不了尾：你会拿「有没有 TLS」去回答「服务器能不能看内容」，拿「用了 SRTP」去回答「对面是不是真人」。这一讲只做一件事——把它们拆开，逐段说清每一段证明了什么、证明不了什么。</p>
+
+  <h2>为什么要在 UDP 上重新实现一遍 TLS</h2>
+
+  <p>TLS 有一条隐含前提：底层是<strong>可靠、有序</strong>的字节流。记录层可以假设「发出去的顺序就是收到的顺序」，丢了自然有人重传——那是 TCP 的活。UDP 把这条前提全部撤掉：记录会丢、会乱序、会重复，甚至一个握手消息本身就装不进一个包。</p>
+
+  <p>DTLS 的工作就是把这些假设一条条补回来：给每条记录加显式序号，让接收方知道丢了哪一条；按 epoch 给密钥分期，迟到的重传记录不会用错密钥；用定时器重传整个 flight（一来一回的一组消息）；把跨越多个包的握手消息重新拼装。RFC 5764 之所以存在，正是因为 SRTP 需要一个能跑在 UDP 上的密钥交换，而 TLS 跑不了。</p>
+
+  <p>代价很直接：<strong>握手更慢、更脆</strong>。一次完整握手要一到两个 RTT，任何一组消息丢了都要等超时重传，而超时是秒级的。证书链一大，握手消息就可能超过路径 MTU，被拆成多个 UDP 包——其中任意一个被中间设备丢掉，整轮握手就得从头再来。这就是「弱网下 DTLS 特别容易卡住」的机制来源，不是玄学。</p>
+
+  <h2>身份是怎么被绑住的：不是证书，是哈希</h2>
+
+  <p>每一端在建立连接时生成一对临时密钥，并用私钥签一张<strong>自签证书</strong>。自签这两个字很重要：没有 CA，没有任何第三方为这张证书背书，证书上写什么完全不重要——任何人都能生成一张写着「我是某某银行」的证书。</p>
+
+  <p>那它凭什么能证明身份？靠的不是证书本身，是<strong>哈希</strong>。端点把自己证书的哈希（指纹，SHA-256）写进 SDP 的 <code>a=fingerprint:sha-256</code> 这一行，随 SDP 经信令到达对面。DTLS 握手时对端出示证书，本地算一遍哈希，和 SDP 里那串比。一致，说明「正在和我握手的这个实体，持有信令里那个身份对应的私钥」；不一致，立刻中止。</p>
+
+  <p>这就是那句话的完整含义：<strong>用一条不安全的信道，传递一个安全的身份锚点。</strong> 信令本身可以是明文的、可以被记录的、可以被中间代理转发的——它只需要保证一件事：那串指纹没有被改。证书不必可信，哈希必须一致。于是「信令被篡改」不再表现为悄无声息的中间人，而表现为一次响亮的握手失败。</p>
+
+  <p>边界也要说清。如果攻击者既能改写双向的 SDP，又能在媒体路径上终止 DTLS（自己扮演端点），它就可以把两边的指纹都换成自己的，握手会「成功」，中间人就成立了。所以<strong>信令必须鉴权</strong>（WSS + 登录态 + 服务端不把别人的 SDP 转给你），高保证场景还要带外核对指纹。DTLS-SRTP 保证的是「媒体不被路上的人偷看」，不是「你不会被自己信任的服务器骗」。</p>
+
+  <h2><code>a=setup</code>：谁先开口</h2>
+
+  <p>SDP 里还有一行决定握手的方向，叫 <code>a=setup</code>，只有三个值。<code>actpass</code> 的意思是「我既可以当客户端也可以当服务端，你定」；<code>active</code> 是「我来发起」；<code>passive</code> 是「我等着」。</p>
+
+  <p>规则是：offer 方一般写 <code>actpass</code>，answer 方必须选一个确定角色，<strong>不能回 actpass</strong>。原因是 DTLS 有客户端与服务端之分，双方同时发 ClientHello 会撞车——两个握手交叉进行，角色冲突，最后谁也完不成。必须有一方让步，而且这个让步必须落在答案里，不能留给对方去猜。</p>
+
+  <p>这一行看起来琐碎，却是自研网关和 SIP 互通时最常踩的坑：两边模板都写着 <code>active</code>，或者都被写死成 <code>passive</code>。现象是 ICE 明明 connected，DTLS 一动不动，日志里连一条明确的报错都没有——因为双方都在等对方先开口。</p>
+
+  <h2>密钥从哪来：一次现场计算，全程不上网</h2>
+
+  <p>握手完成的那一刻，双方各自算出了同一份 master secret。注意这份秘密<strong>从来没有上过网</strong>：它由密钥交换在现场算出来，任何旁观者都拿不到。</p>
+
+  <p>接下来按 RFC 5764 的规定做一次 exporter 导出，标签是 <code>EXTRACTOR-dtls_srtp</code>，得到 SRTP 的主密钥与盐；再按 RFC 3711 的密钥派生，切成发送与接收两个方向各自的加密密钥、认证密钥与盐。从这一刻起，每个 RTP 包都被加密并带完整性校验。</p>
+
+  <p>所以「通了」有两个层次。<strong>ICE connected 只证明包能双向到达</strong>——它连对面是不是人都证明不了，一个占着端口的其他服务也能让 ICE 成功。<strong>DTLS 完成才证明对面是谁</strong>，并且从这一刻起才有密钥。浏览器里这是两个独立状态，排障时必须分开看。</p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 680 300" role="img">
+      <title>三段证明：ICE 证明路能通，DTLS 证明对面是谁并导出密钥，SRTP 才负责保密</title>
+      <defs>
+        <marker id="ar5a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+        </marker>
+      </defs>
+
+      <rect class="f-bg s-accent" x="14" y="26" width="204" height="146" rx="9" />
+      <text class="t-accent" x="30" y="50" font-size="12.5">① ICE / STUN</text>
+      <text x="30" y="74" font-size="11">证明了：这条路能通</text>
+      <text class="t-muted" x="30" y="94" font-size="10.5">没证明：对面是谁</text>
+      <text class="t-muted" x="30" y="112" font-size="10.5">没证明：内容安全</text>
+      <text class="t-muted" x="30" y="150" font-size="10">耗时：几十毫秒到数秒</text>
+
+      <rect class="f-bg s-accent" x="238" y="26" width="204" height="146" rx="9" />
+      <text class="t-accent" x="254" y="50" font-size="12.5">② DTLS 握手</text>
+      <text x="254" y="74" font-size="11">证明了：它持有私钥</text>
+      <text x="254" y="92" font-size="11">顺带：导出 SRTP 密钥</text>
+      <text class="t-muted" x="254" y="112" font-size="10.5">没证明：媒体已经开始</text>
+      <text class="t-muted" x="254" y="150" font-size="10">耗时：1–2 个 RTT，可能重传</text>
+
+      <rect class="f-bg s-accent" x="462" y="26" width="204" height="146" rx="9" />
+      <text class="t-accent" x="478" y="50" font-size="12.5">③ SRTP / SRTCP</text>
+      <text x="478" y="74" font-size="11">证明了：只有两端能读</text>
+      <text class="t-muted" x="478" y="94" font-size="10.5">前提：② 已经完成</text>
+      <text class="t-muted" x="478" y="112" font-size="10.5">钥匙来自 ② 的导出</text>
+      <text class="t-muted" x="478" y="150" font-size="10">耗时：0，直接开始传</text>
+
+      <path class="s-muted" fill="none" stroke-width="1.1" d="M218 99 L234 99" marker-end="url(#ar5a)" />
+      <path class="s-muted" fill="none" stroke-width="1.1" d="M442 99 L458 99" marker-end="url(#ar5a)" />
+
+      <rect class="f-bg s-rule" x="14" y="196" width="652" height="58" rx="9" />
+      <text x="30" y="220" font-size="11">顺序不可交换：DTLS 只能跑在 ICE 打通的那条路上，SRTP 的密钥只能从 DTLS 导出。</text>
+      <text class="t-muted" x="30" y="240" font-size="10.5">① 失败 → 没有 ②；② 失败 → 没有密钥 → ③ 无从谈起，媒体一帧都不会出现。</text>
+
+      <text class="t-muted" x="14" y="282" font-size="10">同一个端口靠首字节分流：0–3 是 STUN，20–63 是 DTLS，128–191 是 RTP 与 RTCP（RFC 7983）。</text>
+    </svg>
+    <figcaption>三段是<strong>串联</strong>关系，不是并列关系。所以「媒体不通」这句话没有信息量——必须指出断在第几段：断在 ① 是网络问题，断在 ② 是身份或路径问题，断在 ③ 才是密钥或解包问题。<strong>把 ② 的失败误判成 ① 的失败，是这一类排障里最常见的错。</strong></figcaption>
+  </figure>
+
+  <p>顺带解释一个常被问的问题：为什么 ICE、DTLS、RTP 能挤在同一个 UDP 端口上？因为首字节就足够分类（RFC 7983），抓包时看一眼就能判断这是哪一类包——这也是「防火墙只放行一个端口」在 WebRTC 里可行的原因。数据通道也一样：它是 SCTP over DTLS（RFC 8831、RFC 4960），复用的还是这条已经加密的管道，既不需要第二套密钥，也没有第二套身份。</p>
+
+  <h2>为什么禁止 SDES：钥匙不能和锁一起寄</h2>
+
+  <p>在 DTLS-SRTP 之前，业界有过一个更省事的方案叫 SDES：把密钥直接写在 SDP 的 <code>a=crypto</code> 行里，随信令一起送过去。省掉整个握手，一个 RTT 都不用多花。</p>
+
+  <p>代价是灾难性的：<strong>任何拿到 SDP 的人都能解密媒体</strong>。信令服务器、信令日志、抓包文件、中间的 SIP 代理、被临时授权排查问题的运维——全都能听。这等于把锁和钥匙一起贴在门上，然后宣称门是锁着的。</p>
+
+  <p>WebRTC 明确禁用 SDES。这也是它和老式 SIP 电话在安全上的分水岭：大量企业 SIP 部署用的正是 SDES 或明文 RTP，所以「我们的电话是加密的」这句话，在那种环境里往往只对了一半——加密的是某一段链路，不是端到端。</p>
+
+  <p>顺便拆掉一个常见误解：SRTP 本身不负责交换密钥，它只是一个「给定密钥、加密 RTP」的箱子。DTLS-SRTP 与 SDES 的全部区别，不在加密算法，而在<strong>钥匙怎么到手上</strong>。</p>
+
+  <h2>规范强制了什么、禁止了什么</h2>
+
+  <p>RFC 8827 把这些写成 MUST 与 MUST NOT，集中在第 6.5 节 Communications Security。值得逐条看一遍，因为它解释了你遇到的每一个「为什么不能那样配」：</p>
+
+  <table>
+    <thead>
+      <tr><th>性质</th><th>规定</th><th>一句话理由</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>必须</td><td>媒体通道走 SRTP 与 SRTCP</td><td>旁路设备默认就能听懂裸 RTP</td></tr>
+      <tr><td>必须</td><td>每个媒体通道都 offer DTLS-SRTP</td><td>不许有「这条不重要所以不加密」</td></tr>
+      <tr><td>必须</td><td>DTLS 1.2、ECDSA P-256、AES-128-GCM</td><td>给所有实现一个共同下限</td></tr>
+      <tr><td>必须</td><td>支持 SRTP_AES128_CM_HMAC_SHA1_80</td><td>与老设备互通的最低公分母</td></tr>
+      <tr><td>必须</td><td>每次通话新建密钥对，不同 origin 不复用</td><td>不可链接性：两通电话不像同一个人</td></tr>
+      <tr><td>必须</td><td>API 不把协商出的密钥材料交给 JS</td><td>否则一个 XSS 就等于拿到了钥匙</td></tr>
+      <tr><td>禁止</td><td>明文 RTP、明文 RTCP</td><td>同上，一放开就一定有人用</td></tr>
+      <tr><td>禁止</td><td>NULL 加密</td><td>「加密」不能是个空操作</td></tr>
+      <tr><td>禁止</td><td>SDES</td><td>密钥过信令，服务器可解密</td></tr>
+      <tr><td>禁止</td><td>SRTP MKI</td><td>无实际用处，只扩大解析攻击面</td></tr>
+      <tr><td>禁止</td><td>DTLS 重协商（收到即以 no_renegotiation 拒绝）</td><td>重协商是历史漏洞的集中地</td></tr>
+      <tr><td>禁止</td><td>TLS False Start</td><td>省半个 RTT，换「身份未确认就发数据」</td></tr>
+    </tbody>
+  </table>
+
+  <p>这张表的设计意图和<a href="../lessons/0001-not-a-protocol.html">第 1 讲</a>说过的一样：它防的不是你，是「不小心的你」和「你遇到的那个人」。任何一条允许「为了省事走明文」的口子，都会在某个生产环境里被当成默认配置。</p>
+
+  <h2>端到端，到底端到哪一端</h2>
+
+  <p>现在可以回答评审会上的第二个问题：加密到哪里为止？</p>
+
+  <p>点对点通话里，DTLS 直接握到对方的浏览器，密钥只有两台设备知道。中间任何节点都只能看到密文流——包括你的信令服务器和 TURN 服务器。TURN 只是转发不透明的 UDP 包，它连里面是音频还是视频都分不出来。</p>
+
+  <p>但只要上了 SFU，情况就变了。<strong>每个客户端与 SFU 之间各有一条独立的 DTLS 会话</strong>，SFU 解密、拿到明文帧、按需转发、再分别加密给其他人。这不是实现偷懒，而是选择性转发的前提——它必须看到帧头、看到分层，才能决定给谁转哪一层。代价是：<strong>SFU 上有明文</strong>。能登上那台机器的人，能看到所有人的画面。</p>
+
+  <p>所以要真正的端到端加密，必须在这一层之上再加一层：SFrame 之类的帧级加密，或者浏览器的 insertable streams，让端点自己加密媒体帧，密钥只分发给参与者。SFU 转发的是密文帧，仍然可以做路由，但解不开内容。</p>
+
+  <p>它挡住谁：挡住 SFU 的运营方、挡住能进服务器的人、挡住落盘的录制文件被直接播放。挡不住谁：<strong>被入侵的端点</strong>——恶意扩展、被控制的手机、录屏软件，在明文进入编码器之前就已经拿到了画面。也挡不住元数据：谁和谁通话、通了多久、大概多少流量，这些仍然留在服务器上。还有一层容易被忽略：如果密钥分发还走同一台信令服务器，它依然拿得到密钥——真 E2EE 要求密钥分发不经过同一个信任根。</p>
+
+  <p>给客户讲的时候，这一句最有用：<strong>端到端加密保护的是「内容不被中间方看到」，不保护「你不被自己的设备出卖」。</strong></p>
+
+  <h2>排障：DTLS 失败的四种样子</h2>
+
+  <p><strong>指纹不匹配。</strong> 现象是 ICE connected 之后 DTLS 立刻失败，日志里是 fingerprint verification failed。原因通常是 SDP 在中间被改过：网关重写了 SDP 却没同步指纹，SFU 换了自己的证书，或者一端复用了上一通的旧 SDP。这类问题一定在握手头几个包里暴露，不会拖到媒体阶段。</p>
+
+  <p><strong>MTU 与分片。</strong> 握手消息（尤其带证书链的）超过路径 MTU，被拆成多个 UDP 包，其中某个被隧道或防火墙丢掉，现象是握手卡在「等某一个 flight」，超时重传，反复几次后放弃。这也是 WebRTC 强制用 ECDSA P-256 而不是 RSA 的原因之一：证书和签名都小得多，握手更容易塞进一个包。</p>
+
+  <p><strong>中间设备拦 UDP。</strong> 企业防火墙常常放行了 STUN（它看起来像普通的 UDP 探测），却按首字节或特征把 DTLS 丢了。现象很有辨识度：候选对能通、STUN 有回包、DTLS 一个字节都回不来。</p>
+
+  <p><strong>时钟与证书有效期。</strong> 自签证书也要检查 notBefore / notAfter。设备时间错到几年前，握手会以证书过期失败——这在嵌入式设备和长期不关机的机器上并不罕见。</p>
+
+  <p>还有一种最迷惑人的：<strong>ICE connected，但 DTLS 永远不完成</strong>。它意味着路是通的，只是对端没在说 DTLS。三种典型原因是：对端根本不是 WebRTC 端点（端口被别的服务占了），DTLS 的包被中间设备单向丢弃，或者两边的 <code>setup</code> 角色撞车、都在等对方先开口。</p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 680 352" role="img">
+      <title>信令被篡改时，指纹校验如何让中间人暴露</title>
+      <defs>
+        <marker id="ar5b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+        </marker>
+      </defs>
+
+      <rect class="f-bg s-rule" x="266" y="14" width="148" height="52" rx="8" />
+      <text x="280" y="34" font-size="11.5">信令服务器</text>
+      <text class="t-muted" x="280" y="52" font-size="10">被入侵：改写 answer</text>
+
+      <rect class="f-bg s-ink" x="14" y="104" width="140" height="62" rx="8" />
+      <text x="30" y="128" font-size="11.5">端点 A</text>
+      <text class="t-muted" x="30" y="148" font-size="10.5">自签证书 K_A</text>
+
+      <rect class="f-bg s-ink" x="526" y="104" width="140" height="62" rx="8" />
+      <text x="542" y="128" font-size="11.5">端点 B</text>
+      <text class="t-muted" x="542" y="148" font-size="10.5">自签证书 K_B</text>
+
+      <path class="s-muted" fill="none" stroke-width="1.1" d="M154 112 Q212 80 268 58" marker-end="url(#ar5b)" />
+      <text class="t-muted" x="160" y="94" font-size="10">offer：fp(K_A)</text>
+
+      <path class="s-accent" fill="none" stroke-width="1.1" d="M414 58 Q470 80 528 112" marker-end="url(#ar5b)" />
+      <text class="t-accent" x="426" y="86" font-size="10">改成 fp(K_M)</text>
+
+      <path class="s-muted" fill="none" stroke-width="1.2" d="M84 166 L84 248 L596 248 L596 166" marker-end="url(#ar5b)" />
+      <text class="t-muted" x="96" y="238" font-size="10">ICE connected ✓</text>
+      <text class="t-muted" x="250" y="272" font-size="10.5">媒体直连：DTLS 握手不经过信令服务器</text>
+
+      <rect class="f-bg s-accent" x="336" y="222" width="8" height="8" rx="2" />
+      <text class="t-accent" x="360" y="232" font-size="10.5">B 出示 K_B，与 fp(K_M) 不符</text>
+
+      <rect class="f-bg s-rule" x="14" y="292" width="652" height="48" rx="9" />
+      <text x="30" y="313" font-size="11">A 手里是 fp(K_M)，B 出示的是 K_B → 指纹校验失败，握手 abort。</text>
+      <text class="t-muted" x="30" y="331" font-size="10.5">结果：路通了、人没认成、密钥没有 —— 一帧画面也不会出现，而不是悄悄被监听。</text>
+    </svg>
+    <figcaption>要点在<strong>「校验发生在媒体路径上，参照物来自信令」</strong>：攻击者能改的只有参照物，改不了 B 手里那把私钥。所以篡改的后果是<strong>连接失败</strong>，不是<strong>静默监听</strong>。反过来说，一旦攻击者同时握住了双向信令和媒体路径，这套机制就不再保护你——那时唯一的补救是带外核对指纹。</figcaption>
+  </figure>
+
+  <p>排查顺序因此是固定的：先看 ICE 状态，再看 DTLS 传输状态，最后才看 <code>getStats()</code> 里 inbound-rtp 的 packetsReceived 是不是零。前者回答「能不能通」，中间回答「对面是谁」，后者才回答「内容有没有真的进来」。</p>
+
+  <div class="quiz" aria-label="回顾练习">
+    <span class="card-title">点选项，立刻看解析</span>
+
+    <div class="q">
+      <p class="stem">1. 状态显示 ICE connected，但对端一帧画面都没收到。最该先怀疑什么？</p>
+      <button type="button" class="opt">候选地址还没有收集完</button>
+      <button type="button" class="opt" data-correct="true">DTLS 握手尚未完成</button>
+      <button type="button" class="opt">编解码参数还没有协商好</button>
+      <button type="button" class="opt">TURN 中继还没有分配好</button>
+      <p class="fb" hidden data-explain="ICE connected 只证明这条 UDP 路径能双向到达，它连对面是不是 WebRTC 端点都不能证明。没有 DTLS 握手就没有 SRTP 密钥，媒体一帧都发不出去。所以顺序永远是：先通、再认人、最后才有加密传输。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">2. offer 与 answer 两边的 <code>a=setup</code> 都写成 active，会发生什么？</p>
+      <button type="button" class="opt" data-correct="true">双方同时发起导致握手中止</button>
+      <button type="button" class="opt">自动退化为 actpass 继续</button>
+      <button type="button" class="opt">由 offer 方单方面决定角色</button>
+      <button type="button" class="opt">回落到明文 RTP 继续传输</button>
+      <p class="fb" hidden data-explain="DTLS 有客户端与服务端之分，两边同时发 ClientHello 会让两个握手交叉、角色冲突。规范要求 answer 方必须给出确定角色，不能回 actpass，正是为了逼出一方让步。现象是 ICE 已 connected 而 DTLS 完全不动。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">3. 规范为什么明确禁用 SDES 这种密钥交换方式？</p>
+      <button type="button" class="opt">它的加密算法强度不够高</button>
+      <button type="button" class="opt">它无法保护 RTCP 控制包</button>
+      <button type="button" class="opt">它与 DTLS 1.2 无法共存</button>
+      <button type="button" class="opt" data-correct="true">它的密钥经信令明文传递</button>
+      <p class="fb" hidden data-explain="SDES 把密钥写在 SDP 的 a=crypto 里，省掉了整个握手，但任何拿到 SDP 的人都能解密媒体：信令服务器、日志、代理、抓包文件。所以区别不在算法强度，而在钥匙怎么到手上——这也是 WebRTC 与老式 SIP 电话的分水岭。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">4. 在 SFU 架构下，说「端到端加密」意味着什么？</p>
+      <button type="button" class="opt">DTLS 握到 SFU 就是端到端</button>
+      <button type="button" class="opt">SRTP 本身已经足够，不必加层</button>
+      <button type="button" class="opt" data-correct="true">需在媒体层再加一层加密</button>
+      <button type="button" class="opt">信令换成 WSS 即可成立</button>
+      <p class="fb" hidden data-explain="SFU 与每个客户端各有一条 DTLS 会话，它必须解密才能做选择性转发，所以它上面有明文。要真端到端，得在媒体层再加一层（SFrame 或 insertable streams），让端点自己加密帧。它挡得住服务器，挡不住被入侵的端点。"></p>
+    </div>
+  </div>
+
+  <p class="ask">哪里没说清？<strong>回头直接问你的老师</strong>（那个正在运行本工作区的 agent）。它知道你的目标，可以就任何一句追问下去、举更多例子——尤其是「我们这套架构该不该上 E2EE」这种没有标准答案的问题。</p>
+
+  <p class="foot">
+    <strong>推荐一手资料：</strong>
+    <a href="https://www.rfc-editor.org/rfc/rfc8827.html" target="_blank" rel="noopener">RFC 8827 — WebRTC Security Architecture</a>
+    —— 全文二十来页，直接读第 6.5 节 Communications Security：本讲那张「强制 / 禁止」表就是逐条抄自那里的 MUST 与 MUST NOT，包括为什么禁 SDES、为什么禁 SRTP MKI、为什么每通电话都要换密钥对。<br />
+    想看清密钥长什么样，接 <a href="https://www.rfc-editor.org/rfc/rfc5764.html" target="_blank" rel="noopener">RFC 5764</a> 第 4.2 节 Key Derivation
+    —— 那里定义了 <code>EXTRACTOR-dtls_srtp</code> 这个标签和导出结构，读完你就知道「握手成功」与「有密钥」为什么是同一件事。<br />
+    相关：<a href="../lessons/0004-nat-traversal.html">第 4 讲 · NAT 的真实行为</a> ·
+    <a href="../lessons/0006-rtp-packets.html">第 6 讲 · 丢包之后发生了什么</a> ·
+    <a href="../reference/0001-glossary.html">概念速查表</a> ·
+    <a href="../RESOURCES.md">资源清单</a>
+  </p>
+
+<script>
+(function () {
+  var questions = document.querySelectorAll('.quiz .q');
+  for (var i = 0; i < questions.length; i++) {
+    (function (q) {
+      var opts = q.querySelectorAll('.opt');
+      var fb = q.querySelector('.fb');
+      for (var j = 0; j < opts.length; j++) {
+        (function (opt) {
+          opt.addEventListener('click', function () {
+            if (q.dataset.answered === '1') return;
+            q.dataset.answered = '1';
+            for (var k = 0; k < opts.length; k++) {
+              opts[k].disabled = true;
+              if (opts[k].dataset.correct === 'true') opts[k].classList.add('correct');
+            }
+            var ok = opt.dataset.correct === 'true';
+            if (!ok) opt.classList.add('wrong');
+            fb.innerHTML = (ok ? '<b>✓ 对。 </b>' : '<b>✗ 再想一下。 </b>') + fb.dataset.explain;
+            fb.hidden = false;
+          });
+        })(opts[j]);
+      }
+    })(questions[i]);
+  }
+})();
+</script>
+</body>
+</html>

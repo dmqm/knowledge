@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>第 7 讲 · 糊一下是算出来的</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+  <nav aria-label="讲义导航">
+    <a class="tag" href="../lessons/0006-rtp-packets.html">← 第 6 讲 · 丢包之后发生了什么</a>
+    <a class="tag" href="../lessons/0008-topology-and-cost.html">第 8 讲 · 架构选型与那道账单 →</a>
+    <a class="tag" href="../reference/0001-glossary.html">概念速查表</a>
+  </nav>
+
+  <p class="kicker">深入 WebRTC · 第 7 讲</p>
+  <h1>糊一下是算出来的</h1>
+  <p class="lede">一句话目标：读完这一讲，你能解释「为什么网络看起来没丢包、码率却掉了三分之二」，并能用 `qualityLimitationReason` 判断该降码率、降分辨率、还是换机器——而不是一律怪网络。</p>
+
+  <h2>引子：一次「没理由」的降码率</h2>
+
+  <p>用户说「画面糊了」。你打开 `chrome://webrtc-internals`，看到发送码率从 1.5 Mbps 掉到 400 kbps，然后慢慢爬回 1.2 Mbps，又掉下去。丢包率全程接近 0，RTT 也就 40 ms。</p>
+
+  <p>直觉会说：网络没丢包，凭什么降我码率？这个直觉基于 TCP 的经验——TCP 把「丢包」当作拥塞的唯一证据。而实时媒体不能这么做，原因很硬：<strong>等到丢包出现才反应，用户已经受损了。</strong> 一帧 33 毫秒，丢几个包就是一秒的花屏和卡顿，而你还在等下一个 RTT 才能确认。</p>
+
+  <p>所以 WebRTC 换了一个更早的信号：<strong>排队延迟</strong>。链路开始拥塞时，路由器队列先变长（延迟上升），然后才溢出（丢包）。在延迟上升阶段就降速，等于在事故前踩刹车。</p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 460 224" role="img">
+      <title>链路利用率与延迟、丢包的关系：延迟信号远早于丢包信号</title>
+      <line class="s-rule" x1="72" y1="30" x2="72" y2="188" stroke-width="1" />
+      <line class="s-rule" x1="72" y1="188" x2="428" y2="188" stroke-width="1" />
+      <text class="t-muted" x="16" y="36" font-size="10">延迟</text>
+      <text class="t-muted" x="384" y="204" font-size="10">利用率</text>
+
+      <path class="s-accent" fill="none" stroke-width="1.6" d="M82 180 C 150 178, 200 174, 246 160 C 282 148, 306 120, 330 88 C 352 58, 368 44, 392 38" />
+
+      <line class="s-muted" x1="286" y1="30" x2="286" y2="188" stroke-width="1" stroke-dasharray="3 4" />
+      <text class="t-muted" x="198" y="46" font-size="9">还没丢包，只是开始排队</text>
+      <text class="t-muted" x="294" y="60" font-size="9">这里才出现丢包</text>
+      <text class="t-muted" x="86" y="176" font-size="9">空闲</text>
+    </svg>
+    <figcaption>读法：<strong>曲线的「膝点」在丢包之前。</strong> 一旦越过膝点，延迟开始陡升，而丢包率可能仍然是 0。基于丢包的算法（如 TCP）只能在右侧那段工作——那时队列已经满了；基于延迟的算法在左段就能察觉，代价是它更容易被「自己造成的排队」误导。这个副作用正是下一节 pacer 存在的理由。</figcaption>
+  </figure>
+
+  <h2>三个部件：估计、检测、分配</h2>
+
+  <p>libwebrtc 里这套机制常被统称为 GCC（Google Congestion Control）。它不是某个 RFC 里的算法，而是实现里的一组组件。理解它只要抓住三个部件：</p>
+
+  <p><strong>一、延迟梯度估计。</strong> 接收端记录<strong>每一个包</strong>的到达时间，发送端把这些时间与自己发出的节奏对比。如果「包与包的到达间隔」比「包与包的发送间隔」系统性变长，说明中间队列在堆积——这就是延迟梯度。注意这个对比的精妙之处：它消除了发送端自身节奏抖动的影响，也能区分「链路窄」与「我发得太猛」。</p>
+
+  <p><strong>二、过载检测。</strong> 把梯度与一个自适应阈值比较，得出三态判断：<code>under-use</code>（链路还有余量）、<code>normal</code>、<code>over-use</code>（正在排队）。阈值不是固定的，会随网络噪声水平自适应——这是它能在 Wi-Fi 和 4G 上都不太失控的原因。</p>
+
+  <p><strong>三、码率控制。</strong> 三态对应三种动作：余量充足时<strong>加性增长</strong>（慢速试探），over-use 时<strong>乘性下降</strong>（快速退让），中间时<strong>保持</strong>。熟悉 TCP 的人会认出这是 AIMD 的形状——只是信号从「丢包」换成了「延迟」。</p>
+
+  <p>这套逐包信息是怎么回传的？标准化的格式在 RFC 8888 里（RTCP 的 CCFB）：每个包带 RTP 序列号、一个 13 位的到达时间偏移（单位 1/1024 秒）和一个 2 位的 ECN 标记，一份报告可以覆盖上万个包，规范提到反馈间隔可工作在 50–200 ms 这个量级。WebRTC 早期用的是同类机制的草案版本（transport-cc），语义一致。</p>
+
+  <h2>Pacer：不让自己骗自己</h2>
+
+  <p>现在回到那个副作用。假设编码器刚编完一个关键帧：2 MB 的数据要在 100 ms 内送出去，平均相当于 160 Mbps——而你的链路只有 2 Mbps。如果直接把这些包倒进网卡，路由器队列瞬间爆满，延迟梯度立刻飙升，过载检测器会判定「网络拥塞」并大幅降码率。</p>
+
+  <p>问题是：<strong>这次拥塞是发送端自己造成的。</strong> 降码率并不能解决它，下一帧关键帧来了还会重演，于是码率进入「降—升—再降」的抖动。</p>
+
+  <p>解法是 <strong>pacer</strong>：把突发数据放进一个令牌桶，按「目标码率」匀速滴出。关键帧因此被摊平到几百毫秒里，网络看到的是平稳流量，队列不会被自己撑爆。代价是<strong>关键帧的交付被拉长</strong>——这正是「加入会议时先糊一下再清晰」的物理原因。</p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 460 200" role="img">
+      <title>拥塞控制的闭环：估计、分配、编码、整形，反馈从网络回来</title>
+      <defs>
+        <marker id="ar7" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+        </marker>
+        <marker id="ar7b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+        </marker>
+      </defs>
+
+      <rect class="f-bg s-accent" x="16" y="56" width="92" height="40" rx="6" />
+      <text class="t-accent" x="30" y="74" font-size="10">估计 + 分配</text>
+      <text class="t-muted" x="30" y="88" font-size="9">给每路定码率</text>
+
+      <rect class="f-bg s-rule" x="128" y="56" width="92" height="40" rx="6" />
+      <text x="140" y="74" font-size="10">编码器</text>
+      <text class="t-muted" x="140" y="88" font-size="9">产出突发</text>
+
+      <rect class="f-bg s-rule" x="240" y="56" width="92" height="40" rx="6" />
+      <text x="252" y="74" font-size="10">Pacer</text>
+      <text class="t-muted" x="252" y="88" font-size="9">摊平再发</text>
+
+      <rect class="f-bg s-rule" x="352" y="56" width="92" height="40" rx="6" />
+      <text x="364" y="74" font-size="10">网络</text>
+      <text class="t-muted" x="364" y="88" font-size="9">排队与抖动</text>
+
+      <path class="s-muted" fill="none" stroke-width="1" d="M108 76 L124 76" marker-end="url(#ar7)" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M220 76 L236 76" marker-end="url(#ar7)" />
+      <path class="s-muted" fill="none" stroke-width="1" d="M332 76 L348 76" marker-end="url(#ar7)" />
+
+      <path class="s-accent" fill="none" stroke-width="1" stroke-dasharray="4 3" d="M398 96 L398 150 L62 150 L62 100" marker-end="url(#ar7b)" />
+      <text class="t-accent" x="96" y="166" font-size="9">逐包到达时间 → 延迟梯度 → 过载判定</text>
+      <text class="t-muted" x="96" y="182" font-size="9">回路延迟几十到几百毫秒，这段时间由算法替你做取舍</text>
+    </svg>
+    <figcaption>读法：<strong>注意反馈是从「网络」的接收端回来，而不是从编码器。</strong> 整个闭环的延迟包括：反馈打包、跨网传输、判定、下一帧编码。在这段窗口里，发送端是「盲」的——它只能靠上一个估计值继续发。这就是为什么降速要果断、回升要保守：<strong>宁可反应过度，也不能反应过晚。</strong></figcaption>
+  </figure>
+
+  <h2>降码率时，先牺牲什么</h2>
+
+  <p>带宽不够时，编码器有三个旋钮，代价依次上升：</p>
+
+  <ol class="flow">
+    <li><strong>降码率（同分辨率、同帧率）</strong>——最先动。压缩比提高，块效应增加，画面变「脏」但依然流畅。</li>
+    <li><strong>降帧率</strong>——其次。动作变卡顿，但对「看清内容」影响小，所以静态场景下很划算。</li>
+    <li><strong>降分辨率</strong>——最后。这是观感最直接的损失，但也是唯一能在极低带宽下保住「能看」的手段。</li>
+  </ol>
+
+  <p>在 SFU + simulcast 的架构里还有第四个手段：<strong>换层</strong>。发送端同时推几路不同分辨率的流，SFU 按订阅方带宽选择转发哪一层——这比重新编码便宜得多，因为服务端只做转发（第 8 讲展开）。</p>
+
+  <h2>判断「为什么糊」：一个字段就够</h2>
+
+  <p>这是本讲最实用的一段。<code>getStats()</code> 里 <code>outbound-rtp</code> 的 <code>qualityLimitationReason</code> 直接告诉你编码器是<strong>被什么限制</strong>的：</p>
+
+  <table>
+    <thead>
+      <tr><th>取值</th><th>含义</th><th>该做什么</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>bandwidth</code></td><td>被可用带宽限制</td><td>降码率/分辨率是正确动作；查 <code>availableOutgoingBitrate</code> 与中继路径</td></tr>
+      <tr><td><code>cpu</code></td><td>编码器算不过来</td><td>降码率没用。要降分辨率、降帧率、换硬件编码或减少并发路数</td></tr>
+      <tr><td><code>none</code></td><td>没有受限</td><td>画质差不是带宽或算力问题——去看采集端（对焦、曝光、分辨率设置）与渲染端</td></tr>
+      <tr><td><code>other</code></td><td>其它原因</td><td>通常是配置上限（<code>maxBitrate</code>）或策略限制</td></tr>
+    </tbody>
+  </table>
+
+  <p>这个字段的价值在于<strong>它把三种完全不同的病分开了</strong>。同样是「画面糊」：<code>cpu</code> 时你去优化网络是白费力气；<code>none</code> 时你去调码率也是白费力气。而大多数人第一步就跳到了「加带宽」。</p>
+
+  <p>配套看两个数：<code>availableOutgoingBitrate</code>（估计出的可用上行带宽）和你设的 <code>maxBitrate</code>。如果前者长期大于后者，瓶颈在配置不在网络；如果前者长期低于 300 kbps，问题几乎一定在接入链路或中继路径上。</p>
+
+  <h2>音频为什么几乎不受影响</h2>
+
+  <p>你可能注意到：视频糊成马赛克了，声音还是清楚的。这是刻意的。音频码率只有几十 kbps（Opus 在 20–40 kbps 就很可用），占总带宽不到 5%；而音频对延迟和中断的敏感度远高于视频。所以实现上音频走独立的一路 RTP，并享有更高的优先级——带宽收缩时，先牺牲视频。</p>
+
+  <p>顺带一个推论：<strong>如果你遇到的是「声音断续、视频正常」，那基本不是拥塞问题</strong>，更可能是音频采集、设备切换（蓝牙耳机抢走设备）、或者抖动缓冲配置异常。别顺着「网络不好」这条线查下去。</p>
+
+  <div class="quiz" aria-label="回顾练习">
+    <span class="card-title">点选项，立刻看解析</span>
+
+    <div class="q">
+      <p class="stem">1. 实时媒体为什么不能像 TCP 那样等丢包再降速？</p>
+      <button type="button" class="opt">丢包在实时链路上几乎不会发生</button>
+      <button type="button" class="opt" data-correct="true">等到丢包时用户已经明显受损</button>
+      <button type="button" class="opt">TCP 的拥塞窗口对媒体不适用</button>
+      <button type="button" class="opt">丢包率无法被接收端准确统计</button>
+      <p class="fb" hidden data-explain="丢包是拥塞的滞后信号：队列先变长（延迟上升），满了才溢出。对实时媒体来说，等到丢包出现，用户已经经历了一轮花屏或卡顿，而且还要再等一个 RTT 才能确认。所以改用更早的信号——排队延迟的增长趋势。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">2. Pacer 主要解决的问题是什么？</p>
+      <button type="button" class="opt">让关键帧的编码速度变得更快</button>
+      <button type="button" class="opt" data-correct="true">避免发送端自己制造出排队延迟</button>
+      <button type="button" class="opt">在丢包发生时立刻触发重传请求</button>
+      <button type="button" class="opt">把多路视频合并进同一条连接</button>
+      <p class="fb" hidden data-explain="编码器是按帧产出的，关键帧一次吐出几十个包。直接倒进网络会瞬间撑爆队列，让过载检测器误判「网络拥塞」并降码率——而这次拥塞是自己造成的，降码率治不好，只会造成反复抖动。Pacer 按目标码率匀速滴出，把突发摊平。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">3. `qualityLimitationReason` 返回 `cpu` 时，正确动作是？</p>
+      <button type="button" class="opt">提高 maxBitrate 让编码器有更多空间</button>
+      <button type="button" class="opt">加一台 TURN 服务器分担转发压力</button>
+      <button type="button" class="opt" data-correct="true">降分辨率或帧率，减轻编码负担</button>
+      <button type="button" class="opt">开启 NACK 让丢包被更快补上</button>
+      <p class="fb" hidden data-explain="cpu 意味着编码器算不过来，跟带宽一点关系都没有。降码率不减少像素处理量，所以没用；有效的是降分辨率、降帧率、换硬件编码，或者减少同时编码的路数。调带宽参数只会让画质更差而不解决卡顿。"></p>
+    </div>
+
+    <div class="q">
+      <p class="stem">4. 降速果断、回升保守，这个不对称是为什么？</p>
+      <button type="button" class="opt">因为上升通道的带宽通常比下行更小</button>
+      <button type="button" class="opt" data-correct="true">反馈还没回来时发送端对网络是盲的</button>
+      <button type="button" class="opt">因为编码器提高码率需要重新初始化</button>
+      <button type="button" class="opt">因为接收端只上报下降不向上报增长</button>
+      <p class="fb" hidden data-explain="闭环里存在几十到几百毫秒的延迟：反馈打包、跨网、判定、下一帧编码。这段时间发送端只能按旧估计继续发。回升太快会在信息滞后的情况下把队列再次撑爆，形成锯齿；所以回升做慢速试探（probe），确认有余量再继续加。"></p>
+    </div>
+  </div>
+
+  <p class="ask">哪里没说清？<strong>回头直接问你的老师</strong>（那个正在运行本工作区的 agent）。它知道你的目标，可以就任何一句追问下去、举更多例子。</p>
+
+  <p class="foot">
+    <strong>推荐一手资料：</strong>
+    <a href="https://www.rfc-editor.org/rfc/rfc8888.html" target="_blank" rel="noopener">RFC 8888 — RTP Control Protocol (RTCP) Feedback for Congestion Control</a>
+    —— 先读第 3 节（反馈格式：序列号、13 位到达时间偏移、ECN）与第 4 节（反馈频率），你就明白「逐包到达时间」这个信息量有多大——它是延迟梯度能算出来的前提。第 8 节对比了 TMMBR、RTCP XR 等早期方案，能看清为什么这些都不够用。<br />
+    配合 <a href="https://www.w3.org/TR/webrtc/" target="_blank" rel="noopener">W3C WebRTC 规范</a>里 <code>RTCIceCandidatePairStats</code> / <code>RTCOutboundRtpStreamStats</code> 的字段定义一起看，把 <code>availableOutgoingBitrate</code> 与 <code>qualityLimitationReason</code> 的语义对准。<br />
+    相关：<a href="../lessons/0006-rtp-packets.html">第 6 讲 · 丢包之后发生了什么</a> ·
+    <a href="../lessons/0008-topology-and-cost.html">第 8 讲 · 架构选型与那道账单</a> ·
+    <a href="../reference/0002-debug-ladder.html">排障阶梯</a>
+  </p>
+
+<script>
+(function () {
+  var questions = document.querySelectorAll('.quiz .q');
+  for (var i = 0; i < questions.length; i++) {
+    (function (q) {
+      var opts = q.querySelectorAll('.opt');
+      var fb = q.querySelector('.fb');
+      for (var j = 0; j < opts.length; j++) {
+        (function (opt) {
+          opt.addEventListener('click', function () {
+            if (q.dataset.answered === '1') return;
+            q.dataset.answered = '1';
+            for (var k = 0; k < opts.length; k++) {
+              opts[k].disabled = true;
+              if (opts[k].dataset.correct === 'true') opts[k].classList.add('correct');
+            }
+            var ok = opt.dataset.correct === 'true';
+            if (!ok) opt.classList.add('wrong');
+            fb.innerHTML = (ok ? '<b>✓ 对。 </b>' : '<b>✗ 再想一下。 </b>') + fb.dataset.explain;
+            fb.hidden = false;
+          });
+        })(opts[j]);
+      }
+    })(questions[i]);
+  }
+})();
+</script>
+</body>
+</html>
