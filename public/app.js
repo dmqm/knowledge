@@ -631,11 +631,11 @@ async function renderHome() {
   };
 
   app.innerHTML = `
+    <div id="resume"></div>
     <div class="search">
       <span class="glass">⌕</span>
       <input id="q" placeholder="搜索课程、讲义、学习记录…" enterkeyhint="search" />
     </div>
-    <div id="resume"></div>
     <div class="chips" id="catbar" hidden></div>
     <div id="courselist"></div>
     <div id="liveres" hidden></div>
