@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url';
 
 import { renderMarkdown } from '../lib/md.mjs';
 import { scanCourses, exists } from '../lib/scan.mjs';
+import { isSameOrInside, realPath } from '../lib/safe-path.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
@@ -34,9 +35,41 @@ const contentRoot = path.resolve(root, arg('content', process.env.LC_CONTENT_ROO
 const outDir = path.resolve(root, arg('out', process.env.LC_OUT || './dist'));
 const publicRoot = path.join(root, 'public');
 
-// Chars kept per document in the search index. Keeps the payload small while
-// still covering whole lessons.
-const TEXT_LIMIT = 20000;
+// Paths the build must never touch, no matter what `--out` says. `main()`
+// deletes the output directory before writing, so an out dir that *contains*
+// any of these (or lives inside them) would destroy sources or local state.
+const PROTECTED = [
+  root,
+  publicRoot,
+  contentRoot,
+  path.join(root, 'courses'),
+  path.join(root, 'lib'),
+  path.join(root, 'scripts'),
+  path.join(root, 'data'),
+  path.join(root, 'docs'),
+  path.join(root, '.git'),
+  path.join(root, '.github'),
+];
+
+// Returns a human-readable reason when `out` is unsafe to wipe, else null.
+// Both sides are resolved to their real locations first, so `--out symlink`
+// and `..` spellings cannot bypass the check.
+function unsafeOutputReason(out) {
+  const target = realPath(out);
+  for (const candidate of PROTECTED) {
+    const protectedReal = realPath(candidate);
+    // The out dir is, or contains, something we must keep (root, courses, ...).
+    if (isSameOrInside(target, protectedReal)) {
+      return `输出目录会删除受保护路径: ${candidate}`;
+    }
+    // The out dir lives inside a source/live directory. `dist/` under the repo
+    // root is fine; `public/x` or `courses/x` is not.
+    if (candidate !== root && isSameOrInside(protectedReal, target)) {
+      return `输出目录位于受保护路径内: ${candidate}`;
+    }
+  }
+  return null;
+}
 
 // --------------------------------------------------------------- helpers ----
 
@@ -50,9 +83,14 @@ function stripTags(html) {
     .trim();
 }
 
-function clip(text, limit = TEXT_LIMIT) {
-  const t = String(text || '');
-  return t.length > limit ? t.slice(0, limit) : t;
+// Fail the build instead of publishing an empty/partial site: every file the
+// scan listed must be readable while exporting.
+async function readText(file) {
+  try {
+    return await fs.readFile(file, 'utf8');
+  } catch (err) {
+    throw new Error(`无法读取文件 ${file}: ${err.message}`);
+  }
 }
 
 async function writeJson(file, obj) {
@@ -76,8 +114,8 @@ async function copyDir(src, dest) {
   let entries;
   try {
     entries = await fs.readdir(src, { withFileTypes: true });
-  } catch {
-    return;
+  } catch (err) {
+    throw new Error(`无法读取目录 ${src}: ${err.message}`);
   }
   for (const entry of entries) {
     if (!isPublishable(entry.name)) continue;
@@ -94,13 +132,13 @@ async function copyDir(src, dest) {
 // GET /api/courses/:id (no progress — the browser owns that).
 async function buildCourseJson(dir, course) {
   const [resourcesRaw, notesRaw] = await Promise.all([
-    course.hasResources ? fs.readFile(path.join(dir, 'RESOURCES.md'), 'utf8').catch(() => '') : '',
-    course.hasNotes ? fs.readFile(path.join(dir, 'NOTES.md'), 'utf8').catch(() => '') : '',
+    course.hasResources ? readText(path.join(dir, 'RESOURCES.md')) : '',
+    course.hasNotes ? readText(path.join(dir, 'NOTES.md')) : '',
   ]);
 
   const records = [];
   for (const rec of course.records) {
-    const raw = await fs.readFile(path.join(dir, 'learning-records', rec.file), 'utf8').catch(() => '');
+    const raw = await readText(path.join(dir, 'learning-records', rec.file));
     records.push({ ...rec, html: renderMarkdown(raw) });
   }
 
@@ -150,30 +188,30 @@ async function buildSearchIndex(courses) {
       label: 'MISSION',
       kind: 'mission',
       url: null,
-      text: clip(course.mission.replace(/[#*`>]/g, '')),
+      text: course.mission.replace(/[#*`>]/g, ''),
     });
 
     for (const lesson of course.lessons) {
-      const raw = await fs.readFile(path.join(dir, 'lessons', lesson.file), 'utf8').catch(() => '');
+      const raw = await readText(path.join(dir, 'lessons', lesson.file));
       index.push({
         courseId: course.id,
         courseTitle: course.title,
         label: lesson.title,
         kind: 'lesson',
         url: lesson.url,
-        text: clip(stripTags(raw)),
+        text: stripTags(raw),
       });
     }
 
     for (const rec of course.records) {
-      const raw = await fs.readFile(path.join(dir, 'learning-records', rec.file), 'utf8').catch(() => '');
+      const raw = await readText(path.join(dir, 'learning-records', rec.file));
       index.push({
         courseId: course.id,
         courseTitle: course.title,
         label: rec.title,
         kind: 'record',
         url: rec.url,
-        text: clip(raw),
+        text: raw,
       });
     }
   }
@@ -186,6 +224,38 @@ async function buildSearchIndex(courses) {
 // lessons link to. Editor backups (*.bak) are left behind.
 async function copyCourseFiles(course) {
   await copyDir(path.join(contentRoot, course.id), path.join(outDir, 'files', course.id));
+}
+
+// Independent filesystem count of what the source tree actually holds. Used
+// after the build to prove the export did not silently drop content: a stale
+// cache or a half-read scan would otherwise publish "0 个主题" with exit 0.
+async function countSource(rootDir) {
+  let entries;
+  try {
+    entries = await fs.readdir(rootDir, { withFileTypes: true });
+  } catch (err) {
+    throw new Error(`无法读取内容目录 ${rootDir}: ${err.message}`);
+  }
+  let topics = 0;
+  let lessons = 0;
+  for (const entry of entries) {
+    if (!entry.isDirectory() || entry.name.startsWith('.')) continue;
+    const dir = path.join(rootDir, entry.name);
+    const lessonsDir = path.join(dir, 'lessons');
+    const hasMission = await exists(path.join(dir, 'MISSION.md'));
+    const hasLessons = await exists(lessonsDir);
+    if (!hasMission && !hasLessons) continue;
+    topics += 1;
+    if (!hasLessons) continue;
+    let names;
+    try {
+      names = await fs.readdir(lessonsDir);
+    } catch (err) {
+      throw new Error(`无法读取目录 ${lessonsDir}: ${err.message}`);
+    }
+    lessons += names.filter((n) => n.toLowerCase().endsWith('.html')).length;
+  }
+  return { topics, lessons };
 }
 
 async function writeShell() {
@@ -212,6 +282,7 @@ async function writeShell() {
   const stamp = createHash('sha1')
     .update(await fs.readFile(path.join(publicRoot, 'styles.css')))
     .update(await fs.readFile(path.join(publicRoot, 'app.js')))
+    .update(await fs.readFile(path.join(publicRoot, 'route-logic.js')))
     .digest('hex')
     .slice(0, 8);
   html = html
@@ -221,6 +292,7 @@ async function writeShell() {
 
   for (const name of [
     'app.js',
+    'route-logic.js',
     'styles.css',
     'favicon.svg',
     'apple-touch-icon.png',
@@ -237,15 +309,33 @@ async function writeShell() {
 }
 
 async function main() {
+  const unsafe = unsafeOutputReason(outDir);
+  if (unsafe) {
+    console.error(`拒绝导出：${unsafe}\n  --out ${outDir}`);
+    process.exit(1);
+  }
+  if (await exists(outDir)) {
+    const stat = await fs.stat(outDir).catch(() => null);
+    if (!stat || !stat.isDirectory()) {
+      console.error(`拒绝导出：输出路径已存在且不是目录: ${outDir}`);
+      process.exit(1);
+    }
+  }
+
   if (!(await exists(contentRoot))) {
     console.error(`内容目录不存在: ${contentRoot}`);
+    process.exit(1);
+  }
+  const contentStat = await fs.stat(contentRoot).catch(() => null);
+  if (!contentStat || !contentStat.isDirectory()) {
+    console.error(`内容根不是目录: ${contentRoot}`);
     process.exit(1);
   }
 
   await fs.rm(outDir, { recursive: true, force: true });
   await fs.mkdir(outDir, { recursive: true });
 
-  const courses = await scanCourses(contentRoot);
+  const courses = await scanCourses(contentRoot, { strict: true });
 
   await writeShell();
   await writeJson(path.join(outDir, 'api', 'courses.json'), { courses: courses.map(courseSummary) });
@@ -262,7 +352,24 @@ async function main() {
   await writeJson(path.join(outDir, 'api', 'search-index.json'), await buildSearchIndex(courses));
 
   const lessons = courses.reduce((n, c) => n + c.counts.lessons, 0);
+
+  // The build already read every file strictly; cross-check the totals against
+  // an independent walk of the source so a partial/empty export can never be
+  // reported as a success.
+  const source = await countSource(contentRoot);
+  if (source.topics !== courses.length || source.lessons !== lessons) {
+    console.error(
+      `导出校验失败：主题 ${courses.length}（源 ${source.topics}） / 讲义 ${lessons}（源 ${source.lessons}）`,
+    );
+    process.exit(1);
+  }
+
   console.log(`已导出 ${courses.length} 个主题 / ${lessons} 篇讲义 → ${path.relative(root, outDir)}`);
 }
 
-await main();
+try {
+  await main();
+} catch (err) {
+  console.error(`导出失败：${err.message}`);
+  process.exit(1);
+}

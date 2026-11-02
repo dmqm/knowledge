@@ -19,6 +19,7 @@ import { renderMarkdown } from './lib/md.mjs';
 import { scanCourses, readCourse, searchCourses, exists } from './lib/scan.mjs';
 import { progressStore } from './lib/store.mjs';
 import { makeAuth } from './lib/auth.mjs';
+import { isInside, isSafeCourseId, isSafePathSegment, realPath } from './lib/safe-path.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -26,13 +27,55 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Config
 // ---------------------------------------------------------------------------
 
+// A missing config.json is a supported state (built-in defaults). A config
+// file that exists but cannot be read or parsed is *not*: silently treating it
+// as "no config" used to drop the password and expose the portal unauthenticated.
+function assertConfigField(name, value, ok) {
+  if (value === undefined) return;
+  if (!ok(value)) {
+    throw new Error(`配置文件字段 ${name} 类型或取值不合法: ${JSON.stringify(value)}`);
+  }
+}
+
 async function loadConfig() {
   const defaults = { host: '127.0.0.1', port: 4321, password: '', contentRoot: './courses' };
+  const configPath = path.join(__dirname, 'config.json');
   let fileConfig = {};
+
+  let raw;
   try {
-    fileConfig = JSON.parse(await fsp.readFile(path.join(__dirname, 'config.json'), 'utf8'));
-  } catch {
-    // no config file — fine
+    raw = await fsp.readFile(configPath, 'utf8');
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      throw new Error(`无法读取配置文件 ${configPath}: ${err.message}`);
+    }
+  }
+
+  if (raw !== undefined) {
+    try {
+      fileConfig = JSON.parse(raw);
+    } catch (err) {
+      throw new Error(`配置文件不是合法 JSON (${configPath}): ${err.message}`);
+    }
+    if (!fileConfig || typeof fileConfig !== 'object' || Array.isArray(fileConfig)) {
+      throw new Error(`配置文件必须是 JSON 对象 (${configPath})`);
+    }
+    assertConfigField('host', fileConfig.host, (v) => typeof v === 'string' && v.trim() !== '');
+    assertConfigField(
+      'port',
+      fileConfig.port,
+      (v) =>
+        (typeof v === 'number' || (typeof v === 'string' && v.trim() !== '')) &&
+        Number.isInteger(Number(v)) &&
+        Number(v) >= 0 &&
+        Number(v) <= 65535,
+    );
+    assertConfigField('password', fileConfig.password, (v) => typeof v === 'string');
+    assertConfigField(
+      'contentRoot',
+      fileConfig.contentRoot,
+      (v) => typeof v === 'string' && v.trim() !== '',
+    );
   }
 
   const argv = process.argv.slice(2);
@@ -226,8 +269,20 @@ function courseSummary(course, progress) {
   };
 }
 
+// Resolve a course id to a directory that is provably inside the content root.
+// Returns null when the id is not a plain directory name or when the resolved
+// real path escapes the root (e.g. `..`, an absolute path, or a symlink).
+async function resolveCourseDir(contentRoot, id) {
+  if (!isSafeCourseId(id)) return null;
+  const rootReal = realPath(contentRoot);
+  const dirReal = realPath(path.join(rootReal, id));
+  if (!isInside(rootReal, dirReal)) return null;
+  return dirReal;
+}
+
 async function buildDetail(contentRoot, store, id) {
-  const dir = path.join(contentRoot, id);
+  const dir = await resolveCourseDir(contentRoot, id);
+  if (!dir) return null;
   if (!(await exists(dir))) return null;
   const course = await readCourse(dir, id);
   if (!course) return null;
@@ -268,6 +323,9 @@ async function buildDetail(contentRoot, store, id) {
 async function createCourse(contentRoot, name) {
   const { slugify } = await import('./lib/scan.mjs');
   const id = slugify(name);
+  if (!isSafeCourseId(id)) {
+    return { error: '主题名称不合法' };
+  }
   const dir = path.join(contentRoot, id);
   if (await exists(dir)) {
     return { error: `主题「${id}」已存在` };
@@ -298,15 +356,47 @@ async function createCourse(contentRoot, name) {
 // Server
 // ---------------------------------------------------------------------------
 
-const config = await loadConfig();
+let config;
+try {
+  config = await loadConfig();
+} catch (err) {
+  console.error(`启动失败：${err.message}`);
+  process.exit(1);
+}
 await fsp.mkdir(config.contentRoot, { recursive: true });
 await fsp.mkdir(config.dataDir, { recursive: true });
 
 const store = progressStore(path.join(config.dataDir, 'progress.json'));
 const auth = await makeAuth({ password: config.password, secretFile: path.join(config.dataDir, 'secret') });
 
+// The Host header is only needed as a base for URL parsing, but a malformed one
+// must be rejected instead of crashing the process: before this guard,
+// `Host: [` made `new URL()` throw outside the request try/catch and Node
+// exited with an unhandled ERR_INVALID_URL.
+function validHost(host) {
+  if (typeof host !== 'string' || host.length === 0) return false;
+  if (!/^[^\s/?#@]+$/.test(host)) return false;
+  try {
+    const parsed = new URL(`http://${host}`);
+    return parsed.hostname.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  if (!validHost(req.headers.host)) {
+    sendJson(res, 400, { error: 'bad request' });
+    return;
+  }
+
+  let url;
+  try {
+    url = new URL(req.url, 'http://localhost');
+  } catch {
+    sendJson(res, 400, { error: 'bad request' });
+    return;
+  }
   const pathname = url.pathname;
 
   try {
@@ -393,7 +483,13 @@ const server = http.createServer(async (req, res) => {
 
     const courseMatch = pathname.match(/^\/api\/courses\/([^/]+)$/);
     if (courseMatch) {
-      const id = decodeURIComponent(courseMatch[1]);
+      let id;
+      try {
+        id = decodeURIComponent(courseMatch[1]);
+      } catch {
+        sendJson(res, 400, { error: '参数不合法' });
+        return;
+      }
       if (req.method === 'GET') {
         const detail = await buildDetail(config.contentRoot, store, id);
         if (!detail) {
@@ -404,8 +500,13 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       if (req.method === 'DELETE') {
-        const from = path.join(config.contentRoot, id);
-        if (!(await exists(from))) {
+        const from = await resolveCourseDir(config.contentRoot, id);
+        if (!from) {
+          sendJson(res, 400, { error: '参数不合法' });
+          return;
+        }
+        const stat = await fsp.stat(from).catch(() => null);
+        if (!stat || !stat.isDirectory()) {
           sendJson(res, 404, { error: '未找到该主题' });
           return;
         }
@@ -426,9 +527,28 @@ const server = http.createServer(async (req, res) => {
       } catch {
         payload = {};
       }
+      if (!payload || typeof payload !== 'object') payload = {};
       const { course, file, status } = payload;
-      if (!course || !file || !['done', 'none'].includes(status)) {
+      if (
+        typeof course !== 'string' ||
+        typeof file !== 'string' ||
+        !['done', 'none'].includes(status)
+      ) {
         sendJson(res, 400, { error: '参数不完整' });
+        return;
+      }
+      if (!isSafeCourseId(course) || !isSafePathSegment(file)) {
+        sendJson(res, 400, { error: '参数不合法' });
+        return;
+      }
+      const dir = await resolveCourseDir(config.contentRoot, course);
+      const known = dir ? await readCourse(dir, course) : null;
+      if (!known) {
+        sendJson(res, 404, { error: '未找到该主题' });
+        return;
+      }
+      if (!known.lessons.some((lesson) => lesson.file === file)) {
+        sendJson(res, 404, { error: '未找到该讲义' });
         return;
       }
       const data = await store.setLesson(course, file, status);

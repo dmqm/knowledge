@@ -7,6 +7,15 @@
 //     localStorage, and hides the write actions. Used for the GitHub Pages
 //     build, which is read-only.
 
+import {
+  courseStats,
+  encodeSegment,
+  readerHash,
+  routeFromFilePath,
+  routeFromIndexUrl,
+  sameRoute,
+} from './route-logic.js';
+
 const STATIC = typeof window !== 'undefined' && window.__LC_STATIC__ === true;
 const PROGRESS_KEY = 'lc:progress';
 // Last-read position per course, for the "继续阅读" strip (both modes).
@@ -215,7 +224,15 @@ async function setProgress(courseId, file, status) {
 let searchIndexPromise = null;
 
 function searchIndex() {
-  if (!searchIndexPromise) searchIndexPromise = fetchJson('api/search-index.json');
+  if (!searchIndexPromise) {
+    // A rejected promise used to be cached forever, so one flaky request left
+    // search broken until a full page reload. Drop the cache on failure: the
+    // next search simply tries again.
+    searchIndexPromise = fetchJson('api/search-index.json').catch((err) => {
+      searchIndexPromise = null;
+      throw err;
+    });
+  }
   return searchIndexPromise;
 }
 
@@ -283,10 +300,12 @@ function resultRows(results, limit = results.length) {
   const shown = results.slice(0, limit);
   return `<div class="rows">${shown
     .map((r) => {
-      const open =
-        r.kind === 'lesson'
-          ? `#/read/${encodeURIComponent(r.courseId)}/lessons/${encodeURIComponent(r.url.split('/').pop())}`
-          : `#/c/${encodeURIComponent(r.courseId)}`;
+      // The index url is already percent-encoded; parse it instead of encoding
+      // its tail again (that produced `01%2520%25E4…` and a 404).
+      const route = r.kind === 'lesson' ? routeFromIndexUrl(r.url) : null;
+      const open = route
+        ? readerHash(route.courseId, route.kind, route.file)
+        : `#/c/${encodeSegment(r.courseId)}`;
       return `
     <a class="row" href="${open}">
       <span class="idx">${r.kind === 'lesson' ? '▤' : r.kind === 'record' ? '✎' : '◎'}</span>
@@ -739,7 +758,7 @@ function courseCard(c) {
   const complete = c.total > 0 && c.done === c.total;
   const size = c.counts.lessons ? `${c.counts.lessons} 讲` : '尚无内容';
   return `
-    <a class="card" style="--hue:${courseHue(c.id)}" title="${esc(c.title)}" href="#/c/${encodeURIComponent(c.id)}">
+    <a class="card" data-course="${esc(c.id)}" style="--hue:${courseHue(c.id)}" title="${esc(c.title)}" href="#/c/${encodeURIComponent(c.id)}">
       <span class="tile">${esc(c.title.trim().charAt(0) || '?')}</span>
       <div class="tile-txt">
         <h3>${esc(c.title)}</h3>
@@ -750,6 +769,41 @@ function courseCard(c) {
       </div>
       ${c.total ? `<span class="bar"><span style="width:${pct}%"></span></span>` : ''}
     </a>`;
+}
+
+// Progress changed without a full re-render (ticking a lesson on the course
+// page): repaint the visible counters in place — the hero pill/bar and, if the
+// home cards are on screen, that course's stat/bar. Keeps the scroll position.
+function syncCourseStats(course, progress = state.progress) {
+  if (!course) return;
+  const lessons = course.lessons || [];
+  const stats = courseStats(lessons, progress);
+
+  const hero = app.querySelector('.hero');
+  if (hero) {
+    const pill = hero.querySelector('.pill');
+    if (pill) {
+      pill.textContent = `${stats.done}/${stats.total} 已完成`;
+      pill.classList.toggle('good', stats.total > 0 && stats.done === stats.total);
+    }
+    const bar = hero.querySelector('.bar > span');
+    if (bar) bar.style.width = `${stats.pct}%`;
+  }
+
+  if (Array.isArray(course.lessons) && course.lessons.length) {
+    const card = [...app.querySelectorAll('.card[data-course]')].find(
+      (el) => el.dataset.course === course.id,
+    );
+    if (card) {
+      const stat = card.querySelector('.stat');
+      if (stat) {
+        stat.textContent = `${stats.done}/${stats.total}`;
+        stat.classList.toggle('good', stats.total > 0 && stats.done === stats.total);
+      }
+      const bar = card.querySelector('.bar > span');
+      if (bar) bar.style.width = `${stats.pct}%`;
+    }
+  }
 }
 
 function emptyState() {
@@ -877,6 +931,17 @@ function lessonTitle(title) {
   return text.replace(/^第\s*[0-9一二三四五六七八九十百]+\s*讲\s*[·:：.\-—]?\s*/, '') || text;
 }
 
+// Human label for a route the iframe just landed on. The course is usually in
+// memory (a link inside the same course); for a cross-course jump fall back to
+// the file name.
+function routeLabel({ courseId, kind, file }) {
+  const c = state.course && state.course.id === courseId ? state.course : null;
+  const list =
+    c && (kind === 'lessons' ? c.lessons : kind === 'reference' ? c.reference : c.records);
+  const hit = Array.isArray(list) ? list.find((d) => d.file === file) : null;
+  return hit ? lessonTitle(hit.title) : file.replace(/\.html?$/i, '');
+}
+
 function lessonRows(lessons) {
   if (!lessons.length) return emptyPanel('还没有课程。让 teach 在这个目录里生成讲义吧。');
   // The first not-done lesson is where this course resumes.
@@ -918,15 +983,24 @@ function wireLessonRows(course) {
     btn.onclick = async (e) => {
       e.stopPropagation();
       const file = btn.dataset.toggle;
-      const nowDone = !btn.classList.contains('on');
-      btn.classList.toggle('on', nowDone);
       const row = btn.closest('.row');
+      const wasDone = btn.classList.contains('on');
+      const nowDone = !wasDone;
+      const before = state.progress[file]; // exact prior value, for rollback
+      // Optimistic update; if the write fails we put every bit of it back.
+      btn.classList.toggle('on', nowDone);
       if (row) row.classList.toggle('done', nowDone);
       state.progress[file] = nowDone ? { status: 'done' } : undefined;
+      syncCourseStats(course);
       try {
         await setProgress(course.id, file, nowDone ? 'done' : 'none');
       } catch (err) {
-        toast(err.message);
+        if (before === undefined) delete state.progress[file];
+        else state.progress[file] = before;
+        btn.classList.toggle('on', wasDone);
+        if (row) row.classList.toggle('done', wasDone);
+        syncCourseStats(course);
+        toast(`${err.message} — 未保存，再点一次重试`);
       }
     };
   });
@@ -982,10 +1056,43 @@ async function renderReader(id, kind, file) {
   const at = lessons.findIndex((l) => l.file === file);
   const prev = at > 0 ? lessons[at - 1] : null;
   const next = at >= 0 && at < lessons.length - 1 ? lessons[at + 1] : null;
-  const label = at >= 0 ? lessons[at].title : file.replace(/\.html?$/i, '');
+  // Reference pages are linked from lessons too, so the reader can sit on one
+  // after an in-page click; show its real title, not the file name.
+  const docs =
+    kind === 'reference'
+      ? state.course && state.course.reference
+      : kind === 'learning-records'
+        ? state.course && state.course.records
+        : null;
+  const doc = Array.isArray(docs) ? docs.find((d) => d.file === file) : null;
+  const label = at >= 0 ? lessons[at].title : doc ? doc.title : file.replace(/\.html?$/i, '');
 
   const src = fileUrl(id, kind, file);
   const restore = takeReaderRestore(id, kind);
+  // The iframe may have followed an in-lesson link before a reload, so a
+  // stashed restore can name a different file than the hash. The hash is the
+  // single source of navigation state: correct it and re-enter with the
+  // restored route instead of painting one lesson under another's title.
+  if (restore) {
+    let restored = null;
+    try {
+      restored = routeFromFilePath(new URL(restore.href).pathname);
+    } catch {
+      restored = null;
+    }
+    if (restored && !sameRoute(restored, { courseId: id, kind, file })) {
+      history.replaceState(null, '', readerHash(restored.courseId, restored.kind, restored.file));
+      try {
+        sessionStorage.setItem(
+          READER_RESTORE_KEY,
+          JSON.stringify({ href: restore.href, y: restore.y, at: Date.now() }),
+        );
+      } catch {
+        // storage disabled — the route is still right, only the scroll is lost
+      }
+      return renderReader(restored.courseId, restored.kind, restored.file);
+    }
+  }
   const frameSrc = restore ? restore.href : src;
   const done = (state.progress[file] || {}).status === 'done';
   const isLesson = kind === 'lessons';
@@ -1036,6 +1143,35 @@ async function renderReader(id, kind, file) {
       } catch {
         // cross-origin — nothing to restore
       }
+    }
+    // An in-lesson link navigates the iframe without touching the parent, so
+    // the title, prev/next, done button and rememberY would stay bound to the
+    // old lesson (and progress would be recorded against it). Mirror the
+    // frame's real location into the hash — the single navigation source —
+    // then let render() rebuild the reader from it. No polling: `load` is the
+    // only signal we need.
+    let frameRoute = null;
+    try {
+      frameRoute = routeFromFilePath(frame.contentWindow.location.pathname);
+    } catch {
+      frameRoute = null; // cross-origin — can't see where it went
+    }
+    if (frameRoute && !sameRoute(frameRoute, { courseId: id, kind, file })) {
+      if (frameRoute.kind === 'lessons') {
+        // Attribute the reading position to the page actually on screen before
+        // render() flushes the outgoing reader.
+        const title = routeLabel(frameRoute);
+        activeReader = { id: frameRoute.courseId, file: frameRoute.file, title };
+        saveLastRead({
+          id: frameRoute.courseId,
+          file: frameRoute.file,
+          title,
+          y: 0,
+          at: Date.now(),
+        });
+      }
+      go(readerHash(frameRoute.courseId, frameRoute.kind, frameRoute.file));
+      return;
     }
     // Track reading progress + position. Same-origin in both modes (the files
     // are served alongside the app), so this normally attaches fine.
@@ -1094,15 +1230,23 @@ async function renderReader(id, kind, file) {
 
   const btn = document.getElementById('r-done');
   btn.onclick = async () => {
-    const nowDone = !(state.progress[file] || {}).status;
+    const wasDone = (state.progress[file] || {}).status === 'done';
+    const nowDone = !wasDone;
+    const before = state.progress[file]; // exact prior value, for rollback
     state.progress[file] = nowDone ? { status: 'done' } : undefined;
     btn.classList.toggle('on', nowDone);
     btn.textContent = nowDone ? '已完成' : '✓ 完成';
-    toast(nowDone ? '已标记完成' : '已取消完成');
     try {
       await setProgress(id, file, nowDone ? 'done' : 'none');
+      toast(nowDone ? '已标记完成' : '已取消完成');
     } catch (err) {
-      toast(err.message);
+      // The write didn't land: put the button and memory back so the UI never
+      // claims something that wasn't saved. Tapping again retries.
+      if (before === undefined) delete state.progress[file];
+      else state.progress[file] = before;
+      btn.classList.toggle('on', wasDone);
+      btn.textContent = wasDone ? '已完成' : '✓ 完成';
+      toast(`${err.message} — 未保存，再点一次重试`);
     }
   };
 }

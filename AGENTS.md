@@ -100,6 +100,14 @@ node server.mjs --host 0.0.0.0 --password "xxx"   # 局域网 + 密码
 配置优先级:命令行参数 > 环境变量 > `config.json`。
 详见 `README.md`。
 
+回归测试(零依赖,`node:test`):`node --test`。改动 `server.mjs` / `lib/` /
+`scripts/export.mjs` / `public/app.js` 的路径与状态逻辑后必须跑一遍。
+
+**安全不变量**(改动时不许放松):课程 id 必须是 `courses/` 下的单段目录名,
+路径校验基于 realpath 包含关系;导出目标不许与仓库任意顶层目录重叠;
+`config.json` 存在但损坏时拒绝启动,不得退化为无密码;进度写入串行化、
+原子替换。
+
 ## 协作偏好
 
 - **默认直接做完、给出结果**,不要逐步征求意见。
