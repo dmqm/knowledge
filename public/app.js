@@ -919,6 +919,18 @@ async function renderCourse(id) {
   }
 
   const done = c.lessons.filter((l) => (state.progress[l.file] || {}).status === 'done').length;
+  // The detail payload carries no group (only the home list does), so resolve
+  // the category from the cached list — fetching it once on a cold deep link.
+  let homeCourse = state.courses.find((x) => x.id === id);
+  if (!homeCourse) {
+    try {
+      state.courses = await listCourses();
+      homeCourse = state.courses.find((x) => x.id === id);
+    } catch {
+      // offline / transient — hero just falls back to the neutral colour
+    }
+  }
+  const catKey = CAT_KEY[(homeCourse || c).group] || 'other';
   const lr = lastReadRecord(c.id);
   const resumeIdx = lr ? c.lessons.findIndex((l) => l.file === lr.file) : -1;
   const tabs = [
@@ -930,7 +942,7 @@ async function renderCourse(id) {
   if (c.hasNotes) tabs.push(['notes', '备注']);
 
   app.innerHTML = `
-    <div class="hero" data-cat-key="${courseCat(c)}">
+    <div class="hero" data-cat-key="${catKey}">
       <h1>${esc(c.title)}</h1>
       <div class="meta">
         <span class="pill ${done === c.counts.lessons && c.counts.lessons ? 'good' : ''}">${done}/${c.counts.lessons} 已完成</span>
