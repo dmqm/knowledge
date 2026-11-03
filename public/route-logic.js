@@ -74,3 +74,110 @@ export function courseStats(lessons, progress) {
   const total = list.length;
   return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
 }
+
+// ------------------------------------------------------------ static store ----
+// Browser-local progress lives in localStorage under `lc:progress`. A corrupt
+// value used to be dropped silently, so the user's history vanished with no
+// trace. Now the bad bytes are copied to a side key before the store is reset,
+// and the caller gets a warning it can show once.
+
+export const CORRUPT_PROGRESS_KEY = '__lc_progress_corrupt';
+
+function emptyLocalProgress() {
+  return { courses: {} };
+}
+
+function isProgressShape(value) {
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    !!value.courses &&
+    typeof value.courses === 'object' &&
+    !Array.isArray(value.courses)
+  );
+}
+
+export function loadLocalProgress(storage, key = 'lc:progress') {
+  let raw = null;
+  try {
+    raw = storage.getItem(key);
+  } catch {
+    // Storage disabled — fall back to an in-memory empty store, no warning.
+    return { progress: emptyLocalProgress(), warning: null, readOnly: false };
+  }
+  if (raw == null) return { progress: emptyLocalProgress(), warning: null, readOnly: false };
+
+  let parsed = null;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    parsed = null;
+  }
+  if (isProgressShape(parsed)) return { progress: parsed, warning: null, readOnly: false };
+
+  // Keep the bad value before touching the live key. If even that write fails
+  // the live key is left exactly as it was (read-only for this session)
+  // instead of being reset with nothing to recover it from.
+  let backedUp = false;
+  try {
+    storage.setItem(CORRUPT_PROGRESS_KEY, raw);
+    backedUp = true;
+  } catch {
+    backedUp = false;
+  }
+  const progress = emptyLocalProgress();
+  if (backedUp) {
+    try {
+      storage.setItem(key, JSON.stringify(progress));
+    } catch {
+      // Can't reset; the next read quarantines again (backup stays intact).
+    }
+  }
+  const warning = backedUp
+    ? `进度文件损坏，已备份为 ${CORRUPT_PROGRESS_KEY}，当前为空白进度`
+    : `进度文件损坏，无法备份（浏览器存储不可写），已切换为只读，当前为空白进度`;
+  return { progress, warning, readOnly: !backedUp };
+}
+
+// --------------------------------------------------------------- retrying ----
+// A failed static search-index fetch used to be cached until a page reload.
+// Now the first failure arms exactly one automatic retry (the next search,
+// whatever the keyword), and further searches are refused until the user taps
+// the explicit retry button. No timers, no polling: attempts only happen on a
+// search or a manual retry.
+export function createRetryLoader(load, { maxAutoAttempts = 2 } = {}) {
+  let cache;
+  let hasCache = false;
+  let pending = null;
+  let attempts = 0; // consecutive automatic attempts since the last success
+  let lastError = null;
+
+  function get({ manual = false } = {}) {
+    if (hasCache) return Promise.resolve(cache);
+    if (pending) return pending;
+    if (!manual && lastError && attempts >= maxAutoAttempts) {
+      return Promise.reject(lastError);
+    }
+    if (manual) attempts = 0;
+    attempts += 1;
+    pending = (async () => {
+      try {
+        const value = await load();
+        cache = value;
+        hasCache = true;
+        attempts = 0;
+        lastError = null;
+        return value;
+      } catch (err) {
+        lastError = err;
+        throw err;
+      } finally {
+        pending = null;
+      }
+    })();
+    return pending;
+  }
+
+  return { get };
+}

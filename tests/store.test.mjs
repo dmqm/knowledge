@@ -7,7 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test, { after, before } from 'node:test';
 
-import { progressStore } from '../lib/store.mjs';
+import { corruptBackupName, progressStore } from '../lib/store.mjs';
 
 let dir;
 let file;
@@ -117,4 +117,109 @@ test('a poisoned store file is ignored, not merged', async () => {
   assert.equal({}.lessons, undefined);
   assert.deepEqual(Object.keys(data.courses), ['demo']);
   assert.deepEqual(Object.keys(data.courses.demo.lessons), ['01.html']);
+  // A valid shape with junk keys is cleaned, not treated as corruption.
+  assert.equal(await store.getWarning(), null);
+  assert.deepEqual(
+    (await fs.readdir(dir)).filter((n) => n.startsWith('poisoned.json.corrupt-')),
+    [],
+  );
+});
+
+// --- corruption is visible, backed up, and recoverable ----------------------
+
+test('bad JSON is backed up, reported, and writes keep working', async () => {
+  const f = path.join(dir, 'bad-json.json');
+  const original = '{"courses": {"demo": {';
+  await fs.writeFile(f, original);
+
+  const store = progressStore(f);
+  const data = await store.get();
+  assert.deepEqual(Object.keys(data.courses), []);
+
+  const warning = await store.getWarning();
+  assert.match(warning, /进度文件损坏/);
+  const backups = (await fs.readdir(dir)).filter((n) => n.startsWith('bad-json.json.corrupt-'));
+  assert.equal(backups.length, 1);
+  assert.match(warning, new RegExp(backups[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  // The original bytes are recoverable from the backup.
+  assert.equal(await fs.readFile(path.join(dir, backups[0]), 'utf8'), original);
+  // The live file was reset to a valid empty store rather than left corrupt.
+  assert.deepEqual(JSON.parse(await fs.readFile(f, 'utf8')), { courses: {} });
+
+  const written = await store.setLesson('demo', '01.html', 'done');
+  assert.equal(written.courses.demo.lessons['01.html'].status, 'done');
+  const onDisk = JSON.parse(await fs.readFile(f, 'utf8'));
+  assert.equal(onDisk.courses.demo.lessons['01.html'].status, 'done');
+
+  // A fresh store reads the repaired file and reports nothing.
+  const again = progressStore(f);
+  assert.equal(await again.getWarning(), null);
+  assert.equal((await again.get()).courses.demo.lessons['01.html'].status, 'done');
+});
+
+test('a structurally invalid store (courses is an array) is treated as corrupt', async () => {
+  const f = path.join(dir, 'bad-shape.json');
+  const original = JSON.stringify({ courses: [] });
+  await fs.writeFile(f, original);
+
+  const store = progressStore(f);
+  assert.deepEqual(Object.keys((await store.get()).courses), []);
+  assert.match(await store.getWarning(), /进度文件损坏/);
+  const backups = (await fs.readdir(dir)).filter((n) => n.startsWith('bad-shape.json.corrupt-'));
+  assert.equal(backups.length, 1);
+  assert.equal(await fs.readFile(path.join(dir, backups[0]), 'utf8'), original);
+});
+
+test('when the backup fails the corrupt file is left untouched and writes are refused', async () => {
+  const f = path.join(dir, 'no-backup.json');
+  const original = '{ definitely not json';
+  await fs.writeFile(f, original);
+
+  const denied = Object.assign(new Error('backup denied'), { code: 'EACCES' });
+  const store = progressStore(f, {
+    copyFile: async () => {
+      throw denied;
+    },
+  });
+
+  assert.deepEqual(Object.keys((await store.get()).courses), []);
+  const warning = await store.getWarning();
+  assert.match(warning, /无法自动备份/);
+  assert.match(warning, /只读/);
+
+  await assert.rejects(store.setLesson('demo', '01.html', 'done'), /只读/);
+  // Neither the original nor a backup was touched.
+  assert.equal(await fs.readFile(f, 'utf8'), original);
+  assert.deepEqual(
+    (await fs.readdir(dir)).filter((n) => n.startsWith('no-backup.json.corrupt-')),
+    [],
+  );
+});
+
+test('a real filesystem backup failure also leaves the original untouched', async () => {
+  const f = path.join(dir, 'fs-backup-fails.json');
+  const original = '{not json either';
+  await fs.writeFile(f, original);
+  const ts = Date.parse('2026-01-02T03:04:05.678Z');
+  const backupPath = corruptBackupName(f, ts);
+  // A directory sitting on the backup path makes copyFile fail for real.
+  await fs.mkdir(backupPath);
+
+  try {
+    const store = progressStore(f, { now: () => ts });
+    assert.deepEqual(Object.keys((await store.get()).courses), []);
+    assert.match(await store.getWarning(), /无法自动备份/);
+    await assert.rejects(store.setLesson('demo', '01.html', 'done'), /只读/);
+    assert.equal(await fs.readFile(f, 'utf8'), original);
+    assert.equal((await fs.stat(backupPath)).isDirectory(), true);
+  } finally {
+    await fs.rm(backupPath, { recursive: true, force: true });
+  }
+});
+
+test('a missing store is empty and produces no warning', async () => {
+  const f = path.join(dir, 'never-written.json');
+  const store = progressStore(f);
+  assert.deepEqual(Object.keys((await store.get()).courses), []);
+  assert.equal(await store.getWarning(), null);
 });

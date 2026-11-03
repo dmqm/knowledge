@@ -19,7 +19,13 @@ import { renderMarkdown } from './lib/md.mjs';
 import { scanCourses, readCourse, searchCourses, exists } from './lib/scan.mjs';
 import { progressStore } from './lib/store.mjs';
 import { makeAuth } from './lib/auth.mjs';
-import { isInside, isSafeCourseId, isSafePathSegment, realPath } from './lib/safe-path.mjs';
+import {
+  isInside,
+  isSameOrInside,
+  isSafeCourseId,
+  isSafePathSegment,
+  realPath,
+} from './lib/safe-path.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -170,19 +176,28 @@ async function sendFile(res, filePath, { cache = false } = {}) {
   try {
     const stat = await fsp.stat(filePath);
     if (!stat.isFile()) throw new Error('not a file');
+    await fsp.access(filePath, fs.constants.R_OK);
     res.writeHead(200, {
       'Content-Type': contentType(filePath),
       'Content-Length': stat.size,
       'Cache-Control': cache ? 'public, max-age=3600' : 'no-cache',
     });
-    fs.createReadStream(filePath).pipe(res);
+    const stream = fs.createReadStream(filePath);
+    // A file that becomes unreadable after the stat must not take the process
+    // down with an unhandled stream 'error'.
+    stream.on('error', () => res.destroy());
+    stream.pipe(res);
   } catch {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('404 Not Found');
   }
 }
 
-// Serve a file from `root`, refusing anything that escapes it.
+// Serve a file from `root`, refusing anything that escapes it. The string
+// prefix check is only an early reject: the real check below resolves the
+// whole path (symlinks and junctions followed), because a link that lives
+// inside `root` can otherwise point anywhere. Escapes are 404 (not 403) so the
+// response does not reveal whether the target exists.
 async function serveStatic(res, root, rel, opts) {
   let decoded;
   try {
@@ -193,9 +208,11 @@ async function serveStatic(res, root, rel, opts) {
     return;
   }
   const target = path.resolve(root, '.' + path.posix.normalize('/' + decoded));
-  if (target !== root && !target.startsWith(root + path.sep)) {
-    res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('403 Forbidden');
+  const rootReal = realPath(root);
+  const targetReal = realPath(target);
+  if (!isSameOrInside(rootReal, targetReal)) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('404 Not Found');
     return;
   }
   await sendFile(res, target, opts);
@@ -442,7 +459,13 @@ const server = http.createServer(async (req, res) => {
 
     // --- api -------------------------------------------------------------
     if (pathname === '/api/state') {
-      sendJson(res, 200, { authRequired: !!auth.required, authed: true, contentRoot: config.contentRoot });
+      const progressWarning = await store.getWarning();
+      sendJson(res, 200, {
+        authRequired: !!auth.required,
+        authed: true,
+        contentRoot: config.contentRoot,
+        progressWarning,
+      });
       return;
     }
 

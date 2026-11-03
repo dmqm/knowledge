@@ -9,7 +9,9 @@
 
 import {
   courseStats,
+  createRetryLoader,
   encodeSegment,
+  loadLocalProgress,
   readerHash,
   routeFromFilePath,
   routeFromIndexUrl,
@@ -34,7 +36,7 @@ const esc = (s) =>
     (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]),
   );
 
-const state = { courses: [], course: null, progress: {} };
+const state = { courses: [], course: null, progress: {}, progressWarning: null };
 
 // A chevron for the reader's circular nav buttons. Inline SVG instead of a
 // text arrow: the glyph stays crisp at any size and inherits the button's
@@ -79,14 +81,17 @@ async function fetchJson(path) {
 
 // --- progress (browser-local in static mode) ---------------------------------
 
+let localProgressReadOnly = false;
+
 function readLocalProgress() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null');
-    if (parsed && typeof parsed === 'object' && parsed.courses) return parsed;
-  } catch {
-    // corrupt / unavailable — start fresh
-  }
-  return { courses: {} };
+  // A corrupt value is copied to `__lc_progress_corrupt` and the store reset
+  // before returning; the warning is kept on `state` so the home page can show
+  // it once even though later reads see a clean (empty) store. When the backup
+  // itself failed the store stays untouched and writes are refused.
+  const { progress, warning, readOnly } = loadLocalProgress(localStorage, PROGRESS_KEY);
+  if (warning) state.progressWarning = warning;
+  localProgressReadOnly = !!readOnly;
+  return progress;
 }
 
 function localLessons(courseId) {
@@ -95,6 +100,9 @@ function localLessons(courseId) {
 
 function writeLocalLesson(courseId, file, status) {
   const all = readLocalProgress();
+  if (localProgressReadOnly) {
+    throw new Error('进度文件损坏且无法备份，已切换为只读');
+  }
   const course = all.courses[courseId] || (all.courses[courseId] = { lessons: {} });
   if (!course.lessons) course.lessons = {};
   if (status === 'none') delete course.lessons[file];
@@ -221,20 +229,13 @@ async function setProgress(courseId, file, status) {
 
 // --- search ------------------------------------------------------------------
 
-let searchIndexPromise = null;
-
-function searchIndex() {
-  if (!searchIndexPromise) {
-    // A rejected promise used to be cached forever, so one flaky request left
-    // search broken until a full page reload. Drop the cache on failure: the
-    // next search simply tries again.
-    searchIndexPromise = fetchJson('api/search-index.json').catch((err) => {
-      searchIndexPromise = null;
-      throw err;
-    });
-  }
-  return searchIndexPromise;
-}
+// The static build's search index is a single JSON file. Load it through a
+// retry gate: after a failure the next search retries once automatically, and
+// after that the UI offers an explicit retry instead of hammering the server.
+// Server mode keeps using /api/search directly.
+const searchIndexLoader = STATIC
+  ? createRetryLoader(() => fetchJson('api/search-index.json'))
+  : null;
 
 function searchLocally(index, q) {
   const needle = q.trim().toLowerCase();
@@ -285,8 +286,8 @@ function localRelevance(doc, q) {
   return score;
 }
 
-async function searchCourses(q) {
-  if (STATIC) return searchLocally(await searchIndex(), q);
+async function searchCourses(q, { manual = false } = {}) {
+  if (STATIC) return searchLocally(await searchIndexLoader.get({ manual }), q);
   const { results } = await api(`/api/search?q=${encodeURIComponent(q)}`);
   return results;
 }
@@ -318,7 +319,7 @@ function resultRows(results, limit = results.length) {
     .join('')}</div>`;
 }
 
-async function liveSearch(query, box) {
+async function liveSearch(query, box, options = {}) {
   const token = ++searchSeq;
   const needle = String(query || '').trim();
   if (!needle) {
@@ -329,14 +330,23 @@ async function liveSearch(query, box) {
   box.hidden = false;
   box.innerHTML = '<div class="spinner">搜索中…</div>';
   try {
-    const results = await searchCourses(needle);
+    const results = await searchCourses(needle, options);
     if (token !== searchSeq || !box.isConnected) return;
     box.innerHTML = results.length
       ? `<div class="section-title">「${esc(needle)}」· ${results.length} 条结果</div>${resultRows(results, 12)}`
       : emptyPanel(`没有找到「${needle}」。`);
   } catch (err) {
     if (token === searchSeq && box.isConnected) {
-      box.innerHTML = `<div class="empty"><div class="big">⚠︎</div>${esc(err.message)}</div>`;
+      // Static mode has a retry gate behind it; give the reader the manual
+      // escape hatch instead of pretending the failure is final.
+      const retry = STATIC
+        ? `<p><button class="linkbtn" id="search-retry" type="button">重试</button></p>`
+        : '';
+      box.innerHTML = `<div class="empty"><div class="big">⚠︎</div>${esc(err.message)}${retry}</div>`;
+      if (STATIC) {
+        const btn = box.querySelector('#search-retry');
+        if (btn) btn.onclick = () => liveSearch(needle, box, { manual: true });
+      }
     }
   }
 }
@@ -358,10 +368,20 @@ function fileUrl(id, kind, file) {
 
 // ---------------------------------------------------------------- chrome ----
 
-// Stable pseudo-random hue per course id — drives the tile/hero accent color.
-function courseHue(s) {
-  return [...String(s)].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) % 360, 7);
-}
+// Tile/hero accent colour is driven by the course's category, not a hash of
+// its id: same group → same colour, and the palette (styles.css --cat-*) is
+// tuned so white tile text clears WCAG AA on every entry. Groups missing from
+// this map (or absent from categories.json) fall back to the neutral "other".
+const CAT_KEY = {
+  '财富与社会': 'wealth',
+  '经济与金融': 'economy',
+  '认知与工作': 'mind',
+  '身体与健康': 'body',
+  '摄影与审美': 'aesthetic',
+  '媒介与批判': 'media',
+  '网络与协议': 'net',
+};
+const courseCat = (c) => CAT_KEY[c.group] || 'other';
 
 let toastTimer = null;
 function toast(msg) {
@@ -650,6 +670,7 @@ async function renderHome() {
   };
 
   app.innerHTML = `
+    <div id="progress-warning"></div>
     <div id="resume"></div>
     <div class="search">
       <span class="glass">⌕</span>
@@ -681,6 +702,49 @@ async function loadHome(refresh = false) {
     paintResume(courses);
   } catch (err) {
     list.innerHTML = `<div class="empty"><div class="big">⚠︎</div>${esc(err.message)}</div>`;
+  }
+  paintProgressWarning();
+}
+
+// A corrupt progress store is backed up (server: a `.corrupt-*` file, static:
+// `__lc_progress_corrupt`) and the app continues from empty. Surface that once
+// so the user isn't left wondering why their ticks disappeared; dismissing it
+// is remembered for the rest of the session.
+const PROGRESS_WARNING_DISMISSED_KEY = 'lc:progress-warning-dismissed';
+
+function paintProgressWarning() {
+  const box = document.getElementById('progress-warning');
+  if (!box) return;
+  const warning = state.progressWarning;
+  if (!warning) {
+    box.innerHTML = '';
+    return;
+  }
+  let dismissed = null;
+  try {
+    dismissed = sessionStorage.getItem(PROGRESS_WARNING_DISMISSED_KEY);
+  } catch {
+    dismissed = null;
+  }
+  if (dismissed === warning) {
+    box.innerHTML = '';
+    return;
+  }
+  box.innerHTML = `
+    <div class="warn-banner" role="status">
+      <span>${esc(warning)}</span>
+      <button class="iconbtn" type="button" id="dismiss-progress-warning" title="关闭提示" aria-label="关闭提示">✕</button>
+    </div>`;
+  const btn = box.querySelector('#dismiss-progress-warning');
+  if (btn) {
+    btn.onclick = () => {
+      try {
+        sessionStorage.setItem(PROGRESS_WARNING_DISMISSED_KEY, warning);
+      } catch {
+        // session-only dismissal is still fine
+      }
+      box.innerHTML = '';
+    };
   }
 }
 
@@ -758,7 +822,7 @@ function courseCard(c) {
   const complete = c.total > 0 && c.done === c.total;
   const size = c.counts.lessons ? `${c.counts.lessons} 讲` : '尚无内容';
   return `
-    <a class="card" data-course="${esc(c.id)}" style="--hue:${courseHue(c.id)}" title="${esc(c.title)}" href="#/c/${encodeURIComponent(c.id)}">
+    <a class="card" data-course="${esc(c.id)}" data-cat-key="${courseCat(c)}" title="${esc(c.title)}" href="#/c/${encodeURIComponent(c.id)}">
       <span class="tile">${esc(c.title.trim().charAt(0) || '?')}</span>
       <div class="tile-txt">
         <h3>${esc(c.title)}</h3>
@@ -866,7 +930,7 @@ async function renderCourse(id) {
   if (c.hasNotes) tabs.push(['notes', '备注']);
 
   app.innerHTML = `
-    <div class="hero" style="--hue:${courseHue(c.id)}">
+    <div class="hero" data-cat-key="${courseCat(c)}">
       <h1>${esc(c.title)}</h1>
       <div class="meta">
         <span class="pill ${done === c.counts.lessons && c.counts.lessons ? 'good' : ''}">${done}/${c.counts.lessons} 已完成</span>
@@ -1295,10 +1359,15 @@ window.addEventListener('pagehide', flushActiveReaderY);
   if (!STATIC) {
     // Surfaces a login redirect via api() if a password is set.
     try {
-      await api('/api/state');
+      const st = await api('/api/state');
+      state.progressWarning = st.progressWarning || null;
     } catch {
       // ignore — render will surface any auth problem
     }
+  } else {
+    // Quarantine a corrupt local store before the first paint, so its warning
+    // is available to the home page.
+    readLocalProgress();
   }
   if (!location.hash) location.hash = '#/';
   const restoreY = takeScrollRestore();

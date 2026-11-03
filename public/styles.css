@@ -16,6 +16,18 @@
      dark fill is light enough that white would land at 2.1:1. */
   --on-good: #14130f;
   --danger: #e2907f;
+  /* Category palette: tile/hero colour is driven by the course's group, not a
+     hash of its id. White ink on every one of these lands ≥4.76:1 (WCAG AA).
+     Light-theme values live in the two light blocks below. */
+  --cat-wealth: #356f8f;
+  --cat-economy: #9a6836;
+  --cat-mind: #5b56a3;
+  --cat-body: #377a5a;
+  --cat-aesthetic: #8a4a71;
+  --cat-media: #9a4b4b;
+  --cat-net: #26707f;
+  --cat-other: #625e54;
+  --tile-ink: #ffffff;
   --radius: 16px;
   --shadow: 0 6px 24px rgba(0, 0, 0, 0.42);
   color-scheme: dark;
@@ -37,6 +49,15 @@
     --good: #2f7d54;
     --on-good: #ffffff;
     --danger: #a4442f;
+    --cat-wealth: #2f5f7a;
+    --cat-economy: #8a5a2b;
+    --cat-mind: #4f4a8f;
+    --cat-body: #2f6b4f;
+    --cat-aesthetic: #7a3f63;
+    --cat-media: #8a4141;
+    --cat-net: #1f5f6f;
+    --cat-other: #55524a;
+    --tile-ink: #ffffff;
     --shadow: 0 6px 20px rgba(60, 50, 30, 0.09);
     color-scheme: light;
   }
@@ -58,6 +79,15 @@
   --good: #2f7d54;
   --on-good: #ffffff;
   --danger: #a4442f;
+  --cat-wealth: #2f5f7a;
+  --cat-economy: #8a5a2b;
+  --cat-mind: #4f4a8f;
+  --cat-body: #2f6b4f;
+  --cat-aesthetic: #7a3f63;
+  --cat-media: #8a4141;
+  --cat-net: #1f5f6f;
+  --cat-other: #55524a;
+  --tile-ink: #ffffff;
   --shadow: 0 6px 20px rgba(60, 50, 30, 0.09);
   color-scheme: light;
 }
@@ -364,6 +394,21 @@ button.iconbtn { -moz-appearance: none; -webkit-appearance: none; }
 .card:active { transform: scale(0.99); }
 @media (hover: hover) { .card:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); } }
 
+/* Category → accent colour. The key is set from app.js via data-cat-key
+   (the course's group; unknown groups fall back to "other"). Kept separate
+   from the chips' data-cat attribute, which carries the group *name* for
+   filtering — two different consumers, two different attributes. */
+/* Default must share specificity with the key rules below it (attr-only
+   selectors), otherwise it would out-rank them and everything falls to grey. */
+[data-cat-key] { --cat: var(--cat-other); }
+[data-cat-key="wealth"] { --cat: var(--cat-wealth); }
+[data-cat-key="economy"] { --cat: var(--cat-economy); }
+[data-cat-key="mind"] { --cat: var(--cat-mind); }
+[data-cat-key="body"] { --cat: var(--cat-body); }
+[data-cat-key="aesthetic"] { --cat: var(--cat-aesthetic); }
+[data-cat-key="media"] { --cat: var(--cat-media); }
+[data-cat-key="net"] { --cat: var(--cat-net); }
+
 .card .tile {
   flex: 0 0 auto;
   width: 26px;
@@ -374,11 +419,8 @@ button.iconbtn { -moz-appearance: none; -webkit-appearance: none; }
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
-  color: #fff;
-  background:
-    linear-gradient(135deg,
-      hsl(var(--hue) 65% 52% / 0.95),
-      hsl(calc(var(--hue) + 28) 60% 42% / 0.95));
+  color: var(--tile-ink);
+  background: var(--cat);
 }
 
 .card .tile-txt { min-width: 0; flex: 1; }
@@ -429,6 +471,24 @@ button.iconbtn { -moz-appearance: none; -webkit-appearance: none; }
   border-radius: var(--radius);
 }
 .empty .big { font-size: 40px; margin-bottom: 8px; }
+
+/* --------------------------------------------------------------- warning */
+.warn-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--border));
+  border-left: 3px solid var(--danger);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.warn-banner > span { flex: 1; min-width: 0; }
+.warn-banner .iconbtn { flex: 0 0 auto; }
 
 /* ------------------------------------------------------------------ tabs */
 .tabs {
@@ -580,7 +640,7 @@ a.row:active { transform: none; opacity: 0.75; }
 .hero {
   background:
     linear-gradient(155deg,
-      hsl(var(--hue, 217) 70% 50% / 0.16),
+      color-mix(in srgb, var(--cat, var(--accent)) 22%, transparent),
       transparent 55%),
     var(--panel);
   border: 1px solid var(--border);
