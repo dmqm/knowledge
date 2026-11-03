@@ -816,8 +816,10 @@ let chipFadeGlobalsWired = false;
 function wireChipFade(bar) {
   if (!bar) return;
   if (bar.dataset.fade !== '1') {
-    // Element-level: one scroll listener per bar; paintHome re-renders the
-    // bar's children but reuses the element, so guard against re-wiring.
+    // Element-level: one scroll listener per bar. Two paths reach here: the
+    // filter repaint reuses the element (the guard prevents re-wiring), while
+    // renderHome rebuilds #catbar wholesale — a fresh element has no marker
+    // and gets wired as new; the old element and its listener die together.
     bar.dataset.fade = '1';
     bar.addEventListener('scroll', syncChipFade, { passive: true });
   }
