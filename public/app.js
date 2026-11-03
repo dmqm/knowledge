@@ -776,6 +776,37 @@ function paintResume(courses) {
 // One flat, full-width grid plus a category chip row. Sections would cap each
 // group at its own course count and leave most of a wide screen empty, so the
 // group is a filter here instead — classification without losing density.
+// --- category chips: edge fade ------------------------------------------------
+// The chips row is a single scroll line that overflows on every phone width.
+// CSS fades both edges (mask-image); here we drop the fade on whichever side
+// is scrolled to its end so the end chip is never dimmed.
+
+function syncChipFade() {
+  const bar = document.getElementById('catbar');
+  if (!bar) return;
+  const max = bar.scrollWidth - bar.clientWidth;
+  bar.classList.toggle('at-start', bar.scrollLeft < 2);
+  bar.classList.toggle('at-end', max <= 2 || bar.scrollLeft > max - 2);
+}
+
+let chipFadeGlobalsWired = false;
+function wireChipFade(bar) {
+  if (!bar) return;
+  if (bar.dataset.fade !== '1') {
+    // Element-level: one scroll listener per bar; paintHome re-renders the
+    // bar's children but reuses the element, so guard against re-wiring.
+    bar.dataset.fade = '1';
+    bar.addEventListener('scroll', syncChipFade, { passive: true });
+  }
+  if (!chipFadeGlobalsWired) {
+    // Global-level: resize only ever needs one listener for the page's single
+    // chips bar.
+    chipFadeGlobalsWired = true;
+    window.addEventListener('resize', syncChipFade, { passive: true });
+  }
+  syncChipFade();
+}
+
 function paintHome(courses) {
   const list = document.getElementById('courselist');
   if (!list) return;
@@ -806,6 +837,7 @@ function paintHome(courses) {
           paintHome(courses);
         };
       });
+      wireChipFade(bar);
     }
   }
 

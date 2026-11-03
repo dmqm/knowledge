@@ -344,7 +344,20 @@ button.iconbtn { -moz-appearance: none; -webkit-appearance: none; }
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
+  /* Narrow screens hide most chips behind a single scroll line; fade both
+     edges so the cutoff reads as "more off-screen" instead of a hard slice.
+     Alpha-only mask: theme-agnostic (the #000 is just the alpha carrier), no
+     layout impact, chips stay aligned with the card grid below. */
+  --fade: 18px;
+  --fade-l: var(--fade);
+  --fade-r: var(--fade);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent 100%);
 }
+/* Scrolled to (or short of) an end: drop that side's fade so the end chip is
+   fully visible. Toggled from app.js on scroll/resize. */
+.chips.at-start { --fade-l: 0px; }
+.chips.at-end { --fade-r: 0px; }
 .chips::-webkit-scrollbar { display: none; }
 .chip {
   flex: 0 0 auto;
