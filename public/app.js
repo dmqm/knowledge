@@ -479,6 +479,29 @@ function syncReaderTheme() {
   doc.documentElement.style.colorScheme = theme;
 }
 
+// Inside the reader, the lesson's own chrome is redundant: 53/135 lessons put
+// a nav pill capsule above the h1 (pushing the text down 32-64px on phones),
+// and 82/135 repeat a table-of-contents paragraph. The reader's fixed bottom
+// bar already covers prev/next. Hide both via an injected stylesheet — the
+// lesson files on disk stay untouched, so opening them outside the reader
+// keeps their chrome. Re-runs on every iframe load (in-page links reload the
+// frame); `lc-embed` guards against double injection.
+function hideLessonChrome() {
+  const frame = document.getElementById('r-frame');
+  if (!frame) return;
+  let doc;
+  try {
+    doc = frame.contentDocument;
+  } catch {
+    return; // cross-origin — nothing to inject
+  }
+  if (!doc || !doc.head || doc.getElementById('lc-embed')) return;
+  const st = doc.createElement('style');
+  st.id = 'lc-embed';
+  st.textContent = 'body > nav[aria-label], body > p.toc { display: none !important; }';
+  doc.head.appendChild(st);
+}
+
 // Some mobile browsers only re-read these hints when the tag itself is
 // replaced, so swap the element instead of just editing `content`.
 function setMetaContent(name, content) {
@@ -1241,6 +1264,7 @@ async function renderReader(id, kind, file) {
   let pendingScroll = restore ? restore.y : 0;
   frame.addEventListener('load', () => {
     syncReaderTheme(); // in-page links re-load the iframe; re-apply the choice
+    hideLessonChrome(); // before scroll restore: the doc shrinks 0-64px
     applyReaderFontScale(fontScale());
     document.getElementById('r-load').hidden = true;
     if (pendingScroll) {
