@@ -385,7 +385,7 @@ button.iconbtn { -moz-appearance: none; -webkit-appearance: none; }
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 11px;
-  padding: 7px 8px 8px;
+  padding: 7px 8px 10px;
   cursor: pointer;
   transition: border-color 0.15s ease, transform 0.05s ease;
   color: var(--text);
@@ -432,7 +432,7 @@ button.iconbtn { -moz-appearance: none; -webkit-appearance: none; }
 /* Two columns even on a 320px phone; shrink the tile a touch to keep the title. */
 @media (max-width: 359px) {
   .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .card { gap: 6px; padding: 6px; }
+  .card { gap: 6px; padding: 6px 6px 8px; }
   .card .tile { width: 23px; height: 23px; font-size: 11px; }
   /* The title column is only ~98px here, i.e. 8 CJK glyphs. One nowrap line
      would ellipsis anything longer ("C++ 现代编程与系统思维"), so the base rule
@@ -445,8 +445,10 @@ button.iconbtn { -moz-appearance: none; -webkit-appearance: none; }
 .bar { height: 6px; border-radius: 999px; background: var(--panel-2); overflow: hidden; margin-top: 12px; }
 .bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--good)); border-radius: inherit; }
 
-/* Progress sits on the card's bottom edge instead of taking its own row. */
-.card > .bar { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; margin: 0; border-radius: 0; }
+/* Progress sits on the card's bottom edge instead of taking its own row.
+   Absolute, so 4px adds no card height; the extra padding above keeps ≥4px
+   clearance between .meta and the bar. */
+.card > .bar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; margin: 0; border-radius: 0; }
 
 .pill {
   display: inline-flex;
@@ -650,7 +652,7 @@ a.row:active { transform: none; opacity: 0.75; }
 
 .hero h1 { margin: 0 0 6px; font-size: 18px; line-height: 1.35; }
 .hero .meta { display: flex; flex-wrap: wrap; gap: 4px 10px; color: var(--muted); font-size: 12px; align-items: center; }
-.hero .bar { margin-top: 8px; height: 3px; }
+.hero .bar { margin-top: 8px; }
 
 .linkbtn {
   border: 0;
