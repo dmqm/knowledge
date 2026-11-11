@@ -2,133 +2,79 @@
 
 给在这个仓库里工作的 agent 的说明。
 
-## 这是什么
+**这是什么**:一个**本地、手机友好**的学习门户(阅读器,不是编辑器),把 `teach` 技能产出的
+多个教学 workspace 聚合到一个入口。纯 Node.js(>=18),**零第三方依赖**——只用内置模块,
+加依赖等于改架构,先说明。内容 = `courses/` 下的每个子目录(一门主题/课程)。
 
-一个**本地、手机友好**的学习门户:把 `teach` 技能产出的多个教学 workspace 聚合到一个入口,
-在手机上阅读。项目定位是**阅读器**,不是编辑器。
-
-- 纯 Node.js,零第三方依赖。
-- 内容 = `courses/` 下的每个子目录,一个子目录就是一门**主题**(课程)。
-
-## 目录结构
-
-```
-knowledge/
-├─ server.mjs           # 本地 HTTP 服务 + JSON API + 鉴权
-├─ scripts/export.mjs   # 把站点导出成静态文件到 dist/(用于 GitHub Pages)
-├─ lib/                 # scan / store / auth / markdown
-├─ public/              # 前端(index.html / app.js / styles.css)
-├─ courses/             # 每个子目录 = 一个主题;内容由 teach 生成
-├─ data/                # progress.json(进度)、secret(会话密钥)—— 不要提交
-├─ .github/workflows/   # pages.yml:push 后自动构建并发布
-└─ config.json
-```
-
-## 两种运行模式
-
-前端 `public/app.js` 通过 `window.__LC_STATIC__` 区分:
-
-- **服务器模式**(本地 `node server.mjs`):走 JSON API,可读可写(删除主题、
-  进度写回 `data/progress.json`)。
-- **静态模式**(导出的 `dist/`,GitHub Pages):读 `api/*.json`,进度存浏览器
-  `localStorage`,隐藏"删除"。**只读。**
-
-两套模式共用同一份 `public/app.js` 与同一套渲染逻辑,只有数据来源不同。
-
-## 怎么加课程
-
-**不要通过界面或手写文件来加课程**——课程内容由 agent 用 `teach` 技能生成:
-
-1. 在 OpenCode 里把工作目录切到目标主题目录(如 `courses/rust/`),运行 `teach`。
-2. `teach` 会写入 `MISSION.md`、`lessons/*.html`、`reference/*.html`、
-   `learning-records/*.md` 等,学习中心会自动收录。
-3. 需要新建目录时,在 `courses/` 下建一个含 `MISSION.md` 或 `lessons/` 的文件夹即可。
-   **界面上没有"新建"入口——新建永远由 agent / 手动建目录完成。**
-4. 新主题默认落在首页的「更多主题」里;想给它归类,把目录名加进
-   `courses/categories.json` 对应分组的 `courses` 数组(该文件要提交)。
-
-> `teach` 与 `show-me` **不在技能默认列表里**,装在 `C:\Users\admin\.agents\skills\` 下;
-> 找不到时直接去该目录调用。
-
-### 内容标准
-
-- **一本书的课程,一开始就按整本书的深度写**,别先交付浅稿再返工。默认单讲正文
-  **2500–4000 字**,讲清「机制 + 真实案例 + 决策链」,而不是罗列概念。
-- **图文并茂**:每页配一张内联 SVG 示意图(离线可用、跟随主题、**不写死颜色**);
-  需要真实图片时用公共领域素材。所有外部资源 URL 必须查证真实可达,**不许凭记忆编**。
-
-## 怎么发布(重点)
-
-发布是**自动**的,不用手动构建:
-
-1. 在 `courses/` 下新增 / 修改内容。
-2. `git add . && git commit -m "..." && git push`(推到 `main`)。
-3. GitHub Actions(`.github/workflows/pages.yml`)自动跑 `node scripts/export.mjs`,
-   把 `dist/` 发布到 GitHub Pages。
-4. 稍等片刻,手机打开站点即可看到更新(可能需要刷新)。
-
-本地想预览发布效果:
+## 命令(已实测)
 
 ```powershell
-node scripts/export.mjs          # 生成 dist/
-npx --yes serve dist             # 或任何静态服务器,然后打开提示的地址
+node server.mjs                        # http://127.0.0.1:4321
+node server.mjs --host 0.0.0.0 --password "xxx"
+node --test                            # 全量:49 个用例,约 4s
+node --test tests/store.test.mjs       # 单文件
+node scripts/export.mjs                # 生成 dist/(静态发布产物)
+npx --yes serve dist                   # 本地预览静态版
 ```
 
-## 不要提交这些
+`package.json` 只映射 `start / export / test`;没有 build、lint、typecheck、codegen 步骤。
+CI(`.github/workflows/pages.yml`)用 Node 22,`main` 上 push 即自动导出并发布到 Pages。
 
-`.gitignore` 已排除,请勿手动 `-f` 加进来:
+## 分层(不看代码就会猜错的)
 
-- `data/` —— 本地进度和会话密钥,含个人状态。
-- `config.json` —— 可能含访问密码;缺失时服务用内置默认值。
-- `dist/` —— 构建产物,由 CI 重新生成。
-- `courses/.trash/` —— 被删除的主题。
+- `server.mjs` — 唯一服务入口:配置加载、鉴权、路由、静态文件。
+- `lib/scan.mjs` 扫描/读取/搜索主题;`lib/store.mjs` 进度存储;`lib/auth.mjs` 会话;
+  `lib/md.mjs` Markdown;`lib/safe-path.mjs` **路径包含判断,服务器与导出器共用**。
+- `public/route-logic.js` — 无 DOM 的纯路由/URL 帮助函数,**浏览器与 `node --test` 都 import**。
+  新增导航/URL 逻辑放这里,别写进 `app.js`,否则测不了。
+- `tests/*.test.mjs` — 全 `node:test`;`tests/helpers.mjs` 会起真实 HTTP 服务(临时端口 +
+  `os.tmpdir()` 下的临时目录)。
+- `docs/superpowers/` — 历史设计文档(如 Pages 发布设计),不是规范,以代码为准。
 
-想临时把某门课"留一手"、不发布也不在列表里出现,把它的目录名改成以 `.` 开头即可
-(扫描会跳过点开头的目录)。
+## 改动时的硬约束
 
-另外,导出时会**整目录镜像**每门课到发布内容的 `files/` 下(这样讲义里的相对链接,
-包括指向 `MISSION.md` / `RESOURCES.md` / `learning-records/*.md` 的,都成立),
-但会跳过编辑器备份(`*.bak`)。
+- **安全不变量,不许放松**:课程 id 必须是 `courses/` 下的单段目录名;校验走
+  `isSafeCourseId()`(拒绝点开头、`..`、原型键、Windows 设备名/保留字符)。
+  所有路径判断用 `lib/safe-path.mjs` 的 `realPath()` + `isSameOrInside()`
+  (**realpath 包含关系**,不是字符串前缀),无法解析时失败即拒绝。新代码不要自己写
+  `startsWith`。
+- **`public/index.html` 里四个绝对路径字面量**(`href="/assets/styles.css"`、`/assets/favicon.svg`、
+  `/assets/apple-touch-icon.png`、`src="/assets/app.js"`)是 `scripts/export.mjs` 用 `.replace()`
+  改写的锚点;字符串对不上会**抛错中断 CI**。改 head / script 标签时保持原样,别顺手改成相对路径。
+- 静态版靠导出时写入的 `assets/config.js`(`window.__LC_STATIC__ = true;`)切换数据源。
+  改前端时两种模式都要能跑:静态模式不许依赖服务器 API,服务器模式不许依赖静态 JSON。
+- 导出目标目录不许与仓库任意顶层目录重叠(`export.mjs` 会抛);镜像整门课到 `files/<id>/`
+  时跳过点开头、`*.bak`、`_originals/`。
+- 进度写入必须串行化 + 原子替换;`progress.json` 损坏时备份并**显式告警**,不许静默合并。
+- `config.json` 存在但损坏 → 拒绝启动,不得退化成无密码。`data/`(progress.json、secret)、
+  `config.json`、`dist/`、`courses/.trash/` 已 gitignore,不要 `-f` 加进来。
 
-## 本地开发
+## 加课程 / 写内容
 
-```powershell
-node server.mjs                  # http://127.0.0.1:4321
-node server.mjs --host 0.0.0.0 --password "xxx"   # 局域网 + 密码
-```
+内容只能由 agent 用 `teach` 技能生成,**不要手写文件,也不走界面**(界面没有"新建"入口):
 
-配置优先级:命令行参数 > 环境变量 > `config.json`。
-详见 `README.md`。
+1. 工作目录切到 `courses/<主题>/` 跑 `teach`,产出 `MISSION.md`、`lessons/*.html`、
+   `reference/*.html`、`learning-records/*.md`;含 `MISSION.md` 或 `lessons/` 即被自动收录。
+2. 要分组就把目录名加进 `courses/categories.json` 的 `groups[].courses`(该文件要提交);
+   没登记的落到首页「更多主题」。
+3. 想临时不发布也不出现在列表:目录名以 `.` 开头(扫描跳过)。
+4. `teach` / `show-me` 不在技能默认列表,装在 `C:\Users\admin\.agents\skills\` 下。
 
-回归测试(零依赖,`node:test`):`node --test`。改动 `server.mjs` / `lib/` /
-`scripts/export.mjs` / `public/app.js` 的路径与状态逻辑后必须跑一遍。
+内容标准:**一开始就按整本书深度写**,单讲正文 2500–4000 字,讲「机制 + 真实案例 + 决策链」;
+每页配内联 SVG 示意图(离线可用、跟随主题、**不写死颜色**);外部资源 URL 必须查证可达,
+不许凭记忆编。
 
-**安全不变量**(改动时不许放松):课程 id 必须是 `courses/` 下的单段目录名,
-路径校验基于 realpath 包含关系;导出目标不许与仓库任意顶层目录重叠;
-`config.json` 存在但损坏时拒绝启动,不得退化为无密码;进度写入串行化、
-原子替换。
+## Windows 坑
+
+- 命令走 PowerShell,复杂引号容易搞乱 → 把命令写成临时 `.mjs` 脚本再 `node` 跑。
+- 读写文本显式 UTF-8;大段内容别一次 `write`,分块写。
+- `core.autocrlf` 会造成「`git status` 有改动、`git diff` 为空」的假改动,先看 diff 再决定。
+- `git push` 的凭据来自仓库本地 `.git/config` 的 `credential.helper`(一个包装脚本,指向 Git 自带的
+  GCM)。`credential.helper` 的值会被按空格切开,所以**不能直接写带空格的路径**,要用无空格的
+  包装脚本转发。
 
 ## 协作偏好
 
-- **默认直接做完、给出结果**,不要逐步征求意见。
-- 需要澄清时**一次问完**(批量),且只问会显著改变结果的关键分叉。
-- 用户常在手机上查看,习惯**看 git / 发布后的结果**,而不是本地预览。
-
-## 环境与常见坑(Windows)
-
-- 命令走 PowerShell,引号容易被搞乱 → 把复杂命令写成临时 `.mjs` 脚本再 `node` 跑。
-- 读写文本文件显式用 UTF-8,避免 PowerShell 默认编码损坏内容。
-- `core.autocrlf` 可能造成「`git status` 显示改动、`git diff` 为空」的假改动,
-  先看 diff 再决定怎么处理。
-- 大段内容不要一次性 `write`,可能解析失败;分块写。
-- 用 `subagent` 并行处理互相独立的课程写作;它**不能**在 `execute`(code mode)里调用。
-- 派发大量 subagent 前先压上下文;改完用脚本核验一致性(无写死颜色、测验一致、
-  链接可达、图存在)。
-- 网络受限时(Wikipedia / Reddit 等可能不可达),优先用可离线的内联资源。
-
-## 约定
-
-- 保持零第三方依赖(只用 Node 内置模块)。
-- 改前端时,两种模式都要能跑:静态模式别依赖服务器 API,服务器模式别依赖静态 JSON。
-- 静态构建使用**相对路径**(站点可能挂在 `/<repo>/` 子路径下);
-  `scripts/export.mjs` 会把 `public/index.html` 里的绝对路径改写掉,改动该文件时注意别破坏这些锚点。
+- 默认直接做完、给结果,不逐步征求意见;需要澄清时一次问完。
+- 用户常在手机上看 push 后的站点,而不是本地预览。
+- 不打印密钥/密码;不修改 `.env`;破坏性命令先说明再执行;不为通过检查造假。
